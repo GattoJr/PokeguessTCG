@@ -176,7 +176,7 @@ details p{color:var(--muted);margin:8px 0}
   <section class="play" id="play">
     <form id="guessForm" autocomplete="off">
       <div class="combo">
-        <input type="text" id="guess" placeholder="Card name, e.g. Charizard ex" aria-label="Card name" aria-autocomplete="list" aria-controls="sugg" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
+        <input type="text" id="guess" placeholder="Card name, e.g. Pikachu" aria-label="Card name" aria-autocomplete="list" aria-controls="sugg" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
         <ul class="sugg" id="sugg" role="listbox" hidden></ul>
       </div>
       <button class="btn" type="submit" id="btnGuess" disabled>Guess</button>
@@ -198,8 +198,8 @@ details p{color:var(--muted);margin:8px 0}
 
   <details id="rules">
     <summary>How to play</summary>
-    <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including V, ex, VMAX and the like. You have 3 guesses per card.</p>
-    <p>Each card puts 2,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play.</p>
+    <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate). You have 3 guesses per card.</p>
+    <p>Each card puts 1,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play. Once you reach 0 you can still open tiles and guess, just for no points.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
       <i class="mid">15</i><span>Inner frame</span>
@@ -236,7 +236,8 @@ var SET_EXCLUDE = /promo|energies|gallery|black star|mcdonald|trainer kit|starte
    The grid covers only the artwork: 12 columns × 7 rows.
    Two cheap frames (outer 5, inner 15) around a much dearer centre (60 per tile). Total 2000. */
 var RING_VALUES = [5,15,60,60];
-var TARGET_TOTAL = 2000;
+var TARGET_TOTAL = 2000;    // sum of all tile values
+var POINTS_IN_PLAY = 1000;  // points each card starts with; can reach 0 before every tile is open, tiles stay openable
 function ringOf(r,c){ return Math.min(r-1, c-1, ROWS-r, COLS-c); }
 function valueOf(r,c){ return RING_VALUES[Math.min(ringOf(r,c), RING_VALUES.length-1)]; }
 var GRID = (function(){
@@ -316,7 +317,7 @@ function loadLocalDb(){
       state.pool.push({id:st[0]+'-'+c[1],name:c[2],image:base+'/'+serie+'/'+st[0]+'/'+c[1],
         rarity:db.rarities[c[3]]||null,evolveFrom:!!c[4],setName:st[1],serie:serie});
     });
-    state.pool.forEach(function(p){ state.nameSet[p.name]=1; });   // suggestions: only Pokémon from the series in play
+    state.pool.forEach(function(p){ if(!isFullArt(p)) state.nameSet[p.name]=1; });   // suggestions: only names of cards that can actually come up
     state.namesDirty=true; state.localDb=true;
   });
 }
@@ -355,7 +356,7 @@ function addSet(d,brief){
   d.cards.forEach(function(c){
     if(!c.image) return;
     state.pool.push({id:c.id,name:c.name,image:c.image,setName:d.name,serie:serie});
-    if(!/energy/i.test(c.name)) state.nameSet[c.name]=1;
+    if(!/energy/i.test(c.name) && !FULL_ART_NAME.test(c.name)) state.nameSet[c.name]=1;
   });
   state.namesDirty=true;
 }
@@ -495,20 +496,20 @@ function openBlock(i,free){
   rd.opened[i]=true; rd.openCount++; if(!free) rd.spent+=rd.grid.values[i];
   var el=$('grid').children[i]; el.classList.add('open'); el.tabIndex=-1;
 }
-function potential(){ var rd=state.round; return rd ? Math.max(0,rd.grid.total-rd.spent) : 0; }
+function potential(){ var rd=state.round; return rd ? Math.max(0,POINTS_IN_PLAY-rd.spent) : 0; }
 function pickBlock(i){
   var rd=state.round;
   if(!rd||rd.over||rd.opened[i]) return;
   openBlock(i);
   renderMeter();
-  say(rd.openCount>=TOTAL ? 'The whole artwork is showing: no points left.' : '');
+  say(potential()===0 ? 'No points left for this card, but you can still open tiles and guess.' : '');
 }
 
 /* ---------- Interface ---------- */
 function renderMeter(){
   var rd=state.round;
   $('ptsNow').textContent = rd ? fmt(potential()) : '–';
-  $('ptsLabel').textContent = rd && !rd.over ? 'points in play, out of '+fmt(rd.grid.total) : 'points in play';
+  $('ptsLabel').textContent = rd && !rd.over ? 'points in play, out of '+fmt(POINTS_IN_PLAY) : 'points in play';
   var left = rd ? MAX_TRIES-rd.wrong : MAX_TRIES, box=$('dots'); box.innerHTML='';
   for(var i=0;i<MAX_TRIES;i++){ var d=document.createElement('span'); d.className='dot'+(i<left?'':' used'); box.appendChild(d); }
   box.setAttribute('aria-label',left+' of '+MAX_TRIES+' guesses left');
