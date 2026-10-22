@@ -148,22 +148,23 @@ dialog::backdrop{background:var(--scrim)}
 .big small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
 .verdict{font-weight:600}
 .muted{color:var(--muted);font-size:14px}
-.chart{display:grid;grid-template-columns:auto 1fr;column-gap:8px;margin-top:4px}
+.chart{display:grid;grid-template-columns:auto 1fr;column-gap:8px;margin:4px 0 0}
 .chart .cap{font-size:12px;color:var(--muted);line-height:1.2}
-.chart .ycap{grid-column:1 / 3;margin-bottom:16px}
+.chart .ycap{grid-column:1 / 3;margin-bottom:6px}
 .chart .xcap{grid-column:2;text-align:right;margin-top:2px}
-.yax{position:relative;height:130px;min-width:1.4em;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.yax span{position:absolute;right:0;line-height:1;transform:translateY(50%)}
-.plot{position:relative;height:130px;border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line)}
-.plot .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--line);opacity:.8}
-.bars{position:absolute;inset:0 4px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;align-items:end}
-.bars div{position:relative;background:var(--bar);border-radius:3px 3px 0 0}
-.bars div.me{background:var(--gold)}
-.bars div.me::after{content:'You';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font:800 11px/1 var(--display);color:var(--ink);white-space:nowrap}
-.bars div.miss{background:repeating-linear-gradient(135deg,var(--bar) 0 3px,transparent 3px 6px)}
-.bars div.miss.me{background:repeating-linear-gradient(135deg,var(--gold) 0 3px,transparent 3px 6px)}
-.xax{grid-column:2;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:5px 4px 0;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.xax span{text-align:center;white-space:nowrap;overflow:visible;display:flex;justify-content:center}
+.ylab,.plot{display:grid;row-gap:3px}
+.ylab span{font-size:11.5px;line-height:1;color:var(--muted);text-align:right;align-self:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ylab span.me{color:var(--ink);font-weight:700}
+.plot{position:relative;border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);padding:3px 0}
+.plot .gl{position:absolute;top:0;bottom:0;border-left:1px dashed var(--line);opacity:.8}
+.track{position:relative;display:flex;align-items:center;min-width:0}
+.bar{height:100%;background:var(--bar);border-radius:0 3px 3px 0}
+.bar.me{background:var(--gold)}
+.bar.miss{background:repeating-linear-gradient(135deg,var(--bar) 0 3px,transparent 3px 6px)}
+.bar.miss.me{background:repeating-linear-gradient(135deg,var(--gold) 0 3px,transparent 3px 6px)}
+.you{margin-left:6px;font:800 11px/1 var(--display);color:var(--ink);white-space:nowrap}
+.xax{grid-column:2;position:relative;height:18px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.xax span{position:absolute;top:4px;transform:translateX(-50%);line-height:1}
 .note{padding:12px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .note b{font-size:15px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -283,12 +284,12 @@ details p{color:var(--muted);margin:8px 0}
     <h2 id="drTitle"></h2>
     <div class="big" id="drScore"></div>
     <p class="verdict" id="drVerdict"></p>
-    <figure class="chart" id="drChart" style="margin-inline:0;margin-bottom:0" role="img">
-      <span class="cap ycap">Players</span>
-      <div class="yax" id="drY"></div>
-      <div class="plot"><div id="drGrid"></div><div class="bars" id="drHist"></div></div>
+    <figure class="chart" id="drChart" role="img">
+      <span class="cap ycap">Points</span>
+      <div class="ylab" id="drYlab"></div>
+      <div class="plot" id="drPlot"></div>
       <div class="xax" id="drX"></div>
-      <span class="cap xcap" id="drXcap">Points</span>
+      <span class="cap xcap">Players</span>
     </figure>
     <p class="muted" id="drPlayers"></p>
     <div class="note" id="drGuest" hidden>
@@ -661,26 +662,29 @@ function niceTicks(max){
   [1,2,5,10].some(function(m){ step=m*mag; return step>=raw; });
   var top=Math.ceil(max/step)*step, out=[]; for(var v=0;v<=top;v+=step) out.push(v); return out;
 }
-function drawHist(stats, myBucket, missed, xLabels){
-  var b=(stats&&stats.buckets)||[];
-  var bars=b.slice(); if(missed!==undefined) bars=[missed].concat(bars);
-  var max=0; bars.forEach(function(n){ if(n>max) max=n; });
+/* horizontal bars: score bands top to bottom (highest first), number of players across */
+function drawHist(stats, myBucket, missed, bandLabel){
+  var b=(stats&&stats.buckets)||[], rows=[];
+  for(var k=b.length-1;k>=0;k--) rows.push({n:b[k]||0, me:k===myBucket, lab:bandLabel(k)});
+  if(missed!==undefined) rows.push({n:missed||0, me:myBucket==='miss', miss:true, lab:'✗'});
+  var max=0; rows.forEach(function(r){ if(r.n>max) max=r.n; });
   var ticks=niceTicks(max), top=ticks[ticks.length-1]||1;
-  var y=$('drY'), gl=$('drGrid'); y.innerHTML=''; gl.innerHTML='';
+  var lab=$('drYlab'), plot=$('drPlot'), x=$('drX');
+  lab.innerHTML=''; plot.innerHTML=''; x.innerHTML='';
+  var tpl='repeat('+rows.length+',15px)'; lab.style.gridTemplateRows=tpl; plot.style.gridTemplateRows=tpl;
   ticks.forEach(function(v){
-    var pct=v/top*100, s=document.createElement('span'); s.textContent=fmt(v); s.style.bottom=pct+'%'; y.appendChild(s);
-    if(v>0){ var l=document.createElement('div'); l.className='gl'; l.style.bottom=pct+'%'; gl.appendChild(l); }
+    var pct=v/top*100;
+    if(v>0){ var g=document.createElement('div'); g.className='gl'; g.style.left=pct+'%'; plot.appendChild(g); }
+    var t=document.createElement('span'); t.textContent=fmt(v); t.style.left=pct+'%'; x.appendChild(t);
   });
-  var h=$('drHist'), x=$('drX'); h.innerHTML=''; x.innerHTML='';
-  bars.forEach(function(n,i){
-    var d=document.createElement('div'), isMiss = missed!==undefined && i===0;
-    var idx = missed!==undefined ? i-1 : i;
-    d.style.height = (n/top*100)+'%';
-    if(isMiss) d.className='miss';
-    if((isMiss && myBucket==='miss') || (!isMiss && idx===myBucket)){ d.className+=' me'; if(!n) d.style.height='0'; }
-    d.title = fmt(n)+' player'+(n===1?'':'s');
-    h.appendChild(d);
-    var lab=document.createElement('span'); lab.textContent=(xLabels&&xLabels[i])||''; x.appendChild(lab);
+  rows.forEach(function(r){
+    var l=document.createElement('span'); l.textContent=r.lab; if(r.me) l.className='me'; lab.appendChild(l);
+    var tr=document.createElement('div'); tr.className='track';
+    var bar=document.createElement('div'); bar.className='bar'+(r.miss?' miss':'')+(r.me?' me':'');
+    bar.style.width=(r.n/top*100)+'%'; bar.title=fmt(r.n)+' player'+(r.n===1?'':'s');
+    tr.appendChild(bar);
+    if(r.me){ var y=document.createElement('span'); y.className='you'; y.textContent='You'; tr.appendChild(y); }
+    plot.appendChild(tr);
   });
 }
 function verdictText(stats){
@@ -696,8 +700,7 @@ function openDailyStats(){
   $('drTitle').textContent = rd.won ? 'Daily card named!' : 'Daily card missed';
   $('drScore').innerHTML = fmt(rd.score||0)+'<small>/ '+fmt(POINTS)+'</small>';
   $('drVerdict').textContent = verdictText(st);
-  drawHist(st, rd.won ? Math.min(10, Math.floor((rd.score||0)/100)) : 'miss', st.missed||0, {0:'✗',1:'0',6:'500',11:'1,000'});
-  $('drXcap').textContent='Points (✗ = missed)';
+  drawHist(st, rd.won ? Math.min(10, Math.floor((rd.score||0)/100)) : 'miss', st.missed||0, function(k){ return fmt(k*100); });
   $('drChart').setAttribute('aria-label','How many players scored each band of points today, from missed to 1,000');
   $('drPlayers').textContent = fmt(st.players)+' player'+(st.players===1?'':'s')+' today. Next card in '+untilText(S.daily&&S.daily.next_reset)+'.';
   guestNote(true);
@@ -711,8 +714,7 @@ function openG10Stats(total, st){
   $('drTitle').textContent='Guess10 complete';
   $('drScore').innerHTML = fmt(total)+'<small>/ 10,000</small>';
   $('drVerdict').textContent = verdictText(st);
-  drawHist(st, Math.min(10, Math.floor(total/1000)), undefined, {0:'0',5:'5,000',10:'10,000'});
-  $('drXcap').textContent='Points';
+  drawHist(st, Math.min(10, Math.floor(total/1000)), undefined, function(k){ return fmt(k*1000); });
   $('drChart').setAttribute('aria-label','How many players reached each band of best Guess10 total, from 0 to 10,000');
   $('drPlayers').textContent = 'Compared with the best Guess10 of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
   guestNote(true);
