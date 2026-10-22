@@ -1,5 +1,6 @@
 // GET /functions/v1/art?round=<round id>   artwork of the card being played, cropped and covered.
 //     The answer never contains the card's name, number or TCGdex address.
+// GET /functions/v1/art?round=<id>&full=1  the same window without the covers, only once the round is over.
 // GET /functions/v1/art?card=<card id>     same picture for the admin panel (admin sign-in required).
 // Deployed with --no-verify-jwt so a plain <img src> works; access is checked here.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -62,12 +63,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "GET") return fail(405, "GET only");
   const q = new URL(req.url).searchParams;
-  const round = q.get("round"), cardParam = q.get("card");
+  const round = q.get("round"), cardParam = q.get("card"), full = q.get("full") === "1";
   let cardId: string | null = null, forAdmin = false;
   try {
     if (round) {
       if (!UUID.test(round)) return fail(400, "bad round");
-      const { data } = await db.from("rounds").select("card_id").eq("id", round).maybeSingle();
+      const { data } = await db.from("rounds").select("card_id, over").eq("id", round).maybeSingle();
+      if (data && full && !data.over) return fail(403, "the card is still in play");
       cardId = data?.card_id ?? null;
     } else if (cardParam) {
       if (!(await isAdmin(req))) return fail(403, "not allowed");
@@ -81,10 +83,10 @@ Deno.serve(async (req) => {
     const { data: layout } = await db.from("layouts").select("crop, evo, evot, mega").eq("serie", card.serie).maybeSingle();
     if (!layout) return fail(500, "no layout for this series");
 
-    const path = `${VERSION}/${card.id}.jpg`;
+    const path = `${VERSION}/${card.id}${full ? "-full" : ""}.jpg`;
     let jpg: Uint8Array | null = await cached(path);
     if (!jpg) {
-      const fresh: Uint8Array = await buildArt(card.image, layout.crop, censorsFor(card, layout));
+      const fresh: Uint8Array = await buildArt(card.image, layout.crop, full ? [] : censorsFor(card, layout));
       await store(path, fresh);
       jpg = fresh;
     }

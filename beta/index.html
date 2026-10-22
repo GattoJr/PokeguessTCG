@@ -148,13 +148,22 @@ dialog::backdrop{background:var(--scrim)}
 .big small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
 .verdict{font-weight:600}
 .muted{color:var(--muted);font-size:14px}
-.hist{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;align-items:end;height:120px;padding-top:18px}
-.hist div{position:relative;background:var(--bar);border-radius:4px 4px 0 0;min-height:2px}
-.hist div.me{background:var(--gold)}
-.hist div.me::after{content:'You';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font:800 11px/1 var(--display);color:var(--ink)}
-.hist div.miss{background:repeating-linear-gradient(135deg,var(--bar) 0 4px,transparent 4px 8px)}
-.hist div.miss.me{background:repeating-linear-gradient(135deg,var(--gold) 0 4px,transparent 4px 8px)}
-.axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:-6px}
+.chart{display:grid;grid-template-columns:auto 1fr;column-gap:8px;margin-top:4px}
+.chart .cap{font-size:12px;color:var(--muted);line-height:1.2}
+.chart .ycap{grid-column:1 / 3;margin-bottom:16px}
+.chart .xcap{grid-column:2;text-align:right;margin-top:2px}
+.yax{position:relative;height:130px;min-width:1.4em;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.yax span{position:absolute;right:0;line-height:1;transform:translateY(50%)}
+.plot{position:relative;height:130px;border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line)}
+.plot .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--line);opacity:.8}
+.bars{position:absolute;inset:0 4px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;align-items:end}
+.bars div{position:relative;background:var(--bar);border-radius:3px 3px 0 0}
+.bars div.me{background:var(--gold)}
+.bars div.me::after{content:'You';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font:800 11px/1 var(--display);color:var(--ink);white-space:nowrap}
+.bars div.miss{background:repeating-linear-gradient(135deg,var(--bar) 0 3px,transparent 3px 6px)}
+.bars div.miss.me{background:repeating-linear-gradient(135deg,var(--gold) 0 3px,transparent 3px 6px)}
+.xax{grid-column:2;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:5px 4px 0;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.xax span{text-align:center;white-space:nowrap;overflow:visible;display:flex;justify-content:center}
 .note{padding:12px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .note b{font-size:15px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -274,10 +283,13 @@ details p{color:var(--muted);margin:8px 0}
     <h2 id="drTitle"></h2>
     <div class="big" id="drScore"></div>
     <p class="verdict" id="drVerdict"></p>
-    <div>
-      <div class="hist" id="drHist" role="img"></div>
-      <div class="axis"><span id="drAxisL">0</span><span id="drAxisR"></span></div>
-    </div>
+    <figure class="chart" id="drChart" style="margin-inline:0;margin-bottom:0" role="img">
+      <span class="cap ycap">Players</span>
+      <div class="yax" id="drY"></div>
+      <div class="plot"><div id="drGrid"></div><div class="bars" id="drHist"></div></div>
+      <div class="xax" id="drX"></div>
+      <span class="cap xcap" id="drXcap">Points</span>
+    </figure>
     <p class="muted" id="drPlayers"></p>
     <div class="note" id="drGuest" hidden>
       <b>Sign in to save your progress</b>
@@ -381,7 +393,8 @@ var sb = configured ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabase
 function rpc(name,args){
   return sb.rpc(name,args||{}).then(function(r){ if(r.error) throw r.error; return r.data; });
 }
-function artUrl(roundId){ return CFG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/art?round='+encodeURIComponent(roundId); }
+/* full = the artwork without the covers: the server gives it only once the card is over */
+function artUrl(roundId,full){ return CFG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/art?round='+encodeURIComponent(roundId)+(full?'&full=1':''); }
 
 /* ---------- State ---------- */
 var S = {
@@ -476,8 +489,12 @@ function showRound(data){
   setLoading(true,'Loading the artwork…');
   var img=$('art');
   img.onload=function(){ if(S.round===rd){ setLoading(false); if(!rd.over){ setControls(true); say(rd.opened.length<=1?'The first tile is free. Tap more to see more of the artwork.':''); } } };
-  img.onerror=function(){ if(S.round===rd) showError("Couldn't load the artwork.", function(){ img.src=artUrl(rd.id)+'&r='+Date.now(); }); };
-  img.src=artUrl(rd.id);
+  img.onerror=function(){
+    if(S.round!==rd) return;
+    if(/full=1/.test(img.src)){ img.src=artUrl(rd.id); return; }   // uncovered version unavailable: keep the covered one
+    showError("Couldn't load the artwork.", function(){ img.src=artUrl(rd.id)+'&r='+Date.now(); });
+  };
+  img.src=artUrl(rd.id, rd.over);
   setControls(false);
   if(rd.over){ showResult(); } else { $('result').hidden=true; $('play').hidden=false; $('guess').value=''; }
   renderMeter(); renderStatus();
@@ -491,6 +508,8 @@ function showResult(){
   var rd=S.round, c=rd.card||{};
   setControls(false); hideSugg();
   $('stage').classList.add('done'); $('play').hidden=true;
+  var img=$('art'), fullSrc=artUrl(rd.id,true);
+  if(img.getAttribute('src')!==fullSrc) img.src=fullSrc;   // covers come off with the tiles
   var res=$('result'); res.hidden=false; res.className='result '+(rd.won?'win':'lose');
   $('resImg').src = c.image ? c.image+'/high.webp' : ''; $('resImg').alt = (c.name||'')+' card';
   $('resImg').onerror=function(){ if(c.image && !/png$/.test(this.src)) this.src=c.image+'/high.png'; };
@@ -544,9 +563,18 @@ function afterServer(data){
   }
   $('guess').value=''; setControls(true); renderMeter(); $('guess').focus();
 }
+/* a guess must be one of the names in the list (if the list loaded), so a typo never costs a guess */
+function knownName(text){
+  var q=norm(text); if(!S.names.length) return text.trim();
+  for(var i=0;i<S.names.length;i++){ if(norm(S.names[i])===q) return S.names[i]; }
+  return null;
+}
 function submitGuess(text){
   var rd=S.round; if(!rd||rd.over||S.busy) return;
   if(!norm(text)) return;
+  var name=knownName(text);
+  if(!name){ say('Pick a name from the list: that one isn’t a card in the game.'); showSugg(); $('guess').focus(); return; }
+  text=name; $('guess').value=name;
   S.busy=true; setControls(false); hideSugg(); say('Checking…');
   rpc('guess',{p_round:rd.id, p_guest:GUEST, p_name:text, p_opened:rd.opened})
     .then(afterServer, function(e){ say("Couldn't check your guess ("+errText(e)+'). Try again.'); setControls(true); })
@@ -626,19 +654,33 @@ function nextCard(){
 }
 
 /* ---------- Result dialogs ---------- */
-function drawHist(stats, myBucket, missed){
-  var h=$('drHist'); h.innerHTML='';
-  var b=(stats&&stats.buckets)||[], max=1;
+/* bar chart of how many players scored in each band; xLabels = {column index: text} */
+function niceTicks(max){
+  if(max<=4){ var t=[]; for(var i=0;i<=Math.max(1,max);i++) t.push(i); return t; }
+  var raw=max/4, mag=Math.pow(10,Math.floor(Math.log10(raw))), step=mag;
+  [1,2,5,10].some(function(m){ step=m*mag; return step>=raw; });
+  var top=Math.ceil(max/step)*step, out=[]; for(var v=0;v<=top;v+=step) out.push(v); return out;
+}
+function drawHist(stats, myBucket, missed, xLabels){
+  var b=(stats&&stats.buckets)||[];
   var bars=b.slice(); if(missed!==undefined) bars=[missed].concat(bars);
-  bars.forEach(function(n){ if(n>max) max=n; });
+  var max=0; bars.forEach(function(n){ if(n>max) max=n; });
+  var ticks=niceTicks(max), top=ticks[ticks.length-1]||1;
+  var y=$('drY'), gl=$('drGrid'); y.innerHTML=''; gl.innerHTML='';
+  ticks.forEach(function(v){
+    var pct=v/top*100, s=document.createElement('span'); s.textContent=fmt(v); s.style.bottom=pct+'%'; y.appendChild(s);
+    if(v>0){ var l=document.createElement('div'); l.className='gl'; l.style.bottom=pct+'%'; gl.appendChild(l); }
+  });
+  var h=$('drHist'), x=$('drX'); h.innerHTML=''; x.innerHTML='';
   bars.forEach(function(n,i){
     var d=document.createElement('div'), isMiss = missed!==undefined && i===0;
     var idx = missed!==undefined ? i-1 : i;
-    d.style.height = (n ? Math.max(4, n/max*100) : 0)+'%';
+    d.style.height = (n/top*100)+'%';
     if(isMiss) d.className='miss';
-    if((isMiss && myBucket==='miss') || (!isMiss && idx===myBucket)) d.className+=' me';
-    d.title = n+' player'+(n===1?'':'s');
+    if((isMiss && myBucket==='miss') || (!isMiss && idx===myBucket)){ d.className+=' me'; if(!n) d.style.height='0'; }
+    d.title = fmt(n)+' player'+(n===1?'':'s');
     h.appendChild(d);
+    var lab=document.createElement('span'); lab.textContent=(xLabels&&xLabels[i])||''; x.appendChild(lab);
   });
 }
 function verdictText(stats){
@@ -654,9 +696,9 @@ function openDailyStats(){
   $('drTitle').textContent = rd.won ? 'Daily card named!' : 'Daily card missed';
   $('drScore').innerHTML = fmt(rd.score||0)+'<small>/ '+fmt(POINTS)+'</small>';
   $('drVerdict').textContent = verdictText(st);
-  drawHist(st, rd.won ? Math.min(10, Math.floor((rd.score||0)/100)) : 'miss', st.missed||0);
-  $('drAxisL').textContent='✗  0'; $('drAxisR').textContent='1,000';
-  $('drHist').setAttribute('aria-label','Scores of today’s players, from missed to 1,000 points');
+  drawHist(st, rd.won ? Math.min(10, Math.floor((rd.score||0)/100)) : 'miss', st.missed||0, {0:'✗',1:'0',6:'500',11:'1,000'});
+  $('drXcap').textContent='Points (✗ = missed)';
+  $('drChart').setAttribute('aria-label','How many players scored each band of points today, from missed to 1,000');
   $('drPlayers').textContent = fmt(st.players)+' player'+(st.players===1?'':'s')+' today. Next card in '+untilText(S.daily&&S.daily.next_reset)+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
@@ -669,9 +711,9 @@ function openG10Stats(total, st){
   $('drTitle').textContent='Guess10 complete';
   $('drScore').innerHTML = fmt(total)+'<small>/ 10,000</small>';
   $('drVerdict').textContent = verdictText(st);
-  drawHist(st, Math.min(10, Math.floor(total/1000)));
-  $('drAxisL').textContent='0'; $('drAxisR').textContent='10,000';
-  $('drHist').setAttribute('aria-label','Best Guess10 totals of all players, from 0 to 10,000');
+  drawHist(st, Math.min(10, Math.floor(total/1000)), undefined, {0:'0',5:'5,000',10:'10,000'});
+  $('drXcap').textContent='Points';
+  $('drChart').setAttribute('aria-label','How many players reached each band of best Guess10 total, from 0 to 10,000');
   $('drPlayers').textContent = 'Compared with the best Guess10 of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
