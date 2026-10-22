@@ -1,0 +1,5 @@
+# Supabase CLI settings, used by the GitHub Action that deploys the database and the image function.
+project_id = "pokeguesstcg"
+
+[functions.art]
+verify_jwt = false   # the browser loads the picture with a plain <img>; the function checks access itself

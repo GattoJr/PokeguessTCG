@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1A31">
+<title>PokeguessTCG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,600..900&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* A playmat with one card on it. The artwork window sits in a sleeve, covered by a sheet of foil
+   cut into tiles. Card-border yellow is the only accent. One column: phone first. */
+:root{
+  --bg:#D9E3F1; --mat:#C7D5EA; --surface:#FFFFFF; --surface-2:#EEF3FA; --ink:#13203D; --muted:#53647F; --line:#B6C5DB;
+  --gold:#F2C230; --gold-deep:#D9A90E; --gold-ink:#2E2300; --focus:#2457D6;
+  --good:#1D8657; --bad:#BF3B2B;
+  --tile-1:#1D2F55; --tile-2:#2B4677; --tile-3:#3D5D92; --tile-edge:rgba(255,255,255,.10);
+  --tile-ink:#9FB3D6; --tile-ink-mid:#DCE6F7;
+  --bar:#9DB0CF; --scrim:rgba(8,16,34,.55);
+  --sleeve:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,.12));
+  --display:'Anybody','Arial Narrow',system-ui,sans-serif;
+  --body:'Instrument Sans','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1A31; --mat:#182A50; --surface:#192A4D; --surface-2:#14223F; --ink:#EDF2FB; --muted:#9AABC9; --line:#2A3D66;
+    --focus:#F2C230; --good:#4CC995; --bad:#FF7B68; --bar:#3B5585; --scrim:rgba(2,6,16,.7);
+    --sleeve:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1A31; --mat:#182A50; --surface:#192A4D; --surface-2:#14223F; --ink:#EDF2FB; --muted:#9AABC9; --line:#2A3D66;
+  --focus:#F2C230; --good:#4CC995; --bad:#FF7B68; --bar:#3B5585; --scrim:rgba(2,6,16,.7);
+  --sleeve:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh; color:var(--ink); font:16px/1.5 var(--body);
+  background:var(--bg) radial-gradient(ellipse 80% 55% at 50% 30%, var(--mat), transparent 75%) no-repeat fixed;
+  padding-block:max(14px, env(safe-area-inset-top, 0px)) 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none !important}
+.app{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+/* ---------- Top ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top h1{margin:0;font:900 clamp(26px,7vw,38px)/.9 var(--display);font-stretch:135%;letter-spacing:-.02em}
+.top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.acct{flex:none;max-width:45%;border:1.5px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- Mode switch ---------- */
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line)}
+.modes button{border:0;border-radius:10px;padding:10px 8px;background:transparent;cursor:pointer;font:800 17px/1 var(--display);font-stretch:115%;color:var(--muted)}
+.modes button[aria-selected="true"]{background:var(--tile-1);color:#fff;box-shadow:0 -3px 0 var(--gold) inset}
+.status{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);padding:0 4px;min-height:21px}
+.status b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- Points and guesses ---------- */
+.meter{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:0 4px}
+.pts b{display:block;font:900 clamp(40px,11vw,56px)/.9 var(--display);font-stretch:120%;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pts span{font-size:14px;color:var(--muted)}
+.tries{text-align:right;flex:none}
+.tries>span:first-child{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+.dots{display:inline-flex;gap:6px;margin-bottom:4px}
+.dot{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--gold-deep) inset}
+.dot.used{background:transparent;box-shadow:0 0 0 2px var(--line) inset}
+
+/* ---------- The artwork ---------- */
+.sleeve{padding:8px;border-radius:20px;background:var(--sleeve);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 18px 40px rgba(8,18,40,.28)}
+.stage{position:relative;width:100%;aspect-ratio:502/297;container-type:inline-size;background:var(--tile-1);border-radius:12px;overflow:hidden;touch-action:manipulation}
+.stage img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
+.grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(7,1fr)}
+.blk{
+  display:grid;place-items:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  background:linear-gradient(118deg,var(--tile-1) 0%,var(--tile-2) 26%,var(--tile-3) 38%,var(--tile-2) 47%,var(--tile-1) 63%,var(--tile-2) 82%,var(--tile-1) 100%);
+  box-shadow:inset 0 0 0 .5px var(--tile-edge),inset 0 1px 0 rgba(255,255,255,.07);
+  color:var(--tile-ink);font:700 2.9cqw/1 var(--display);font-variant-numeric:tabular-nums;
+  transition:opacity .4s,transform .4s,filter .15s;
+}
+.blk.mid{color:var(--tile-ink-mid);font-weight:800}
+.blk.hi{color:var(--gold);font-weight:900;font-size:3.4cqw}
+@media (hover:hover){.blk:hover{filter:brightness(1.35)}}
+.blk:active{filter:brightness(1.5)}
+.blk:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.blk.open{opacity:0;transform:scale(.55) rotate(-6deg);pointer-events:none}
+.stage.done .blk{opacity:0;transform:scale(.55);pointer-events:none}
+.loading{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;background:var(--tile-1);color:#C9D6EE;font-weight:500;z-index:5}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--gold);margin:0 auto 12px;animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading.err .spin{display:none}
+.hint{margin:0;min-height:22px;text-align:center;color:var(--muted);font-size:14px}
+
+/* ---------- Guess10 start ---------- */
+.intro{text-align:center;padding:26px 18px;border-radius:20px;background:var(--tile-1);color:#DCE6F7;box-shadow:0 18px 40px rgba(8,18,40,.28)}
+.intro h2{margin:0;color:#fff;font:900 clamp(30px,9vw,44px)/.95 var(--display);font-stretch:130%}
+.intro h2 span{color:var(--gold)}
+.intro p{margin:10px auto 18px;max-width:34ch}
+.intro .last{font-size:14px;color:#9FB3D6;margin:-6px auto 16px}
+
+/* ---------- Guessing ---------- */
+.play{display:flex;flex-direction:column;gap:10px}
+form{display:flex;gap:8px}
+.combo{position:relative;flex:1;min-width:0}
+input[type=text]{width:100%;font-size:17px;font-weight:500;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface)}
+input[type=text]:disabled{opacity:.6}
+.sugg{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:20;margin:0;padding:4px;list-style:none;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;box-shadow:0 -10px 30px rgba(8,18,40,.25);max-height:240px;overflow:auto}
+.sugg li{padding:10px;border-radius:8px;cursor:pointer}
+.sugg li[aria-selected="true"],.sugg li:hover{background:var(--surface-2)}
+.btn{border:0;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer;background:var(--gold);color:var(--gold-ink);box-shadow:0 -3px 0 var(--gold-deep) inset}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.btn.ghost{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.below{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:14px;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--bad);text-decoration:line-through}
+.link{background:none;border:0;padding:6px 2px;color:var(--muted);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:none}
+.link[disabled]{opacity:.4;cursor:default}
+.below .link{margin-left:auto}
+
+/* ---------- End of a card: the whole card is revealed ---------- */
+.result{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface)}
+.result.win{border-color:var(--good)}
+.result img{width:clamp(96px,26vw,132px);aspect-ratio:600/825;border-radius:6px;box-shadow:0 8px 20px rgba(8,18,40,.3);display:block;background:var(--surface-2)}
+.result h2{margin:0;font:900 clamp(22px,6vw,28px)/1.05 var(--display);font-stretch:115%}
+.result.win h2{color:var(--good)}
+.result.lose h2{color:var(--bad)}
+.result p{margin:6px 0 12px;font-size:15px}
+.result .acts{display:flex;flex-direction:column;gap:8px}
+.result .btn{width:100%}
+.result .small{font-size:13px;color:var(--muted);margin:8px 0 0}
+
+/* ---------- Dialogs ---------- */
+dialog{border:0;padding:0;border-radius:20px;background:var(--surface);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-shadow:0 30px 80px rgba(0,0,0,.4)}
+dialog::backdrop{background:var(--scrim)}
+.dlg{padding:20px 18px 18px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{margin:0;font:900 26px/1 var(--display);font-stretch:120%}
+.dlg .x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px;line-height:1}
+.dlg p{margin:0}
+.big{font:900 clamp(44px,13vw,60px)/.9 var(--display);font-stretch:120%;font-variant-numeric:tabular-nums}
+.big small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
+.verdict{font-weight:600}
+.muted{color:var(--muted);font-size:14px}
+.hist{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;align-items:end;height:120px;padding-top:18px}
+.hist div{position:relative;background:var(--bar);border-radius:4px 4px 0 0;min-height:2px}
+.hist div.me{background:var(--gold)}
+.hist div.me::after{content:'You';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font:800 11px/1 var(--display);color:var(--ink)}
+.hist div.miss{background:repeating-linear-gradient(135deg,var(--bar) 0 4px,transparent 4px 8px)}
+.hist div.miss.me{background:repeating-linear-gradient(135deg,var(--gold) 0 4px,transparent 4px 8px)}
+.axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:-6px}
+.note{padding:12px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.note b{font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row .btn{flex:1}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1F1F1F;box-shadow:inset 0 0 0 1.5px #C9CED6}
+.gbtn svg{width:18px;height:18px;flex:none}
+.board{list-style:none;margin:0;padding:0;max-height:min(55dvh,460px);overflow:auto}
+.board li{display:grid;grid-template-columns:3.2em 1fr auto;gap:8px;padding:9px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.board li.me{background:var(--surface-2);border-radius:8px;font-weight:700}
+.board li span:first-child{color:var(--muted)}
+.board li b{font-family:var(--display);font-stretch:110%}
+.field input{margin-top:6px}
+.err{color:var(--bad);font-size:14px;min-height:20px}
+
+/* ---------- Bottom ---------- */
+.links{display:flex;gap:18px;justify-content:center}
+details{border-top:1.5px solid var(--line);padding-top:12px;font-size:15px}
+summary{cursor:pointer;font-weight:700}
+details p{color:var(--muted);margin:8px 0}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin:10px 0 4px}
+.legend i{font:800 14px/1 var(--display);font-style:normal;display:grid;place-items:center;width:34px;height:24px;border-radius:5px;background:var(--tile-2);color:var(--tile-ink)}
+.legend i.hi{color:var(--gold)} .legend i.mid{color:var(--tile-ink-mid)}
+.legend span{color:var(--muted)}
+.foot{font-size:13px;color:var(--muted);margin:0}
+.foot a{color:inherit;text-decoration-color:var(--gold-deep);text-underline-offset:2px}
+@media (prefers-reduced-motion:reduce){.blk,.spin{transition:none;animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>PokeguessTCG</h1>
+      <p>Name the Pokémon card from its artwork.</p>
+    </div>
+    <button class="acct" id="btnAcct" type="button">Sign in</button>
+  </header>
+
+  <div class="modes" role="tablist" aria-label="Game mode">
+    <button type="button" role="tab" id="tabDaily" aria-selected="true">Daily</button>
+    <button type="button" role="tab" id="tabG10" aria-selected="false">Guess10</button>
+  </div>
+  <div class="status" id="status"><span id="statusL"></span><span id="statusR"></span></div>
+
+  <section class="intro" id="intro" hidden>
+    <h2>Guess<span>10</span></h2>
+    <p>Ten random cards in a row, up to 1,000 points each. Your best total goes on the world leaderboard.</p>
+    <p class="last" id="introLast" hidden></p>
+    <button class="btn" id="btnStart" type="button">Start a Guess10</button>
+  </section>
+
+  <div id="board">
+    <div class="meter">
+      <div class="pts"><b id="ptsNow">–</b><span id="ptsLabel">points in play</span></div>
+      <div class="tries"><span>Guesses</span><span class="dots" id="dots" aria-label="Guesses left"></span></div>
+    </div>
+    <div class="sleeve" style="margin-top:14px">
+      <div class="stage" id="stage">
+        <img id="art" alt="Pokémon card artwork covered by tiles" draggable="false">
+        <div class="grid" id="grid"></div>
+        <div class="loading" id="loading"><div><div class="spin"></div><div id="loadingText">Loading…</div></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="hint" id="msg" aria-live="polite"></p>
+
+  <section class="play" id="play">
+    <form id="guessForm" autocomplete="off">
+      <div class="combo">
+        <input type="text" id="guess" placeholder="Card name, e.g. Pikachu" aria-label="Card name" aria-autocomplete="list" aria-controls="sugg" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
+        <ul class="sugg" id="sugg" role="listbox" hidden></ul>
+      </div>
+      <button class="btn" type="submit" id="btnGuess" disabled>Guess</button>
+    </form>
+    <div class="below">
+      <div class="chips" id="wrongList" aria-label="Wrong guesses"></div>
+      <button class="link" id="btnGiveUp" type="button" disabled>Give up</button>
+    </div>
+  </section>
+
+  <section class="result" id="result" hidden aria-live="polite">
+    <img id="resImg" alt="">
+    <div>
+      <h2 id="resTitle"></h2>
+      <p id="resInfo"></p>
+      <div class="acts">
+        <button class="btn" id="btnResMain" type="button"></button>
+        <button class="btn ghost" id="btnResAlt" type="button" hidden></button>
+      </div>
+      <p class="small" id="resSmall" hidden></p>
+    </div>
+  </section>
+
+  <div class="links">
+    <button class="link" id="btnBoard" type="button">Leaderboard</button>
+  </div>
+
+  <details id="rules">
+    <summary>How to play</summary>
+    <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate). You have 2 guesses per card.</p>
+    <p>Each card puts 1,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play. Once you reach 0 you can still open tiles and guess, just for no points.</p>
+    <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. <b>Guess10</b>: ten random cards in a row, up to 10,000 points; play as many as you like. Sign in with Google to save your results and enter the leaderboard.</p>
+    <div class="legend">
+      <i class="hi">60</i><span>Centre of the artwork</span>
+      <i class="mid">15</i><span>Inner frame</span>
+      <i>5</i><span>Outer frame</span>
+    </div>
+  </details>
+
+  <p class="foot">Card data: <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>, MIT licence. Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company. Unofficial fan site, not affiliated with them.</p>
+</div>
+
+<!-- End of a Daily or of a Guess10 -->
+<dialog id="dlgResult" aria-labelledby="drTitle">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">×</button>
+    <h2 id="drTitle"></h2>
+    <div class="big" id="drScore"></div>
+    <p class="verdict" id="drVerdict"></p>
+    <div>
+      <div class="hist" id="drHist" role="img"></div>
+      <div class="axis"><span id="drAxisL">0</span><span id="drAxisR"></span></div>
+    </div>
+    <p class="muted" id="drPlayers"></p>
+    <div class="note" id="drGuest" hidden>
+      <b>Sign in to save your progress</b>
+      <button class="btn gbtn" type="button" data-signin></button>
+    </div>
+    <div class="row">
+      <button class="btn" id="drMain" type="button"></button>
+      <button class="btn ghost" id="drAlt" type="button" hidden></button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Username after the first sign-in -->
+<dialog id="dlgName" aria-labelledby="dnTitle">
+  <form class="dlg" id="nameForm">
+    <h2 id="dnTitle">Choose a username</h2>
+    <p class="muted">It's how you'll appear on the leaderboard. 3 to 16 letters, numbers or _.</p>
+    <label class="field"><span class="muted">Username</span>
+      <input type="text" id="nameInput" maxlength="16" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+    </label>
+    <p class="err" id="nameErr" aria-live="polite"></p>
+    <div class="row">
+      <button class="btn" type="submit" id="nameSave">Save</button>
+      <button class="btn ghost" type="button" id="nameLater" hidden>Cancel</button>
+    </div>
+    <button class="link" type="button" id="nameSignOut">Sign out instead</button>
+  </form>
+</dialog>
+
+<!-- Leaderboard -->
+<dialog id="dlgBoard" aria-labelledby="dbTitle">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">×</button>
+    <h2 id="dbTitle">Leaderboard</h2>
+    <p class="muted">Best Guess10 of each player.</p>
+    <ol class="board" id="boardList"></ol>
+    <div class="note" id="dbGuest" hidden>
+      <b>Sign in to enter the leaderboard</b>
+      <button class="btn gbtn" type="button" data-signin></button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Account -->
+<dialog id="dlgAcct" aria-labelledby="daTitle">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">×</button>
+    <h2 id="daTitle"></h2>
+    <p class="muted" id="daEmail"></p>
+    <div class="row">
+      <button class="btn ghost" type="button" id="daRename">Change username</button>
+      <button class="btn ghost" type="button" id="daSignOut">Sign out</button>
+    </div>
+    <a class="link" id="daAdmin" href="admin.html" hidden>Admin panel</a>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- Settings (the server applies the same rules; these are for display) ---------- */
+var COLS = 12, ROWS = 7, TOTAL = COLS*ROWS;
+var POINTS = 1000, PENALTY = 50, TRIES = 2;
+var RUN_CARDS = 10;
+var CFG = window.PG_CONFIG || {};
+var GOOGLE_G = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.7l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>';
+
+function ringOf(r,c){ return Math.min(r, c, ROWS-1-r, COLS-1-c); }
+function tileValue(i){ return [5,15,60,60][Math.min(ringOf(Math.floor(i/COLS), i%COLS),3)]; }
+
+/* ---------- Helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function lsGet(k){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
+function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+function uuid(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){ var r=Math.random()*16|0; return (c==='x'?r:(r&3|8)).toString(16); });
+}
+function errText(e){ return (e && (e.message||e.error_description)) || 'unknown error'; }
+
+/* the guest id identifies this browser until the player signs in */
+var GUEST = lsGet('pg_guest'); if(!GUEST){ GUEST=uuid(); lsSet('pg_guest',GUEST); }
+
+/* tiles opened on each round, kept in the browser so a reload does not lose them */
+function savedTiles(id){ var m=lsGet('pg_tiles')||{}; return m[id]||[]; }
+function saveTiles(id,list){
+  var m=lsGet('pg_tiles')||{}; m[id]=list;
+  var keys=Object.keys(m); if(keys.length>30) keys.slice(0,keys.length-30).forEach(function(k){ delete m[k]; });
+  lsSet('pg_tiles',m);
+}
+
+/* ---------- Supabase ---------- */
+var configured = CFG.supabaseUrl && CFG.supabaseKey && !/YOUR-/.test(CFG.supabaseUrl+CFG.supabaseKey) && window.supabase;
+var sb = configured ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce'}}) : null;
+function rpc(name,args){
+  return sb.rpc(name,args||{}).then(function(r){ if(r.error) throw r.error; return r.data; });
+}
+function artUrl(roundId){ return CFG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/art?round='+encodeURIComponent(roundId); }
+
+/* ---------- State ---------- */
+var S = {
+  mode: 'daily',           // 'daily' | 'g10'
+  user: null,              // signed-in user (supabase), or null for a guest
+  profile: null,           // {username, is_admin}
+  round: null,             // the card on screen
+  run: null,               // the Guess10 in progress: {run_id, total, done, finished}
+  daily: null,             // today's daily, as last received
+  lastStats: null,         // stats for the result dialog
+  names: [], busy: false
+};
+
+/* ---------- Names for the suggestions ---------- */
+fetch('names.json').then(function(r){ return r.ok ? r.json() : []; }).then(function(n){ S.names = Array.isArray(n)?n:[]; }).catch(function(){});
+
+/* ---------- Drawing a round ---------- */
+function buildGrid(){
+  var g=$('grid'); g.innerHTML='';
+  for(var i=0;i<TOTAL;i++){
+    var c=i%COLS, r=Math.floor(i/COLS), v=tileValue(i);
+    var b=document.createElement('div'); b.className='blk'+(v>=40?' hi':(v>=15?' mid':''));
+    b.setAttribute('data-i',i); b.setAttribute('role','button'); b.tabIndex=0;
+    b.setAttribute('aria-label','Tile row '+(r+1)+', column '+(c+1)+', costs '+v+' points');
+    b.style.backgroundSize=(COLS*100)+'% '+(ROWS*100)+'%';
+    b.style.backgroundPosition=(c/(COLS-1)*100)+'% '+(r/(ROWS-1)*100)+'%';
+    b.textContent=v; g.appendChild(b);
+  }
+}
+function potential(){
+  var rd=S.round; if(!rd) return 0;
+  var spent=0; rd.opened.forEach(function(t){ if(t!==rd.start) spent+=tileValue(t); });
+  return Math.max(0, POINTS - spent - PENALTY*rd.wrong);
+}
+function markOpen(i){
+  var el=$('grid').children[i]; if(el){ el.classList.add('open'); el.tabIndex=-1; }
+}
+function setLoading(show,text,isErr){
+  var l=$('loading'); l.hidden=!show; l.classList.toggle('err',!!isErr);
+  $('loadingText').textContent = text===undefined ? 'Loading…' : text;
+}
+function showError(msg,retry){
+  setLoading(true,'',true);
+  var t=$('loadingText'); t.textContent='';
+  var p=document.createElement('div'); p.textContent=msg; t.appendChild(p);
+  if(retry){ var b=document.createElement('button'); b.className='btn'; b.style.marginTop='14px'; b.textContent='Try again'; b.onclick=retry; t.appendChild(b); }
+}
+function setControls(on){ ['guess','btnGuess','btnGiveUp'].forEach(function(id){ $(id).disabled=!on; }); }
+function say(t){ $('msg').textContent=t||''; }
+
+function renderMeter(){
+  var rd=S.round;
+  if(rd && rd.over){
+    $('ptsNow').textContent = fmt(rd.score||0);
+    $('ptsLabel').textContent = 'points scored';
+  } else {
+    $('ptsNow').textContent = rd ? fmt(potential()) : '–';
+    $('ptsLabel').textContent = rd ? 'points in play, out of '+fmt(POINTS) : 'points in play';
+  }
+  var left = rd ? Math.max(0,TRIES-rd.wrong) : TRIES, box=$('dots'); box.innerHTML='';
+  for(var i=0;i<TRIES;i++){ var d=document.createElement('span'); d.className='dot'+(i<left?'':' used'); box.appendChild(d); }
+  box.setAttribute('aria-label',left+' of '+TRIES+' guesses left');
+}
+function renderStatus(){
+  var L='', R='';
+  if(S.mode==='daily'){
+    var d=S.daily && S.daily.day ? new Date(S.daily.day+'T00:00:00Z') : null;
+    L = 'Daily card'+(d ? ' · '+d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}) : '');
+  } else if(S.run && !S.run.finished && S.round){
+    L = 'Card <b>'+(S.round.idx+1)+'</b> of '+RUN_CARDS;
+    R = 'Total <b>'+fmt(S.run.total)+'</b>';
+  }
+  $('statusL').innerHTML=L; $('statusR').innerHTML=R;
+}
+
+/* show a round received from the server */
+function showRound(data){
+  var rd = {
+    id:data.round_id, mode:data.mode, idx:data.idx, day:data.day,
+    start:data.start_tile, wrong:data.wrong||0, guesses:data.guesses||[],
+    over:!!data.over, won:!!data.won, score:data.score, card:data.card||null,
+    opened:[]
+  };
+  var seen={};
+  [rd.start].concat(data.opened||[], savedTiles(rd.id)).forEach(function(t){ if(t>=0&&t<TOTAL&&!seen[t]){ seen[t]=1; rd.opened.push(t); } });
+  S.round=rd;
+  $('intro').hidden=true; $('board').hidden=false;
+  hideSugg(); $('wrongList').innerHTML=''; say('');
+  rd.guesses.forEach(function(g){ addChip(g); });
+  buildGrid(); rd.opened.forEach(markOpen);
+  $('stage').classList.toggle('done', rd.over);
+  setLoading(true,'Loading the artwork…');
+  var img=$('art');
+  img.onload=function(){ if(S.round===rd){ setLoading(false); if(!rd.over){ setControls(true); say(rd.opened.length<=1?'The first tile is free. Tap more to see more of the artwork.':''); } } };
+  img.onerror=function(){ if(S.round===rd) showError("Couldn't load the artwork.", function(){ img.src=artUrl(rd.id)+'&r='+Date.now(); }); };
+  img.src=artUrl(rd.id);
+  setControls(false);
+  if(rd.over){ showResult(); } else { $('result').hidden=true; $('play').hidden=false; $('guess').value=''; }
+  renderMeter(); renderStatus();
+}
+function addChip(text){
+  var chip=document.createElement('span'); chip.className='chip'; chip.textContent=text; $('wrongList').appendChild(chip);
+}
+
+/* the card is over: show the whole card and what to do next */
+function showResult(){
+  var rd=S.round, c=rd.card||{};
+  setControls(false); hideSugg();
+  $('stage').classList.add('done'); $('play').hidden=true;
+  var res=$('result'); res.hidden=false; res.className='result '+(rd.won?'win':'lose');
+  $('resImg').src = c.image ? c.image+'/high.webp' : ''; $('resImg').alt = (c.name||'')+' card';
+  $('resImg').onerror=function(){ if(c.image && !/png$/.test(this.src)) this.src=c.image+'/high.png'; };
+  $('resTitle').textContent = rd.won ? '+'+fmt(rd.score)+' points' : (rd.wrong>=TRIES ? 'Out of guesses' : 'You gave up');
+  $('resInfo').textContent = (rd.won?'Yes, it’s ':'It was ')+c.name+', from '+c.set_name+'.';
+  var main=$('btnResMain'), alt=$('btnResAlt'), small=$('resSmall');
+  alt.hidden=true; small.hidden=true;
+  if(rd.mode==='daily'){
+    main.textContent='Play Guess10'; main.onclick=function(){ switchMode('g10'); };
+    alt.hidden=false; alt.textContent='See how you did'; alt.onclick=function(){ openDailyStats(); };
+    if(S.daily && S.daily.next_reset){ small.hidden=false; small.textContent='Next daily card in '+untilText(S.daily.next_reset)+'.'; }
+  } else if(rd.idx < RUN_CARDS-1){
+    main.textContent='Next card ('+(rd.idx+2)+'/'+RUN_CARDS+')'; main.onclick=nextCard;
+  } else {
+    main.textContent='See your total'; main.onclick=nextCard;
+  }
+  renderMeter(); renderStatus();
+  setTimeout(function(){ main.focus({preventScroll:true}); },50);
+}
+function untilText(iso){
+  var ms=new Date(iso)-new Date(); if(!(ms>0)) return 'a moment';
+  var h=Math.floor(ms/3600000), m=Math.floor(ms/60000)%60;
+  return (h?h+'h ':'')+m+'m';
+}
+
+/* ---------- Playing ---------- */
+function pickBlock(i){
+  var rd=S.round;
+  if(!rd||rd.over||rd.opened.indexOf(i)>=0) return;
+  rd.opened.push(i); markOpen(i); saveTiles(rd.id, rd.opened);
+  renderMeter();
+  say(potential()===0 ? 'No points left for this card, but you can still open tiles and guess.' : '');
+}
+function afterServer(data){
+  var rd=S.round; if(!rd || data.round_id!==rd.id) return;
+  if(data.repeat){ say('You already tried that name.'); setControls(true); $('guess').focus(); return; }
+  var newWrong = (data.wrong||0) > rd.wrong;
+  rd.wrong=data.wrong||0; rd.guesses=data.guesses||[]; rd.over=!!data.over; rd.won=!!data.won; rd.score=data.score; rd.card=data.card||null;
+  if(S.run && rd.mode==='g10' && rd.over) S.run.total += (rd.score||0);
+  say('');
+  if(rd.over){
+    if(rd.mode==='daily'){ S.daily = Object.assign({}, S.daily||{}, data); S.lastStats=data.stats; }
+    showResult();
+    if(rd.mode==='daily') setTimeout(openDailyStats, 700);
+    return;
+  }
+  if(newWrong){
+    $('wrongList').innerHTML=''; rd.guesses.forEach(addChip);
+    var left=TRIES-rd.wrong;
+    say('Not this one: −'+PENALTY+' points. '+(left===1?'1 guess left.':left+' guesses left.'));
+  }
+  $('guess').value=''; setControls(true); renderMeter(); $('guess').focus();
+}
+function submitGuess(text){
+  var rd=S.round; if(!rd||rd.over||S.busy) return;
+  if(!norm(text)) return;
+  S.busy=true; setControls(false); hideSugg(); say('Checking…');
+  rpc('guess',{p_round:rd.id, p_guest:GUEST, p_name:text, p_opened:rd.opened})
+    .then(afterServer, function(e){ say("Couldn't check your guess ("+errText(e)+'). Try again.'); setControls(true); })
+    .then(function(){ S.busy=false; });
+}
+function giveUp(){
+  var rd=S.round; if(!rd||rd.over||S.busy) return;
+  S.busy=true; setControls(false); say('');
+  rpc('give_up',{p_round:rd.id, p_guest:GUEST, p_opened:rd.opened})
+    .then(afterServer, function(e){ say("Couldn't reach the server ("+errText(e)+')'); setControls(true); })
+    .then(function(){ S.busy=false; });
+}
+
+/* ---------- Modes ---------- */
+function switchMode(m){
+  if(S.busy) return;
+  S.mode=m;
+  $('tabDaily').setAttribute('aria-selected', m==='daily'); $('tabG10').setAttribute('aria-selected', m==='g10');
+  closeAll();
+  if(m==='daily') loadDaily(); else loadG10();
+}
+function loadDaily(){
+  S.round=null; $('intro').hidden=true; $('board').hidden=false; $('result').hidden=true; $('play').hidden=false;
+  setControls(false); buildGrid(); renderMeter(); renderStatus(); setLoading(true,'Getting today’s card…');
+  return rpc('daily_get',{p_guest:GUEST}).then(function(d){
+    if(S.mode!=='daily') return;
+    S.daily=d; S.lastStats=d.stats||null; showRound(d);
+  }).catch(function(e){ showError("Couldn't get today's card ("+errText(e)+').', loadDaily); });
+}
+function loadG10(){
+  var runId = lsGet('pg_run');
+  if(!runId){ showIntro(); return; }
+  S.round=null; $('intro').hidden=true; $('board').hidden=false; $('result').hidden=true;
+  setControls(false); buildGrid(); renderMeter(); setLoading(true,'Loading your Guess10…');
+  return rpc('g10_state',{p_run:runId, p_guest:GUEST}).then(function(d){
+    if(S.mode!=='g10') return;
+    if(d.finished){ lsDel('pg_run'); S.run=null; showIntro(d.total); return; }
+    S.run={run_id:d.run_id,total:d.total,done:d.done,finished:false};
+    showRound(d.round);
+  }).catch(function(){ lsDel('pg_run'); S.run=null; showIntro(); });
+}
+function showIntro(lastTotal){
+  S.round=null; S.run=null;
+  $('board').hidden=true; $('play').hidden=true; $('result').hidden=true; say('');
+  $('intro').hidden=false; renderStatus();
+  var best=lsGet('pg_last_g10');
+  if(lastTotal!==undefined && lastTotal!==null) best=lastTotal;
+  $('introLast').hidden = best===null || best===undefined;
+  if(best!==null && best!==undefined) $('introLast').textContent='Your last Guess10: '+fmt(best)+' points';
+}
+function startG10(){
+  if(S.busy) return; S.busy=true;
+  $('btnStart').disabled=true;
+  rpc('g10_start',{p_guest:GUEST}).then(function(d){
+    lsSet('pg_run', d.run_id);
+    S.run={run_id:d.run_id,total:0,done:0,finished:false};
+    $('play').hidden=false;
+    showRound(d.round);
+  }).catch(function(e){ alert("Couldn't start a Guess10 ("+errText(e)+')'); })
+  .then(function(){ S.busy=false; $('btnStart').disabled=false; });
+}
+function nextCard(){
+  if(!S.run || S.busy) return; S.busy=true;
+  $('btnResMain').disabled=true;
+  rpc('g10_next',{p_run:S.run.run_id, p_guest:GUEST}).then(function(d){
+    S.run.total=d.total;
+    if(d.finished){
+      S.run.finished=true; lsDel('pg_run'); lsSet('pg_last_g10', d.total);
+      renderStatus();
+      openG10Stats(d.total, d.stats);
+      $('btnResMain').textContent='Start a new Guess10'; $('btnResMain').onclick=function(){ closeAll(); startG10(); };
+      return;
+    }
+    $('play').hidden=false; showRound(d.round);
+  }).catch(function(e){ say("Couldn't get the next card ("+errText(e)+').'); })
+  .then(function(){ S.busy=false; $('btnResMain').disabled=false; });
+}
+
+/* ---------- Result dialogs ---------- */
+function drawHist(stats, myBucket, missed){
+  var h=$('drHist'); h.innerHTML='';
+  var b=(stats&&stats.buckets)||[], max=1;
+  var bars=b.slice(); if(missed!==undefined) bars=[missed].concat(bars);
+  bars.forEach(function(n){ if(n>max) max=n; });
+  bars.forEach(function(n,i){
+    var d=document.createElement('div'), isMiss = missed!==undefined && i===0;
+    var idx = missed!==undefined ? i-1 : i;
+    d.style.height = (n ? Math.max(4, n/max*100) : 0)+'%';
+    if(isMiss) d.className='miss';
+    if((isMiss && myBucket==='miss') || (!isMiss && idx===myBucket)) d.className+=' me';
+    d.title = n+' player'+(n===1?'':'s');
+    h.appendChild(d);
+  });
+}
+function verdictText(stats){
+  var n=stats.players||0, others=Math.max(0,n-1);
+  if(n<=1) return 'You’re one of the first to finish.';
+  var pct=Math.round((stats.beaten||0)/others*100);
+  return 'Better than '+pct+'% of players.';
+}
+function guestNote(on){ $('drGuest').hidden=!on || !!S.user; }
+function openDailyStats(){
+  var rd=S.round, st=S.lastStats || (S.daily && S.daily.stats);
+  if(!rd || rd.mode!=='daily' || !st){ return; }
+  $('drTitle').textContent = rd.won ? 'Daily card named!' : 'Daily card missed';
+  $('drScore').innerHTML = fmt(rd.score||0)+'<small>/ '+fmt(POINTS)+'</small>';
+  $('drVerdict').textContent = verdictText(st);
+  drawHist(st, rd.won ? Math.min(10, Math.floor((rd.score||0)/100)) : 'miss', st.missed||0);
+  $('drAxisL').textContent='✗  0'; $('drAxisR').textContent='1,000';
+  $('drHist').setAttribute('aria-label','Scores of today’s players, from missed to 1,000 points');
+  $('drPlayers').textContent = fmt(st.players)+' player'+(st.players===1?'':'s')+' today. Next card in '+untilText(S.daily&&S.daily.next_reset)+'.';
+  guestNote(true);
+  var main=$('drMain'), alt=$('drAlt');
+  main.textContent='Play Guess10'; main.onclick=function(){ closeAll(); switchMode('g10'); };
+  alt.hidden=true;
+  $('dlgResult').showModal();
+}
+function openG10Stats(total, st){
+  st = st || {players:1,buckets:[],beaten:0};
+  $('drTitle').textContent='Guess10 complete';
+  $('drScore').innerHTML = fmt(total)+'<small>/ 10,000</small>';
+  $('drVerdict').textContent = verdictText(st);
+  drawHist(st, Math.min(10, Math.floor(total/1000)));
+  $('drAxisL').textContent='0'; $('drAxisR').textContent='10,000';
+  $('drHist').setAttribute('aria-label','Best Guess10 totals of all players, from 0 to 10,000');
+  $('drPlayers').textContent = 'Compared with the best Guess10 of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
+  guestNote(true);
+  var main=$('drMain'), alt=$('drAlt');
+  main.textContent='Play again'; main.onclick=function(){ closeAll(); startG10(); };
+  alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(); };
+  $('dlgResult').showModal();
+}
+function closeAll(){ ['dlgResult','dlgBoard','dlgAcct'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
+
+/* ---------- Leaderboard ---------- */
+function openBoard(){
+  var ul=$('boardList'); ul.innerHTML='<li><span></span><span>Loading…</span><span></span></li>';
+  $('dbGuest').hidden=!!S.user;
+  $('dlgBoard').showModal();
+  rpc('leaderboard',{p_limit:100}).then(function(d){
+    ul.innerHTML='';
+    var top=d.top||[], me=d.me, meShown=false;
+    if(!top.length){ ul.innerHTML='<li><span></span><span>No scores yet. Be the first!</span><span></span></li>'; }
+    top.forEach(function(r){
+      var li=document.createElement('li');
+      var isMe = me && r.username===me.username; if(isMe){ li.className='me'; meShown=true; }
+      li.innerHTML='<span>#'+r.pos+'</span><span></span><b>'+fmt(r.total)+'</b>';
+      li.children[1].textContent=r.username; ul.appendChild(li);
+    });
+    if(me && !meShown){
+      var li=document.createElement('li'); li.className='me';
+      li.innerHTML='<span>#'+me.pos+'</span><span></span><b>'+fmt(me.total)+'</b>'; li.children[1].textContent=me.username; ul.appendChild(li);
+    }
+  }).catch(function(e){ ul.innerHTML=''; var li=document.createElement('li'); li.textContent="Couldn't load the leaderboard ("+errText(e)+')'; ul.appendChild(li); });
+}
+
+/* ---------- Account ---------- */
+function signIn(){
+  if(!sb) return;
+  sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin+location.pathname}});
+}
+function signOut(){
+  closeAll(); if($('dlgName').open) $('dlgName').close();
+  sb.auth.signOut().then(function(){ location.reload(); });
+}
+function renderAccount(){
+  var b=$('btnAcct');
+  if(!S.user){ b.textContent='Sign in'; return; }
+  b.textContent = (S.profile && S.profile.username) || 'Account';
+}
+function askUsername(required){
+  $('nameErr').textContent=''; $('nameInput').value=(S.profile&&S.profile.username)||'';
+  $('nameLater').hidden=required; $('nameSignOut').hidden=!required;
+  $('dlgName').showModal(); $('nameInput').focus();
+}
+function loadProfile(){
+  return rpc('my_profile').then(function(p){
+    S.profile=p; renderAccount();
+    if(p && !p.username) askUsername(true);
+  });
+}
+function onSignedIn(user){
+  var first = !S.user || S.user.id!==user.id;
+  S.user=user; renderAccount();
+  if(!first) return Promise.resolve();
+  // results played as a guest in this browser move to the account
+  var claimed=lsGet('pg_claimed')||{};
+  var p = claimed[user.id+GUEST] ? Promise.resolve() : rpc('claim_guest',{p_guest:GUEST}).then(function(){ claimed[user.id+GUEST]=1; lsSet('pg_claimed',claimed); }).catch(function(){});
+  return p.then(loadProfile);
+}
+
+/* ---------- Suggestions (open upwards, so the phone keyboard never hides them) ---------- */
+var suggIdx=-1;
+function hideSugg(){ $('sugg').hidden=true; $('sugg').innerHTML=''; suggIdx=-1; }
+function showSugg(){
+  var q=norm($('guess').value);
+  if(q.length<2){ hideSugg(); return; }
+  var names=S.names, starts=[], inner=[];
+  for(var i=0;i<names.length;i++){
+    var n=norm(names[i]);
+    if(n.indexOf(q)===0) starts.push(names[i]); else if(n.indexOf(q)>0) inner.push(names[i]);
+  }
+  var list=starts.concat(inner).slice(0,6);
+  var ul=$('sugg'); ul.innerHTML=''; suggIdx=-1;
+  if(!list.length){ ul.hidden=true; return; }
+  list.forEach(function(name){
+    var li=document.createElement('li'); li.setAttribute('role','option'); li.textContent=name;
+    li.onmousedown=function(e){ e.preventDefault(); $('guess').value=name; hideSugg(); $('guess').focus(); };
+    ul.appendChild(li);
+  });
+  ul.hidden=false;
+}
+function moveSugg(d){
+  var items=$('sugg').children; if(!items.length) return;
+  if(suggIdx>=0) items[suggIdx].setAttribute('aria-selected','false');
+  suggIdx=(suggIdx+d+items.length)%items.length;
+  items[suggIdx].setAttribute('aria-selected','true');
+  items[suggIdx].scrollIntoView({block:'nearest'});
+}
+
+/* ---------- Events ---------- */
+$('guessForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var items=$('sugg').children;
+  if(suggIdx>=0 && items[suggIdx]){ $('guess').value=items[suggIdx].textContent; hideSugg(); }
+  submitGuess($('guess').value);
+});
+$('guess').addEventListener('input',showSugg);
+$('guess').addEventListener('keydown',function(e){
+  if(e.key==='ArrowDown'){ e.preventDefault(); if($('sugg').hidden) showSugg(); moveSugg(1); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); moveSugg(-1); }
+  else if(e.key==='Escape'){ hideSugg(); }
+  else if(e.key==='Enter' && suggIdx>=0){
+    e.preventDefault();
+    var items=$('sugg').children; $('guess').value=items[suggIdx].textContent; hideSugg();
+  }
+});
+$('guess').addEventListener('blur',function(){ setTimeout(hideSugg,120); });
+$('grid').addEventListener('click',function(e){
+  var i=e.target && e.target.getAttribute && e.target.getAttribute('data-i'); if(i===null||i===undefined) return;
+  pickBlock(parseInt(i,10));
+});
+$('grid').addEventListener('keydown',function(e){
+  if(e.key!=='Enter' && e.key!==' ') return;
+  var i=e.target.getAttribute && e.target.getAttribute('data-i'); if(i===null) return;
+  e.preventDefault(); pickBlock(parseInt(i,10));
+});
+$('btnGiveUp').addEventListener('click',giveUp);
+$('tabDaily').addEventListener('click',function(){ if(S.mode!=='daily') switchMode('daily'); });
+$('tabG10').addEventListener('click',function(){ if(S.mode!=='g10') switchMode('g10'); });
+$('btnStart').addEventListener('click',startG10);
+$('btnBoard').addEventListener('click',openBoard);
+$('btnAcct').addEventListener('click',function(){
+  if(!S.user){ signIn(); return; }
+  $('daTitle').textContent=(S.profile&&S.profile.username)||'Your account';
+  $('daEmail').textContent=S.user.email||'';
+  $('daAdmin').hidden=!(S.profile&&S.profile.is_admin);
+  $('dlgAcct').showModal();
+});
+$('daSignOut').addEventListener('click',signOut);
+$('daRename').addEventListener('click',function(){ $('dlgAcct').close(); askUsername(false); });
+$('nameSignOut').addEventListener('click',signOut);
+$('nameLater').addEventListener('click',function(){ $('dlgName').close(); });
+$('dlgName').addEventListener('cancel',function(e){ if(!(S.profile&&S.profile.username)) e.preventDefault(); });
+$('nameForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var n=$('nameInput').value.trim();
+  if(!/^[A-Za-z0-9_]{3,16}$/.test(n)){ $('nameErr').textContent='Use 3 to 16 letters, numbers or _.'; return; }
+  $('nameSave').disabled=true; $('nameErr').textContent='';
+  rpc('set_username',{p_name:n}).then(function(p){ S.profile=p; renderAccount(); $('dlgName').close(); })
+  .catch(function(err){ $('nameErr').textContent = /taken/.test(errText(err)) ? 'That username is taken. Try another one.' : "Couldn't save it ("+errText(err)+')'; })
+  .then(function(){ $('nameSave').disabled=false; });
+});
+document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',function(){ b.closest('dialog').close(); }); });
+document.querySelectorAll('[data-signin]').forEach(function(b){ b.innerHTML=GOOGLE_G+'<span>Sign in with Google</span>'; b.addEventListener('click',signIn); });
+
+/* ---------- Start ---------- */
+function boot(){
+  buildGrid(); renderMeter();
+  if(!sb){ showError('The game server is not configured yet (beta/config.js).'); $('btnAcct').hidden=true; return; }
+  sb.auth.getSession().then(function(r){
+    var user = r && r.data && r.data.session ? r.data.session.user : null;
+    return user ? onSignedIn(user) : null;
+  }).catch(function(){}).then(function(){
+    sb.auth.onAuthStateChange(function(ev,session){
+      if(ev==='SIGNED_IN' && session && (!S.user || S.user.id!==session.user.id)){
+        onSignedIn(session.user).then(function(){ switchMode(S.mode); });
+      }
+    });
+    renderAccount();
+    switchMode('daily');   // Daily first: if today's card is done, its final screen shows
+  });
+}
+boot();
+
+window.__pg = {S:S, GUEST:GUEST};   // for tests
+})();
+</script>
+</body>
+</html>
