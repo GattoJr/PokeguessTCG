@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1A31">
+<title>PokeguessTCG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,600..900&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* A playmat with one card on it. The artwork window sits in a sleeve, covered by a sheet of foil
+   cut into tiles. Card-border yellow is the only accent. One column: phone first. */
+:root{
+  --bg:#D9E3F1; --mat:#C7D5EA; --surface:#FFFFFF; --surface-2:#EEF3FA; --ink:#13203D; --muted:#53647F; --line:#B6C5DB;
+  --gold:#F2C230; --gold-deep:#D9A90E; --gold-ink:#2E2300; --focus:#2457D6;
+  --good:#1D8657; --bad:#BF3B2B;
+  --tile-1:#1D2F55; --tile-2:#2B4677; --tile-3:#3D5D92; --tile-edge:rgba(255,255,255,.10);
+  --tile-ink:#9FB3D6; --tile-ink-mid:#DCE6F7; --censor-a:#2A3B60; --censor-b:#22314F;
+  --sleeve:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,.12));
+  --display:'Anybody','Arial Narrow',system-ui,sans-serif;
+  --body:'Instrument Sans','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1A31; --mat:#182A50; --surface:#192A4D; --surface-2:#14223F; --ink:#EDF2FB; --muted:#9AABC9; --line:#2A3D66;
+    --focus:#F2C230; --good:#4CC995; --bad:#FF7B68;
+    --sleeve:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1A31; --mat:#182A50; --surface:#192A4D; --surface-2:#14223F; --ink:#EDF2FB; --muted:#9AABC9; --line:#2A3D66;
+  --focus:#F2C230; --good:#4CC995; --bad:#FF7B68;
+  --sleeve:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh; color:var(--ink); font:16px/1.5 var(--body);
+  background:var(--bg) radial-gradient(ellipse 80% 55% at 50% 30%, var(--mat), transparent 75%) no-repeat fixed;
+  padding-block:max(14px, env(safe-area-inset-top, 0px)) 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none !important}
+.app{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+/* ---------- Top ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top h1{margin:0;font:900 clamp(26px,7vw,38px)/.9 var(--display);font-stretch:135%;letter-spacing:-.02em}
+.top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.stat{padding:6px 8px 5px;text-align:center;min-width:0}
+.stat+.stat{border-left:1.5px solid var(--line)}
+.stat b{display:block;font:800 20px/1.1 var(--display);font-stretch:110%;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat span{font-size:12px;color:var(--muted)}
+
+/* ---------- Points and guesses ---------- */
+.meter{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:0 4px}
+.pts b{display:block;font:900 clamp(40px,11vw,56px)/.9 var(--display);font-stretch:120%;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pts span{font-size:14px;color:var(--muted)}
+.tries{text-align:right;flex:none}
+.tries>span:first-child{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+.dots{display:inline-flex;gap:6px;margin-bottom:4px}
+.dot{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--gold-deep) inset}
+.dot.used{background:transparent;box-shadow:0 0 0 2px var(--line) inset}
+
+/* ---------- The artwork ---------- */
+.sleeve{padding:8px;border-radius:20px;background:var(--sleeve);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 18px 40px rgba(8,18,40,.28)}
+.stage{position:relative;width:100%;aspect-ratio:836/436;container-type:inline-size;background:var(--tile-1);border-radius:12px;overflow:hidden;touch-action:manipulation}
+.cardbox{position:absolute;left:0;top:0;width:100%;height:100%}
+.cardbox img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
+.censors{position:absolute;inset:0;pointer-events:none}
+.censor{position:absolute;border-radius:4px;background:repeating-linear-gradient(135deg,var(--censor-a) 0 5px,var(--censor-b) 5px 10px);transition:opacity .5s}
+.censor.evo{border-radius:32%}
+.grid{position:absolute;inset:0;display:grid}
+.blk{
+  display:grid;place-items:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  background:linear-gradient(118deg,var(--tile-1) 0%,var(--tile-2) 26%,var(--tile-3) 38%,var(--tile-2) 47%,var(--tile-1) 63%,var(--tile-2) 82%,var(--tile-1) 100%);
+  box-shadow:inset 0 0 0 .5px var(--tile-edge),inset 0 1px 0 rgba(255,255,255,.07);
+  color:var(--tile-ink);font:700 2.9cqw/1 var(--display);font-variant-numeric:tabular-nums;
+  transition:opacity .4s,transform .4s,filter .15s;
+}
+.blk.mid{color:var(--tile-ink-mid);font-weight:800}
+.blk.hi{color:var(--gold);font-weight:900;font-size:3.4cqw}
+@media (hover:hover){.blk:hover{filter:brightness(1.35)}}
+.blk:active{filter:brightness(1.5)}
+.blk:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.blk.open{opacity:0;transform:scale(.55) rotate(-6deg);pointer-events:none}
+.stage.done .blk{opacity:0;transform:scale(.55);pointer-events:none}
+.stage.done .censor{opacity:0}
+.loading{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;background:var(--tile-1);color:#C9D6EE;font-weight:500;z-index:5}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--gold);margin:0 auto 12px;animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading.err .spin{display:none}
+.hint{margin:0;min-height:22px;text-align:center;color:var(--muted);font-size:14px}
+
+/* ---------- Guessing ---------- */
+.play{display:flex;flex-direction:column;gap:10px}
+form{display:flex;gap:8px}
+.combo{position:relative;flex:1;min-width:0}
+input[type=text]{width:100%;font-size:17px;font-weight:500;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface)}
+input[type=text]:disabled{opacity:.6}
+.sugg{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:20;margin:0;padding:4px;list-style:none;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;box-shadow:0 -10px 30px rgba(8,18,40,.25);max-height:240px;overflow:auto}
+.sugg li{padding:10px;border-radius:8px;cursor:pointer}
+.sugg li[aria-selected="true"],.sugg li:hover{background:var(--surface-2)}
+.btn{border:0;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer;background:var(--gold);color:var(--gold-ink);box-shadow:0 -3px 0 var(--gold-deep) inset}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.below{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:14px;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--bad);text-decoration:line-through}
+.link{background:none;border:0;padding:6px 2px;color:var(--muted);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:none;margin-left:auto}
+.link[disabled]{opacity:.4;cursor:default}
+
+/* ---------- End of a card: the whole card is revealed ---------- */
+.result{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface)}
+.result.win{border-color:var(--good)}
+.result img{width:clamp(96px,26vw,132px);aspect-ratio:600/825;border-radius:6px;box-shadow:0 8px 20px rgba(8,18,40,.3);display:block}
+.result h2{margin:0;font:900 clamp(22px,6vw,28px)/1.05 var(--display);font-stretch:115%}
+.result.win h2{color:var(--good)}
+.result.lose h2{color:var(--bad)}
+.result p{margin:6px 0 12px;font-size:15px}
+.result .btn{width:100%}
+
+/* ---------- Bottom ---------- */
+details{border-top:1.5px solid var(--line);padding-top:12px;font-size:15px}
+summary{cursor:pointer;font-weight:700}
+details p{color:var(--muted);margin:8px 0}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin:10px 0 4px}
+.legend i{font:800 14px/1 var(--display);font-style:normal;display:grid;place-items:center;width:34px;height:24px;border-radius:5px;background:var(--tile-2);color:var(--tile-ink)}
+.legend i.hi{color:var(--gold)} .legend i.mid{color:var(--tile-ink-mid)}
+.legend span{color:var(--muted)}
+.foot{font-size:13px;color:var(--muted);margin:0}
+.foot a{color:inherit;text-decoration-color:var(--gold-deep);text-underline-offset:2px}
+@media (prefers-reduced-motion:reduce){.blk,.censor,.spin{transition:none;animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>PokeguessTCG</h1>
+      <p>Name the Pokémon card from its artwork.</p>
+    </div>
+  </header>
+
+  <div class="stats" aria-live="polite">
+    <div class="stat"><b id="stScore">0</b><span>Score</span></div>
+    <div class="stat"><b id="stStreak">0</b><span>Streak</span></div>
+    <div class="stat"><b id="stWins">0</b><span>Named</span></div>
+    <div class="stat"><b id="stPlayed">0</b><span>Played</span></div>
+  </div>
+
+  <div class="meter">
+    <div class="pts"><b id="ptsNow">–</b><span id="ptsLabel">points in play</span></div>
+    <div class="tries"><span>Guesses</span><span class="dots" id="dots" aria-label="Guesses left"></span></div>
+  </div>
+
+  <div class="sleeve">
+    <div class="stage" id="stage">
+      <div class="cardbox" id="cardBox">
+        <img id="cardImg" alt="Pokémon card artwork covered by tiles" draggable="false">
+        <div class="censors" id="censors"></div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="loading" id="loading"><div><div class="spin"></div><div id="loadingText">Loading cards…</div></div></div>
+    </div>
+  </div>
+  <p class="hint" id="msg" aria-live="polite"></p>
+
+  <section class="play" id="play">
+    <form id="guessForm" autocomplete="off">
+      <div class="combo">
+        <input type="text" id="guess" placeholder="Card name, e.g. Charizard ex" aria-label="Card name" aria-autocomplete="list" aria-controls="sugg" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
+        <ul class="sugg" id="sugg" role="listbox" hidden></ul>
+      </div>
+      <button class="btn" type="submit" id="btnGuess" disabled>Guess</button>
+    </form>
+    <div class="below">
+      <div class="chips" id="wrongList" aria-label="Wrong guesses"></div>
+      <button class="link" id="btnGiveUp" type="button" disabled>Give up</button>
+    </div>
+  </section>
+
+  <section class="result" id="result" hidden aria-live="polite">
+    <img id="resImg" alt="">
+    <div>
+      <h2 id="resTitle"></h2>
+      <p id="resInfo"></p>
+      <button class="btn" id="btnNext" type="button">Next card</button>
+    </div>
+  </section>
+
+  <details id="rules">
+    <summary>How to play</summary>
+    <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including V, ex, VMAX and the like. You have 3 guesses per card.</p>
+    <p>Each card puts 2,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play.</p>
+    <div class="legend">
+      <i class="hi">60</i><span>Centre of the artwork</span>
+      <i class="mid">15</i><span>Inner frame</span>
+      <i>5</i><span>Outer frame</span>
+    </div>
+  </details>
+
+  <p class="foot">Card data: <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>, MIT licence. Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company. Unofficial fan site, not affiliated with them.</p>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Settings ---------- */
+var API = 'https://api.tcgdex.net/v2/en';
+var DB_URL = 'cards.json';  // card database built by gen_cards.py; if it is missing the game falls back to the TCGdex API
+var COLS = 12, ROWS = 7, TOTAL = COLS*ROWS;
+var CONC = 6;               // parallel requests while loading sets from the API
+var MIN_READY = 8;          // sets needed before the first card (API mode)
+var MAX_TRIES = 3;          // wrong guesses allowed per card
+var WRONG_PENALTY = 50;     // points lost for each wrong guess
+var MAX_IMG_SKIPS = 7;      // cards skipped in a row when TCGdex has no image
+var STATS_KEY = 'pcg_stats_v1';
+/* Series in play. Add more ids once their artwork window is measured:
+   base, gym, neo, lc, ecard, ex, dp, pl, hgss, col, bw, xy, sm */
+var ERAS = ['me','swsh','sv'];
+
+/* Main series only: no promos, online games, kits, McDonald's and similar */
+var SERIES_EXCLUDE = /pocket|\bpop\b|promo|trainer kit|mcdonald|misc|jumbo|nintendo/i;
+var SET_EXCLUDE = /promo|energies|gallery|black star|mcdonald|trainer kit|starter|deck|classic collection|shiny vault|radiant collection|rumble|best of/i;
+
+/* ---------- Tile values (row × column, counting from 1) ----------
+   The grid covers only the artwork: 12 columns × 7 rows.
+   Two cheap frames (outer 5, inner 15) around a much dearer centre (60 per tile). Total 2000. */
+var RING_VALUES = [5,15,60,60];
+var TARGET_TOTAL = 2000;
+function ringOf(r,c){ return Math.min(r-1, c-1, ROWS-r, COLS-c); }
+function valueOf(r,c){ return RING_VALUES[Math.min(ringOf(r,c), RING_VALUES.length-1)]; }
+var GRID = (function(){
+  var v=[], t=0;
+  for(var i=0;i<TOTAL;i++){ var x=valueOf(Math.floor(i/COLS)+1, i%COLS+1); v.push(x); t+=x; }
+  if(t!==TARGET_TOTAL && window.console) console.warn('Tile values add up to '+t+', not '+TARGET_TOTAL);
+  return {values:v, total:t};
+})();
+
+/* ---------- Layout of each series, as fractions of the card: [left, top, width, height] ----------
+   crop = artwork window, the only part of the card the player sees.
+   Inside it, these can show and are covered: evo = pre-evolution picture,
+   evot = "Evolves from …" text, mega = "The Mega-Evolved form of …" box (Mega cards only).
+   Measured on standard (non full art) cards. */
+var LAYOUT = {
+  sv:   { crop:[0.087,0.105,0.836,0.360], evo:[0.030,0.066,0.148,0.112], evot:[0.190,0.089,0.330,0.030], mega:[0,0,0,0] },
+  me:   { crop:[0.087,0.105,0.836,0.360], evo:[0.022,0.060,0.165,0.125], evot:[0.185,0.089,0.340,0.030], mega:[0.550,0.085,0.385,0.055] },
+  swsh: { crop:[0.087,0.105,0.836,0.362], evo:[0.036,0.062,0.124,0.096], evot:[0.172,0.090,0.360,0.030], mega:[0,0,0,0] }
+};
+function layoutFor(card){ return LAYOUT[card.serie] || LAYOUT.sv; }
+
+/* ---------- Helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function lsGet(k){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function norm(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
+function rnd(n){ return Math.floor(Math.random()*n); }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=rnd(i+1), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function fmt(n){ return Number(n).toLocaleString('en-US'); }
+function getJSON(url){
+  var ctl = new AbortController();
+  var t = setTimeout(function(){ ctl.abort(); }, 20000);
+  return fetch(url,{signal:ctl.signal}).then(function(r){
+    clearTimeout(t);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  },function(e){ clearTimeout(t); throw e; });
+}
+function loadImage(urls){
+  return new Promise(function(res,rej){
+    var i=0;
+    (function tryNext(){
+      if(i>=urls.length) return rej(new Error('No image'));
+      var im=new Image(), u=urls[i];
+      im.onload=function(){ res({url:u,w:im.naturalWidth||600,h:im.naturalHeight||825}); };
+      im.onerror=function(){ i++; tryNext(); };
+      im.src=u;
+    })();
+  });
+}
+function overlap(a,b){
+  var w=Math.max(0,Math.min(a[2],b[2])-Math.max(a[0],b[0]));
+  var h=Math.max(0,Math.min(a[3],b[3])-Math.max(a[1],b[1]));
+  return w*h/((a[2]-a[0])*(a[3]-a[1]));
+}
+
+/* ---------- State ---------- */
+var state = {
+  sets:[], pool:[], nameSet:{}, names:[], namesDirty:false, localDb:false,
+  round:null, next:null,
+  stats:{played:0,wins:0,streak:0,score:0}
+};
+(function(){
+  var s=lsGet(STATS_KEY);
+  if(s) ['played','wins','streak','score'].forEach(function(k){ if(typeof s[k]==='number') state.stats[k]=s[k]; });
+})();
+
+/* ---------- Loading from the local database (cards.json) ---------- */
+function loadLocalDb(){
+  return getJSON(DB_URL).then(function(db){
+    if(!db || !Array.isArray(db.cards) || !db.cards.length) throw new Error('empty database');
+    var base = db.imageBase || 'https://assets.tcgdex.net/en';
+    db.sets.forEach(function(st){ var serie=db.series[st[2]][0]; if(ERAS.indexOf(serie)>=0) state.sets.push({id:st[0],name:st[1],serie:serie}); });
+    db.cards.forEach(function(c){
+      var st=db.sets[c[0]], serie=db.series[st[2]][0];
+      if(ERAS.indexOf(serie)<0) return;
+      state.pool.push({id:st[0]+'-'+c[1],name:c[2],image:base+'/'+serie+'/'+st[0]+'/'+c[1],
+        rarity:db.rarities[c[3]]||null,evolveFrom:!!c[4],setName:st[1],serie:serie});
+    });
+    state.pool.forEach(function(p){ state.nameSet[p.name]=1; });   // suggestions: only Pokémon from the series in play
+    state.namesDirty=true; state.localDb=true;
+  });
+}
+
+/* ---------- Loading sets from the API (fallback) ---------- */
+function loadCatalog(){
+  return getJSON(API+'/series').then(function(list){
+    var arr = Array.isArray(list) ? list : [];
+    var main = arr.filter(function(s){ return s && s.id && ERAS.indexOf(s.id)>=0 && !SERIES_EXCLUDE.test((s.name||'')+' '+s.id); });
+    return main.length ? main : ERAS.map(function(id){ return {id:id,name:id}; });
+  },function(){
+    return ERAS.map(function(id){ return {id:id,name:id}; });
+  }).then(function(main){
+    return Promise.all(main.map(function(s){
+      return getJSON(API+'/series/'+encodeURIComponent(s.id)).then(function(d){
+        return {serie:s, sets:(d&&d.sets)||[]};
+      },function(){ return {serie:s, sets:[]}; });
+    }));
+  }).then(function(groups){
+    var out=[];
+    groups.forEach(function(g){
+      g.sets.forEach(function(st){
+        if(!st || !st.id || SET_EXCLUDE.test(st.name||'')) return;
+        if(st.cardCount && st.cardCount.total===0) return;
+        out.push({id:st.id,name:st.name,serie:g.serie.id});
+      });
+    });
+    if(!out.length) throw new Error('No sets found');
+    return out;
+  });
+}
+function addSet(d,brief){
+  if(!d || !d.cards || !d.cards.length) return;
+  var serie = (d.serie && d.serie.id) || brief.serie;
+  state.sets.push({id:d.id,name:d.name,serie:serie});
+  d.cards.forEach(function(c){
+    if(!c.image) return;
+    state.pool.push({id:c.id,name:c.name,image:c.image,setName:d.name,serie:serie});
+    if(!/energy/i.test(c.name)) state.nameSet[c.name]=1;
+  });
+  state.namesDirty=true;
+}
+function loadSetsInBackground(sets){
+  var order = shuffle(sets.slice()), idx=0, active=0, done=0, resolved=false;
+  var need = Math.min(MIN_READY, order.length);
+  return new Promise(function(resolve,reject){
+    function settle(){
+      if(resolved) return;
+      if(state.sets.length>=need){ resolved=true; resolve(); }
+      else if(done===order.length){ resolved=true; reject(new Error('No sets loaded')); }
+    }
+    function pump(){
+      while(active<CONC && idx<order.length){
+        (function(brief){
+          active++; idx++;
+          getJSON(API+'/sets/'+encodeURIComponent(brief.id)).then(function(d){ addSet(d,brief); },function(){})
+          .then(function(){ active--; done++; settle(); pump(); });
+        })(order[idx]);
+      }
+    }
+    pump();
+  });
+}
+function allNames(){
+  if(state.namesDirty){ state.names=Object.keys(state.nameSet).sort(); state.namesDirty=false; }
+  return state.names;
+}
+
+/* ---------- Drawing a card ---------- */
+/* Cards whose artwork covers the whole card have no artwork window to show, so they are left out:
+   full arts (by rarity) and Pokémon V, VMAX, VSTAR and ex (by rarity or by name). */
+var FULL_ART = /^(ultra rare|secret rare|illustration rare|special illustration rare|hyper rare|mega hyper rare|shiny ultra rare|black white rare|mega attack rare|rgb rare|futuristic rare|holo rare v|holo rare vmax|holo rare vstar|double rare)$/i;
+var FULL_ART_NAME = / (ex|V|VMAX|VSTAR)$/;
+function isFullArt(c){ return !!(c && ((c.rarity && FULL_ART.test(c.rarity)) || FULL_ART_NAME.test(c.name||''))); }
+function pickCard(){
+  if(state.localDb){
+    var ok = state.pool.filter(function(p){ return !isFullArt(p); });
+    if(!ok.length) return Promise.reject(new Error('No suitable card found'));
+    var p = ok[rnd(ok.length)];
+    return Promise.resolve({id:p.id,name:p.name,image:p.image,evolveFrom:p.evolveFrom,rarity:p.rarity,setName:p.setName,serie:p.serie});
+  }
+  var cand = state.pool;
+  if(!cand.length) return Promise.reject(new Error('No cards loaded yet'));
+  var batches = 0;
+  function attempt(){
+    if(batches++ >= 10) return Promise.reject(new Error('No suitable card found'));
+    var picks=[]; for(var i=0;i<4;i++) picks.push(cand[rnd(cand.length)]);
+    return Promise.all(picks.map(function(p){
+      return getJSON(API+'/cards/'+encodeURIComponent(p.id)).then(function(d){ return {d:d,p:p}; },function(){ return null; });
+    })).then(function(rs){
+      for(var j=0;j<rs.length;j++){
+        var r=rs[j]; if(!r) continue; var d=r.d;
+        if(d.category==='Pokemon' && d.image && !isFullArt(d)){
+          return {id:d.id,name:d.name,image:d.image,evolveFrom:d.evolveFrom||null,rarity:d.rarity||null,
+                  setName:(d.set&&d.set.name)||r.p.setName,serie:r.p.serie};
+        }
+      }
+      return attempt();
+    });
+  }
+  return attempt();
+}
+/* If TCGdex has no image for a card, draw another one */
+function prepareRound(tries){
+  tries = tries||0;
+  return pickCard().then(function(card){
+    return loadImage([card.image+'/high.webp',card.image+'/high.png',card.image+'/low.png']).then(function(img){
+      return {card:card,img:img};
+    },function(e){
+      if(tries<MAX_IMG_SKIPS) return prepareRound(tries+1);
+      throw e;
+    });
+  });
+}
+
+/* ---------- Artwork window, covers and tiles ---------- */
+function censorRects(card){
+  var L=layoutFor(card), out=[];
+  if(card.evolveFrom){ out.push({k:'evo',r:L.evo}); out.push({k:'evot',r:L.evot}); }
+  if(/^Mega /.test(card.name)) out.push({k:'mega',r:L.mega});
+  return out.filter(function(c){ return c.r[2]>0 && c.r[3]>0; });
+}
+/* the whole card sits inside the stage, enlarged and moved so only the artwork window shows */
+function renderCard(){
+  var rd=state.round, k=layoutFor(rd.card).crop, box=$('cardBox');
+  box.style.width=(100/k[2])+'%'; box.style.height=(100/k[3])+'%';
+  box.style.left=(-k[0]/k[2]*100)+'%'; box.style.top=(-k[1]/k[3]*100)+'%';
+  $('stage').style.aspectRatio=(k[2]*rd.img.w)+' / '+(k[3]*rd.img.h);
+  var cz=$('censors'); cz.innerHTML='';
+  censorRects(rd.card).forEach(function(c){
+    var el=document.createElement('div');
+    el.className='censor '+c.k;
+    el.style.left=(c.r[0]*100)+'%'; el.style.top=(c.r[1]*100)+'%';
+    el.style.width=(c.r[2]*100)+'%'; el.style.height=(c.r[3]*100)+'%';
+    cz.appendChild(el);
+  });
+}
+/* tile position on the card (fractions of the whole card) */
+function blockRect(i,card){
+  var k=layoutFor(card).crop, c=i%COLS, r=Math.floor(i/COLS);
+  return [k[0]+c/COLS*k[2], k[1]+r/ROWS*k[3], k[0]+(c+1)/COLS*k[2], k[1]+(r+1)/ROWS*k[3]];
+}
+function informative(i,card){
+  var b=blockRect(i,card), cov=0;
+  censorRects(card).forEach(function(c){ cov+=overlap(b,[c.r[0],c.r[1],c.r[0]+c.r[2],c.r[1]+c.r[3]]); });
+  return cov<=0.5;
+}
+function buildGrid(){
+  var g=$('grid'); g.innerHTML='';
+  g.style.gridTemplateColumns='repeat('+COLS+',1fr)';
+  g.style.gridTemplateRows='repeat('+ROWS+',1fr)';
+  var V=state.round.grid.values;
+  for(var i=0;i<TOTAL;i++){
+    var c=i%COLS, r=Math.floor(i/COLS);
+    var b=document.createElement('div'); b.className='blk'+(V[i]>=40?' hi':(V[i]>=15?' mid':''));
+    b.setAttribute('data-i',i);
+    b.setAttribute('role','button'); b.tabIndex=0;
+    b.setAttribute('aria-label','Tile row '+(r+1)+', column '+(c+1)+', costs '+V[i]+' points');
+    // one sheet of foil across all the tiles
+    b.style.backgroundSize=(COLS*100)+'% '+(ROWS*100)+'%';
+    b.style.backgroundPosition=(c/(COLS-1)*100)+'% '+(r/(ROWS-1)*100)+'%';
+    b.textContent=V[i]; g.appendChild(b);
+  }
+}
+/* Starting tile: free, random among the cheapest tiles that show something not covered */
+function openStart(){
+  var rd=state.round, V=rd.grid.values, all=[], min=Infinity, cheap=[];
+  for(var i=0;i<TOTAL;i++){ if(informative(i,rd.card)){ all.push(i); if(V[i]<min) min=V[i]; } }
+  all.forEach(function(i){ if(V[i]===min) cheap.push(i); });
+  var pool = cheap.length ? cheap : [rnd(TOTAL)];
+  openBlock(pool[rnd(pool.length)], true);
+}
+function openBlock(i,free){
+  var rd=state.round;
+  if(rd.opened[i]) return;
+  rd.opened[i]=true; rd.openCount++; if(!free) rd.spent+=rd.grid.values[i];
+  var el=$('grid').children[i]; el.classList.add('open'); el.tabIndex=-1;
+}
+function potential(){ var rd=state.round; return rd ? Math.max(0,rd.grid.total-rd.spent) : 0; }
+function pickBlock(i){
+  var rd=state.round;
+  if(!rd||rd.over||rd.opened[i]) return;
+  openBlock(i);
+  renderMeter();
+  say(rd.openCount>=TOTAL ? 'The whole artwork is showing: no points left.' : '');
+}
+
+/* ---------- Interface ---------- */
+function renderMeter(){
+  var rd=state.round;
+  $('ptsNow').textContent = rd ? fmt(potential()) : '–';
+  $('ptsLabel').textContent = rd && !rd.over ? 'points in play, out of '+fmt(rd.grid.total) : 'points in play';
+  var left = rd ? MAX_TRIES-rd.wrong : MAX_TRIES, box=$('dots'); box.innerHTML='';
+  for(var i=0;i<MAX_TRIES;i++){ var d=document.createElement('span'); d.className='dot'+(i<left?'':' used'); box.appendChild(d); }
+  box.setAttribute('aria-label',left+' of '+MAX_TRIES+' guesses left');
+}
+function setLoading(show,text,isErr){
+  var l=$('loading'); l.hidden=!show; l.classList.toggle('err',!!isErr);
+  if(text!==undefined) $('loadingText').textContent=text;
+}
+function showError(msg,retry){
+  setLoading(true,'',true);
+  var t=$('loadingText'); t.textContent='';
+  var p=document.createElement('div'); p.textContent=msg; t.appendChild(p);
+  var b=document.createElement('button'); b.className='btn'; b.style.marginTop='14px'; b.textContent='Try again';
+  b.onclick=retry; t.appendChild(b);
+}
+function updateStats(){
+  $('stScore').textContent=fmt(state.stats.score); $('stStreak').textContent=fmt(state.stats.streak);
+  $('stWins').textContent=fmt(state.stats.wins); $('stPlayed').textContent=fmt(state.stats.played);
+}
+function setControls(on){ ['guess','btnGuess','btnGiveUp'].forEach(function(id){ $(id).disabled=!on; }); }
+function say(t){ $('msg').textContent=t||''; }
+
+function startRound(){
+  hideSugg();
+  setControls(false); $('result').hidden=true; $('play').hidden=false; $('wrongList').innerHTML=''; say('');
+  $('stage').classList.remove('done');
+  setLoading(true,'Drawing a card…');
+  var p = state.next || prepareRound();
+  state.next = null;
+  return p.then(function(r){
+    return r ? r : prepareRound();
+  }).then(function(r){
+    state.round={card:r.card,img:r.img,grid:GRID,opened:{},openCount:0,spent:0,wrong:0,guesses:[],over:false};
+    $('cardImg').src=r.img.url;
+    renderCard(); buildGrid(); openStart();
+    renderMeter();
+    setControls(true); $('guess').value='';
+    say('The first tile is free. Tap more to see more of the artwork.');
+    state.next = prepareRound().catch(function(){ return null; });
+    setLoading(false);
+  }).catch(function(e){
+    showError("Couldn't get a card from TCGdex ("+(e&&e.message?e.message:'unknown error')+').',startRound);
+  });
+}
+
+/* reason: 'win', 'tries' (out of guesses), 'giveup' */
+function endRound(reason){
+  var rd=state.round; if(!rd||rd.over) return;
+  var win = reason==='win', gain = win ? potential() : 0;
+  rd.over=true; setControls(false); hideSugg();
+  state.stats.played++;
+  if(win){ state.stats.wins++; state.stats.streak++; state.stats.score+=gain; } else { state.stats.streak=0; }
+  lsSet(STATS_KEY,state.stats);
+  updateStats(); renderMeter();
+  $('stage').classList.add('done');
+  $('play').hidden=true;
+  var res=$('result'); res.hidden=false; res.className='result '+(win?'win':'lose');
+  $('resImg').src=rd.img.url; $('resImg').alt=rd.card.name+' card';
+  $('resTitle').textContent = win ? '+'+fmt(gain)+' points' : (reason==='giveup' ? 'You gave up' : 'Out of guesses');
+  $('resInfo').textContent = (win?'Yes, it’s ':'It was ')+rd.card.name+', from '+rd.card.setName+'.';
+  say('');
+  $('btnNext').focus({preventScroll:true});
+}
+
+function submitGuess(text){
+  var rd=state.round; if(!rd||rd.over) return;
+  var g=norm(text); if(!g) return;
+  if(rd.guesses.indexOf(g)>=0){ say('You already tried that name.'); return; }
+  if(g===norm(rd.card.name)){ endRound('win'); return; }
+  rd.guesses.push(g); rd.wrong++; rd.spent+=WRONG_PENALTY;
+  var chip=document.createElement('span'); chip.className='chip'; chip.textContent=text.trim(); $('wrongList').appendChild(chip);
+  $('guess').value='';
+  if(rd.wrong>=MAX_TRIES){ endRound('tries'); return; }
+  var left=MAX_TRIES-rd.wrong;
+  renderMeter();
+  say('Not this one: −'+WRONG_PENALTY+' points. '+(left===1?'1 guess left.':left+' guesses left.'));
+}
+
+/* ---------- Suggestions (open upwards, so the phone keyboard never hides them) ---------- */
+var suggIdx=-1;
+function hideSugg(){ $('sugg').hidden=true; $('sugg').innerHTML=''; suggIdx=-1; }
+function showSugg(){
+  var q=norm($('guess').value);
+  if(q.length<2){ hideSugg(); return; }
+  var names=allNames(), starts=[], inner=[];
+  for(var i=0;i<names.length;i++){
+    var n=norm(names[i]);
+    if(n.indexOf(q)===0) starts.push(names[i]); else if(n.indexOf(q)>0) inner.push(names[i]);
+  }
+  var list=starts.concat(inner).slice(0,6);
+  var ul=$('sugg'); ul.innerHTML=''; suggIdx=-1;
+  if(!list.length){ ul.hidden=true; return; }
+  list.forEach(function(name){
+    var li=document.createElement('li'); li.setAttribute('role','option'); li.textContent=name;
+    li.onmousedown=function(e){ e.preventDefault(); $('guess').value=name; hideSugg(); $('guess').focus(); };
+    ul.appendChild(li);
+  });
+  ul.hidden=false;
+}
+function moveSugg(d){
+  var items=$('sugg').children; if(!items.length) return;
+  if(suggIdx>=0) items[suggIdx].setAttribute('aria-selected','false');
+  suggIdx=(suggIdx+d+items.length)%items.length;
+  items[suggIdx].setAttribute('aria-selected','true');
+  items[suggIdx].scrollIntoView({block:'nearest'});
+}
+
+/* ---------- Events ---------- */
+$('guessForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var items=$('sugg').children;
+  if(suggIdx>=0 && items[suggIdx]){ $('guess').value=items[suggIdx].textContent; hideSugg(); }
+  submitGuess($('guess').value);
+});
+$('guess').addEventListener('input',showSugg);
+$('guess').addEventListener('keydown',function(e){
+  if(e.key==='ArrowDown'){ e.preventDefault(); if($('sugg').hidden) showSugg(); moveSugg(1); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); moveSugg(-1); }
+  else if(e.key==='Escape'){ hideSugg(); }
+  else if(e.key==='Enter' && suggIdx>=0){
+    e.preventDefault();
+    var items=$('sugg').children; $('guess').value=items[suggIdx].textContent; hideSugg();
+  }
+});
+$('guess').addEventListener('blur',function(){ setTimeout(hideSugg,120); });
+$('grid').addEventListener('click',function(e){
+  var t=e.target; if(!t||!t.getAttribute) return;
+  var i=t.getAttribute('data-i'); if(i===null) return;
+  pickBlock(parseInt(i,10));
+});
+$('grid').addEventListener('keydown',function(e){
+  if(e.key!=='Enter' && e.key!==' ') return;
+  var i=e.target.getAttribute && e.target.getAttribute('data-i'); if(i===null) return;
+  e.preventDefault(); pickBlock(parseInt(i,10));
+});
+$('btnGiveUp').addEventListener('click',function(){ endRound('giveup'); });
+$('btnNext').addEventListener('click',function(){ startRound(); });
+
+/* ---------- Start ---------- */
+function boot(){
+  updateStats(); renderMeter();
+  setLoading(true,'Loading cards…');
+  loadLocalDb().catch(function(){
+    // cards.json unreachable (for example, the page was opened as a file): load sets from the API
+    state.sets=[]; state.pool=[]; state.nameSet={}; state.localDb=false;
+    return loadCatalog().then(loadSetsInBackground);
+  }).then(function(){
+    return startRound();
+  }).catch(function(e){
+    showError("Couldn't reach TCGdex ("+(e&&e.message?e.message:'unknown error')+'). Check your connection and try again.',boot);
+  });
+}
+boot();
+
+/* exposed for tests only */
+window.__pcg = {state:state, GRID:GRID};
+})();
+</script>
+</body>
+</html>
