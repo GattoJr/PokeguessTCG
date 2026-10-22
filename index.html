@@ -198,7 +198,7 @@ details p{color:var(--muted);margin:8px 0}
 
   <details id="rules">
     <summary>How to play</summary>
-    <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate). You have 3 guesses per card.</p>
+    <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate). You have 2 guesses per card.</p>
     <p>Each card puts 1,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play. Once you reach 0 you can still open tiles and guess, just for no points.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
@@ -220,7 +220,7 @@ var DB_URL = 'cards.json';  // card database built by gen_cards.py; if it is mis
 var COLS = 12, ROWS = 7, TOTAL = COLS*ROWS;
 var CONC = 6;               // parallel requests while loading sets from the API
 var MIN_READY = 8;          // sets needed before the first card (API mode)
-var MAX_TRIES = 3;          // wrong guesses allowed per card
+var MAX_TRIES = 2;          // wrong guesses allowed per card
 var WRONG_PENALTY = 50;     // points lost for each wrong guess
 var MAX_IMG_SKIPS = 7;      // cards skipped in a row when TCGdex has no image
 var STATS_KEY = 'pcg_stats_v1';
