@@ -40,8 +40,17 @@ def main():
         print("::notice::Supabase secrets are not set, nothing changed. See SETUP.md.")
         return
     body = json.loads((ROOT / "settings.json").read_text())
-    body["mailer_templates_confirmation_content"] = (ROOT / "confirmation.html").read_text()
-    body["mailer_templates_recovery_content"] = (ROOT / "recovery.html").read_text()
+    # On the free plan Supabase accepts custom email templates only once a custom SMTP service is set:
+    # until then the players get Supabase's standard emails (a link, no code). Run this again after setting SMTP.
+    smtp_before = bool(call("GET").get("smtp_host"))
+    if smtp_before:
+        body["mailer_templates_confirmation_content"] = (ROOT / "confirmation.html").read_text()
+        body["mailer_templates_recovery_content"] = (ROOT / "recovery.html").read_text()
+    else:
+        for k in ("mailer_subjects_confirmation", "mailer_subjects_recovery"):
+            body.pop(k, None)
+        print("::warning::Email templates NOT applied: Supabase allows them only with a custom SMTP service. "
+              "Set SMTP (SETUP.md), then run this action again from the Actions tab.")
     call("PATCH", body)
     now = call("GET")
     wrong = []
@@ -53,7 +62,7 @@ def main():
             wrong.append(k)
     smtp = bool(now.get("smtp_host"))
     print(f"custom email service (SMTP): {'set (' + str(now.get('smtp_host')) + ')' if smtp else 'NOT set'}")
-    if not smtp:
+    if not smtp and smtp_before:
         print("::warning::No custom SMTP: Supabase's built-in email only reaches the project's team members, "
               "a few emails per hour. Set one up in Authentication > Emails > SMTP Settings (see SETUP.md).")
     if wrong:
