@@ -30,7 +30,9 @@ def call(method, body=None):
         with urllib.request.urlopen(req, timeout=60) as r:
             return json.loads(r.read() or b"{}")
     except urllib.error.HTTPError as e:
-        sys.exit(f"{method} {API} failed: HTTP {e.code} {e.read().decode(errors='replace')[:500]}")
+        msg = e.read().decode(errors="replace")[:400].replace("\n", " ")
+        print(f"::error::{method} config/auth failed: HTTP {e.code} {msg}")
+        sys.exit(1)
 
 
 def main():
@@ -46,7 +48,7 @@ def main():
     for k, v in body.items():
         shown = v if not k.startswith("mailer_templates") else f"<{len(v)} characters>"
         same = now.get(k) == v
-        print(f"{'ok ' if same else 'DIFF'} {k} = {shown}")
+        print(f"{'ok ' if same else 'DIFF'} {k} = {shown}" + ("" if same else f" (Supabase has: {now.get(k) if not k.startswith('mailer_templates') else '...'})"))
         if not same:
             wrong.append(k)
     smtp = bool(now.get("smtp_host"))
@@ -55,7 +57,8 @@ def main():
         print("::warning::No custom SMTP: Supabase's built-in email only reaches the project's team members, "
               "a few emails per hour. Set one up in Authentication > Emails > SMTP Settings (see SETUP.md).")
     if wrong:
-        sys.exit("Supabase did not keep these settings: " + ", ".join(wrong))
+        print("::error::Supabase did not keep these settings: " + ", ".join(wrong))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
