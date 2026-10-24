@@ -55,7 +55,12 @@ button,input{font:inherit;color:inherit}
 
 /* ---------- Top ---------- */
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.top h1{margin:0;font:900 clamp(26px,7vw,38px)/.9 var(--display);font-stretch:135%;letter-spacing:-.02em}
+.top>div{min-width:0;flex:1 1 auto}
+.top h1{margin:0;font:900 clamp(26px,7vw,38px)/.9 var(--display);font-stretch:135%;letter-spacing:-.02em;white-space:nowrap}
+@media (max-width:520px){
+  .top h1{font-size:clamp(19px,6.1vw,30px);font-stretch:112%}
+  .acct{padding:7px 12px;font-size:13px}
+}
 .top p{margin:4px 0 0;color:var(--muted);font-size:14px}
 .acct{flex:none;max-width:45%;border:1.5px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
