@@ -62,6 +62,11 @@ button,input{font:inherit;color:inherit}
 /* ---------- Mode switch ---------- */
 .modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line)}
 .modes button{border:0;border-radius:10px;padding:10px 8px;background:transparent;cursor:pointer;font:800 17px/1 var(--display);font-stretch:115%;color:var(--muted)}
+.modes button.hardtab{padding:8px 8px;font-size:14px;font-stretch:105%}
+.modes button.hardtab span{color:var(--bad)}
+.modes button.hardtab[aria-selected="true"] span{color:#FF9C8C}
+.status .sr{display:flex;gap:12px;align-items:baseline}
+.status .link{padding:0;font-size:14px}
 .modes button[aria-selected="true"]{background:var(--tile-1);color:#fff;box-shadow:0 -3px 0 var(--gold) inset}
 .status{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);padding:0 4px;min-height:21px}
 .status b{color:var(--ink);font-variant-numeric:tabular-nums}
@@ -96,6 +101,13 @@ button,input{font:inherit;color:inherit}
 .blk:active{filter:brightness(1.5)}
 .blk:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .blk.open{opacity:0;transform:scale(.55) rotate(-6deg);pointer-events:none}
+.blk.lock{cursor:not-allowed;color:transparent;background:repeating-linear-gradient(135deg,#16233F 0 5px,#1B2B4C 5px 10px);filter:none}
+.blk.lock:active{filter:none}
+.startov{position:absolute;inset:0;z-index:4;display:grid;place-items:center;text-align:center;padding:12px;background:rgba(10,18,36,.8);color:#DCE6F7;backdrop-filter:blur(2px)}
+.startov .btn{font-size:18px;padding:14px 26px}
+.startov p{margin:10px 0 0;font-weight:600}
+.startov .last{font-size:13px;font-weight:500;color:#AFC0DD;margin-top:4px}
+.startov .row{justify-content:center}
 .stage.done .blk{opacity:0;transform:scale(.55);pointer-events:none}
 .loading{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;background:var(--tile-1);color:#C9D6EE;font-weight:500;z-index:5}
 .spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--gold);margin:0 auto 12px;animation:sp .9s linear infinite}
@@ -143,7 +155,7 @@ input[type=text]:disabled{opacity:.6}
 .result .small{font-size:13px;color:var(--muted);margin:8px 0 0}
 
 /* ---------- Dialogs ---------- */
-dialog{border:0;padding:0;border-radius:20px;background:var(--surface);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-shadow:0 30px 80px rgba(0,0,0,.4)}
+dialog{border:0;padding:0;border-radius:20px;overflow-x:hidden;background:var(--surface);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-shadow:0 30px 80px rgba(0,0,0,.4)}
 dialog::backdrop{background:var(--scrim)}
 .dlg{padding:20px 18px 18px;display:flex;flex-direction:column;gap:12px}
 .dlg h2{margin:0;font:900 26px/1 var(--display);font-stretch:120%}
@@ -217,16 +229,12 @@ details p{color:var(--muted);margin:8px 0}
 
   <div class="modes" role="tablist" aria-label="Game mode">
     <button type="button" role="tab" id="tabDaily" aria-selected="true">Daily</button>
-    <button type="button" role="tab" id="tabG10" aria-selected="false">Booster</button>
+    <button type="button" role="tab" id="tabBooster" aria-selected="false">Booster</button>
+    <button type="button" role="tab" id="tabDailyHard" class="hardtab" aria-selected="false">Daily <span>(Hard)</span></button>
+    <button type="button" role="tab" id="tabBoosterHard" class="hardtab" aria-selected="false">Booster <span>(Hard)</span></button>
   </div>
-  <div class="status" id="status"><span id="statusL"></span><span id="statusR"></span></div>
+  <div class="status" id="status"><span id="statusL"></span><span class="sr"><span id="statusR"></span><button class="link" id="btnNew" type="button" hidden>New game</button></span></div>
 
-  <section class="intro" id="intro" hidden>
-    <h2>Booster<span>.</span></h2>
-    <p>Open a pack of ten random cards and name them one after another, up to 1,000 points each. Your best booster goes on the world leaderboard.</p>
-    <p class="last" id="introLast" hidden></p>
-    <button class="btn" id="btnStart" type="button">Open a booster</button>
-  </section>
 
   <div id="board">
     <div class="meter">
@@ -238,6 +246,13 @@ details p{color:var(--muted);margin:8px 0}
         <img id="art" alt="Pokémon card artwork covered by tiles" draggable="false">
         <img id="artTop" class="arttop" alt="" draggable="false">
         <div class="grid" id="grid"></div>
+        <div class="startov" id="startOv" hidden>
+          <div>
+            <div class="row"><button class="btn" id="btnStart" type="button">Start game</button><button class="btn" id="btnContinue" type="button" hidden>Continue</button></div>
+            <p id="startText">Guess 10 cards</p>
+            <p class="last" id="introLast" hidden></p>
+          </div>
+        </div>
         <div class="loading" id="loading"><div><div class="spin"></div><div id="loadingText">Loading…</div></div></div>
       </div>
     </div>
@@ -280,6 +295,7 @@ details p{color:var(--muted);margin:8px 0}
     <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate). You have 2 guesses per card.</p>
     <p>Each card puts 1,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play. Once you reach 0 you can still open tiles and guess, just for no points.</p>
     <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. <b>Booster</b>: like opening a pack, ten random cards in a row, up to 10,000 points; open as many as you like. Sign in with Google to save your results and enter the leaderboard.</p>
+    <p><b>Hard</b>: same game, but only the outer frame of tiles can be opened. Each card puts 200 points in play, every outer tile costs 5 and a wrong guess costs 30. Daily (Hard) has its own card of the day, and Booster (Hard) its own leaderboard.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
       <i class="mid">15</i><span>Inner frame</span>
@@ -299,7 +315,7 @@ details p{color:var(--muted);margin:8px 0}
     <p id="dcInfo"></p>
     <div class="row">
       <button class="btn" id="dcMain" type="button"></button>
-      <button class="btn ghost" id="dcAlt" type="button" hidden></button>
+      <button class="btn" id="dcAlt" type="button" hidden></button>
     </div>
   </div>
 </dialog>
@@ -353,10 +369,22 @@ details p{color:var(--muted);margin:8px 0}
     <button class="x" type="button" data-close aria-label="Close">×</button>
     <h2 id="dsTitle">Sign in</h2>
     <p class="muted">Save your results on every device and enter the world leaderboard.</p>
-    <div id="gsiBtn" style="min-height:44px;display:flex;justify-content:center"></div>
+    <div id="gsiBtn" style="min-height:44px;display:flex;justify-content:center;max-width:100%;overflow:hidden"></div>
     <button class="btn gbtn" type="button" id="btnOAuth" hidden></button>
     <button class="link" type="button" id="btnOAuthAlt" hidden>Trouble signing in? Try the other way</button>
     <p class="err" id="signErr" aria-live="polite"></p>
+  </div>
+</dialog>
+
+<!-- New booster? -->
+<dialog id="dlgNew" aria-labelledby="dnwTitle">
+  <div class="dlg">
+    <h2 id="dnwTitle">Start a new game?</h2>
+    <p class="muted">This booster will be dropped and won't count for the leaderboard.</p>
+    <div class="row">
+      <button class="btn" type="button" id="newYes">New game</button>
+      <button class="btn ghost" type="button" id="newNo">Keep playing</button>
+    </div>
   </div>
 </dialog>
 
@@ -365,7 +393,11 @@ details p{color:var(--muted);margin:8px 0}
   <div class="dlg">
     <button class="x" type="button" data-close aria-label="Close">×</button>
     <h2 id="dbTitle">Leaderboard</h2>
-    <p class="muted">Best booster of each player.</p>
+    <div class="modes" role="tablist" aria-label="Leaderboard">
+      <button type="button" role="tab" id="lbNormal" aria-selected="true">Booster</button>
+      <button type="button" role="tab" id="lbHard" aria-selected="false">Booster (Hard)</button>
+    </div>
+    <p class="muted" id="lbNote">Best booster of each player.</p>
     <ol class="board" id="boardList"></ol>
     <div class="note" id="dbGuest" hidden>
       <b>Sign in to enter the leaderboard</b>
@@ -390,20 +422,23 @@ details p{color:var(--muted);margin:8px 0}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
-<script src="config.js?v=4"></script>
+<script src="config.js?v=5"></script>
 <script>
 (function(){
 'use strict';
 
 /* ---------- Settings (the server applies the same rules; these are for display) ---------- */
 var COLS = 12, ROWS = 7, TOTAL = COLS*ROWS;
-var POINTS = 1000, PENALTY = 50, TRIES = 2;
+var TRIES = 2;
+function pointsFor(hard){ return hard ? 200 : 1000; }   // the server sends the same values with each round
 var RUN_CARDS = 10;
 var CFG = window.PG_CONFIG || {};
 var GOOGLE_G = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.7l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>';
 
 function ringOf(r,c){ return Math.min(r, c, ROWS-1-r, COLS-1-c); }
 function tileValue(i){ return [5,15,60,60][Math.min(ringOf(Math.floor(i/COLS), i%COLS),3)]; }
+/* in Hard only the outer frame (tiles worth 5) can be opened */
+function tileOk(i,hard){ return !hard || tileValue(i)===5; }
 
 /* ---------- Helpers ---------- */
 function $(id){ return document.getElementById(id); }
@@ -464,7 +499,8 @@ function warmNext(data){
 
 /* ---------- State ---------- */
 var S = {
-  mode: 'daily',           // 'daily' | 'g10'
+  mode: 'daily',           // 'daily' | 'booster'
+  hard: false,             // Hard version of the mode
   user: null,              // signed-in user (supabase), or null for a guest
   profile: null,           // {username, is_admin}
   round: null,             // the card on screen
@@ -478,13 +514,15 @@ var S = {
 fetch('names.json').then(function(r){ return r.ok ? r.json() : []; }).then(function(n){ S.names = Array.isArray(n)?n:[]; }).catch(function(){});
 
 /* ---------- Drawing a round ---------- */
-function buildGrid(){
+function buildGrid(hard){
+  if(hard===undefined) hard=S.hard;
   var g=$('grid'); g.innerHTML='';
   for(var i=0;i<TOTAL;i++){
-    var c=i%COLS, r=Math.floor(i/COLS), v=tileValue(i);
-    var b=document.createElement('div'); b.className='blk'+(v>=40?' hi':(v>=15?' mid':''));
-    b.setAttribute('data-i',i); b.setAttribute('role','button'); b.tabIndex=0;
-    b.setAttribute('aria-label','Tile row '+(r+1)+', column '+(c+1)+', costs '+v+' points');
+    var c=i%COLS, r=Math.floor(i/COLS), v=tileValue(i), ok=tileOk(i,hard);
+    var b=document.createElement('div'); b.className='blk'+(v>=40?' hi':(v>=15?' mid':''))+(ok?'':' lock');
+    b.setAttribute('data-i',i);
+    if(ok){ b.setAttribute('role','button'); b.tabIndex=0; b.setAttribute('aria-label','Tile row '+(r+1)+', column '+(c+1)+', costs '+v+' points'); }
+    else b.setAttribute('aria-hidden','true');
     b.style.backgroundSize=(COLS*100)+'% '+(ROWS*100)+'%';
     b.style.backgroundPosition=(c/(COLS-1)*100)+'% '+(r/(ROWS-1)*100)+'%';
     b.textContent=v; g.appendChild(b);
@@ -492,8 +530,8 @@ function buildGrid(){
 }
 function potential(){
   var rd=S.round; if(!rd) return 0;
-  var spent=0; rd.opened.forEach(function(t){ if(t!==rd.start) spent+=tileValue(t); });
-  return Math.max(0, POINTS - spent - PENALTY*rd.wrong);
+  var spent=0; rd.opened.forEach(function(t){ if(t!==rd.start && tileOk(t,rd.hard)) spent+=tileValue(t); });
+  return Math.max(0, rd.points - spent - rd.penalty*rd.wrong);
 }
 function markOpen(i){
   var el=$('grid').children[i]; if(el){ el.classList.add('open'); el.tabIndex=-1; }
@@ -518,39 +556,43 @@ function renderMeter(){
     $('ptsLabel').textContent = 'points scored';
   } else {
     $('ptsNow').textContent = rd ? fmt(potential()) : '–';
-    $('ptsLabel').textContent = rd ? 'points in play, out of '+fmt(POINTS) : 'points in play';
+    $('ptsLabel').textContent = rd ? 'points in play, out of '+fmt(rd.points) : 'points in play';
   }
   var left = rd ? Math.max(0,TRIES-rd.wrong) : TRIES, box=$('dots'); box.innerHTML='';
   for(var i=0;i<TRIES;i++){ var d=document.createElement('span'); d.className='dot'+(i<left?'':' used'); box.appendChild(d); }
   box.setAttribute('aria-label',left+' of '+TRIES+' guesses left');
 }
 function renderStatus(){
-  var L='', R='';
+  var L='', R='', hardTag = S.hard ? ' · <b style="color:var(--bad)">Hard</b>' : '';
   if(S.mode==='daily'){
     var d=S.daily && S.daily.day ? new Date(S.daily.day+'T00:00:00Z') : null;
-    L = 'Daily card'+(d ? ' · '+d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}) : '');
+    L = 'Daily card'+(d ? ' · '+d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}) : '')+hardTag;
   } else if(S.run && !S.run.finished && S.round){
-    L = 'Card <b>'+(S.round.idx+1)+'</b> of '+RUN_CARDS;
+    L = 'Card <b>'+(S.round.idx+1)+'</b> of '+RUN_CARDS+hardTag;
     R = 'Total <b>'+fmt(S.run.total)+'</b>';
+  } else {
+    L = 'Booster'+hardTag;
   }
   $('statusL').innerHTML=L; $('statusR').innerHTML=R;
+  $('btnNew').hidden = !(S.mode==='booster' && S.run && !S.run.finished && S.round && $('startOv').hidden);
 }
 
 /* show a round received from the server */
 function showRound(data){
   var rd = {
-    id:data.round_id, mode:data.mode, idx:data.idx, day:data.day,
+    id:data.round_id, mode:data.mode, idx:data.idx, day:data.day, hard:!!data.hard,
+    points:data.points||pointsFor(!!data.hard), penalty:data.penalty||(data.hard?30:50),
     start:data.start_tile, wrong:data.wrong||0, guesses:data.guesses||[],
     over:!!data.over, won:!!data.won, score:data.score, card:data.card||null,
     art:data.art||null, artFull:data.art_full||null, opened:[]
   };
   var seen={};
-  [rd.start].concat(data.opened||[], savedTiles(rd.id)).forEach(function(t){ if(t>=0&&t<TOTAL&&!seen[t]){ seen[t]=1; rd.opened.push(t); } });
+  [rd.start].concat(data.opened||[], savedTiles(rd.id)).forEach(function(t){ if(t>=0&&t<TOTAL&&!seen[t]&&(t===rd.start||tileOk(t,rd.hard))){ seen[t]=1; rd.opened.push(t); } });
   S.round=rd;
-  $('intro').hidden=true; $('board').hidden=false;
+  $('startOv').hidden=true;
   hideSugg(); $('wrongList').innerHTML=''; say('');
   rd.guesses.forEach(function(g){ addChip(g); });
-  buildGrid(); rd.opened.forEach(markOpen);
+  buildGrid(rd.hard); rd.opened.forEach(markOpen);
   var top=$('artTop'); top.onload=null; top.onerror=null; top.classList.remove('on'); top.removeAttribute('src');
   $('stage').classList.remove('done');
   setLoading(true,'Loading the artwork…');
@@ -600,7 +642,7 @@ function showResult(fresh){
   var main=$('btnResMain'), alt=$('btnResAlt'), small=$('resSmall');
   alt.hidden=true; small.hidden=true;
   if(rd.mode==='daily'){
-    main.textContent='Play Booster'; main.onclick=function(){ switchMode('g10'); };
+    main.textContent='Play Booster'+(rd.hard?' (Hard)':''); main.onclick=function(){ switchMode('booster', rd.hard); };
     alt.hidden=false; alt.textContent='See how you did'; alt.onclick=function(){ openDailyStats(); };
     if(S.daily && S.daily.next_reset){ small.hidden=false; small.textContent='Next daily card in '+untilText(S.daily.next_reset)+'.'; }
   } else if(rd.idx < RUN_CARDS-1){
@@ -629,7 +671,7 @@ function openCardPopup(){
   var main=$('dcMain'), alt=$('dcAlt'); alt.hidden=true;
   if(rd.mode==='daily'){
     main.textContent='See how you did'; main.onclick=function(){ $('dlgCard').close(); openDailyStats(); };
-    alt.hidden=false; alt.textContent='Play Booster'; alt.onclick=function(){ $('dlgCard').close(); switchMode('g10'); };
+    alt.hidden=false; alt.textContent='Play Booster'+(rd.hard?' (Hard)':''); alt.onclick=function(){ $('dlgCard').close(); switchMode('booster', rd.hard); };
   } else if(rd.idx < RUN_CARDS-1){
     main.textContent='Next card ('+(rd.idx+2)+'/'+RUN_CARDS+')'; main.onclick=function(){ $('dlgCard').close(); nextCard(); };
   } else {
@@ -648,6 +690,7 @@ function untilText(iso){
 function pickBlock(i){
   var rd=S.round;
   if(!rd||rd.over||rd.opened.indexOf(i)>=0) return;
+  if(!tileOk(i,rd.hard)){ say('In Hard mode only the outer tiles can be opened.'); return; }
   rd.opened.push(i); markOpen(i); saveTiles(rd.id, rd.opened);
   renderMeter();
   say(potential()===0 ? 'No points left for this card, but you can still open tiles and guess.' : '');
@@ -658,7 +701,7 @@ function afterServer(data){
   var newWrong = (data.wrong||0) > rd.wrong;
   rd.wrong=data.wrong||0; rd.guesses=data.guesses||[]; rd.over=!!data.over; rd.won=!!data.won; rd.score=data.score; rd.card=data.card||null;
   rd.artFull=data.art_full||rd.artFull;
-  if(S.run && rd.mode==='g10' && rd.over) S.run.total += (rd.score||0);
+  if(S.run && rd.mode==='booster' && rd.over) S.run.total += (rd.score||0);
   say('');
   if(rd.over){
     if(rd.mode==='daily'){ S.daily = Object.assign({}, S.daily||{}, data); S.lastStats=data.stats; }
@@ -668,7 +711,7 @@ function afterServer(data){
   if(newWrong){
     $('wrongList').innerHTML=''; rd.guesses.forEach(addChip);
     var left=TRIES-rd.wrong;
-    say('Not this one: −'+PENALTY+' points. '+(left===1?'1 guess left.':left+' guesses left.'));
+    say('Not this one: −'+rd.penalty+' points. '+(left===1?'1 guess left.':left+' guesses left.'));
   }
   $('guess').value=''; setControls(true); renderMeter(); $('guess').focus();
 }
@@ -698,69 +741,95 @@ function giveUp(){
 }
 
 /* ---------- Modes ---------- */
-function switchMode(m){
+var TABS = {tabDaily:['daily',false], tabBooster:['booster',false], tabDailyHard:['daily',true], tabBoosterHard:['booster',true]};
+function runKey(hard){ return 'pg_run'+(hard?'_hard':''); }
+function lastKey(hard){ return 'pg_last_booster'+(hard?'_hard':''); }
+function switchMode(m, hard){
   if(S.busy) return;
-  S.mode=m;
-  $('tabDaily').setAttribute('aria-selected', m==='daily'); $('tabG10').setAttribute('aria-selected', m==='g10');
+  S.mode=m; S.hard=!!hard;
+  Object.keys(TABS).forEach(function(id){ $(id).setAttribute('aria-selected', TABS[id][0]===m && TABS[id][1]===S.hard); });
   closeAll();
-  if(m==='daily') loadDaily(); else loadG10();
+  if(m==='daily') loadDaily(); else loadBooster();
+}
+function clearArt(){
+  var img=$('art'); img.onload=null; img.onerror=null; img.removeAttribute('src');
+  var top=$('artTop'); top.onload=null; top.onerror=null; top.classList.remove('on'); top.removeAttribute('src');
+  $('stage').classList.remove('done');
 }
 function loadDaily(){
-  S.round=null; $('intro').hidden=true; $('board').hidden=false; $('result').hidden=true; $('play').hidden=false;
-  setControls(false); buildGrid(); renderMeter(); renderStatus(); setLoading(true,'Getting today’s card…');
-  return rpc('daily_get',{p_guest:GUEST}).then(function(d){
-    if(S.mode!=='daily') return;
+  var hard=S.hard;
+  S.round=null; S.run=null; $('startOv').hidden=true; $('result').hidden=true; $('play').hidden=false;
+  clearArt(); setControls(false); buildGrid(hard); renderMeter(); renderStatus(); setLoading(true,'Getting today’s card…');
+  return rpc('daily_get',{p_guest:GUEST, p_hard:hard}).then(function(d){
+    if(S.mode!=='daily' || S.hard!==hard) return;
     S.daily=d; S.lastStats=d.stats||null; showRound(d);
   }).catch(function(e){ showError("Couldn't get today's card ("+errText(e)+').', loadDaily); });
 }
-function loadG10(){
-  var runId = lsGet('pg_run');
+/* entering Booster never starts a game by itself: the artwork window offers Start (or Continue) */
+function loadBooster(){
+  var hard=S.hard, runId=lsGet(runKey(hard));
+  S.round=null; S.run=null; $('result').hidden=true; $('play').hidden=true; say('');
+  clearArt(); setControls(false); buildGrid(hard); renderMeter();
   if(!runId){ showIntro(); return; }
-  S.round=null; $('intro').hidden=true; $('board').hidden=false; $('result').hidden=true;
-  setControls(false); buildGrid(); renderMeter(); setLoading(true,'Loading your booster…');
-  return rpc('g10_state',{p_run:runId, p_guest:GUEST}).then(function(d){
-    if(S.mode!=='g10') return;
-    if(d.finished){ lsDel('pg_run'); S.run=null; showIntro(d.total); return; }
-    S.run={run_id:d.run_id,total:d.total,done:d.done,finished:false};
-    showRound(d.round);
-  }).catch(function(){ lsDel('pg_run'); S.run=null; showIntro(); });
+  setLoading(true,'Loading your booster…'); $('startOv').hidden=true; renderStatus();
+  return rpc('booster_state',{p_run:runId, p_guest:GUEST}).then(function(d){
+    if(S.mode!=='booster' || S.hard!==hard) return;
+    if(d.finished){ lsDel(runKey(hard)); showIntro(d.total); return; }
+    showIntro(undefined, d);
+  }).catch(function(){ lsDel(runKey(hard)); showIntro(); });
 }
-function showIntro(lastTotal){
+function showIntro(lastTotal, resume){
   S.round=null; S.run=null;
-  $('board').hidden=true; $('play').hidden=true; $('result').hidden=true; say('');
-  $('intro').hidden=false; renderStatus();
-  var best=lsGet('pg_last_g10');
+  $('play').hidden=true; $('result').hidden=true; say('');
+  setLoading(false); $('startOv').hidden=false;
+  $('startText').textContent = S.hard ? 'Guess 10 cards. Only the outer tiles can be opened.' : 'Guess 10 cards';
+  var best=lsGet(lastKey(S.hard));
   if(lastTotal!==undefined && lastTotal!==null) best=lastTotal;
-  $('introLast').hidden = best===null || best===undefined;
+  $('introLast').hidden = best===null || best===undefined || !!resume;
   if(best!==null && best!==undefined) $('introLast').textContent='Your last booster: '+fmt(best)+' points';
+  var cont=$('btnContinue');
+  if(resume){
+    cont.hidden=false; cont.style.order='-1'; cont.textContent='Continue (card '+(resume.round.idx+1)+'/'+RUN_CARDS+')';
+    $('btnStart').textContent='New game'; $('btnStart').className='btn ghost';
+    cont.onclick=function(){ S.run={run_id:resume.run_id,total:resume.total,done:resume.done,finished:false}; $('play').hidden=false; showRound(resume.round); };
+    $('startText').textContent='Booster in progress: '+fmt(resume.total)+' points so far';
+  } else {
+    cont.hidden=true; $('btnStart').textContent='Start game'; $('btnStart').className='btn';
+  }
+  renderMeter(); renderStatus();
 }
-function startG10(){
+function startBooster(){
   if(S.busy) return; S.busy=true;
-  $('btnStart').disabled=true;
-  rpc('g10_start',{p_guest:GUEST}).then(function(d){
-    lsSet('pg_run', d.run_id);
+  var hard=S.hard;
+  $('btnStart').disabled=true; closeAll();
+  $('startOv').hidden=true; setLoading(true,'Opening a booster…');
+  rpc('booster_start',{p_guest:GUEST, p_hard:hard}).then(function(d){
+    lsSet(runKey(hard), d.run_id);
     S.run={run_id:d.run_id,total:0,done:0,finished:false};
     $('play').hidden=false;
     showRound(d.round);
-  }).catch(function(e){ alert("Couldn't open a booster ("+errText(e)+')'); })
+  }).catch(function(e){ showError("Couldn't open a booster ("+errText(e)+').', function(){ S.busy=false; startBooster(); }); })
   .then(function(){ S.busy=false; $('btnStart').disabled=false; });
 }
 function nextCard(){
   if(!S.run || S.busy) return; S.busy=true;
+  var hard=S.hard;
   $('btnResMain').disabled=true;
-  rpc('g10_next',{p_run:S.run.run_id, p_guest:GUEST}).then(function(d){
+  rpc('booster_next',{p_run:S.run.run_id, p_guest:GUEST}).then(function(d){
     S.run.total=d.total;
     if(d.finished){
-      S.run.finished=true; lsDel('pg_run'); lsSet('pg_last_g10', d.total);
+      S.run.finished=true; lsDel(runKey(hard)); lsSet(lastKey(hard), d.total);
       renderStatus();
-      openG10Stats(d.total, d.stats);
-      $('btnResMain').textContent='Open another booster'; $('btnResMain').onclick=function(){ closeAll(); startG10(); };
+      openBoosterStats(d.total, d.stats, hard);
+      $('btnResMain').textContent='Open another booster'; $('btnResMain').onclick=function(){ closeAll(); startBooster(); };
       return;
     }
     $('play').hidden=false; showRound(d.round);
   }).catch(function(e){ say("Couldn't get the next card ("+errText(e)+').'); })
   .then(function(){ S.busy=false; $('btnResMain').disabled=false; });
 }
+/* drop the booster in progress and open a new one */
+function newGame(){ closeAll(); $('dlgNew').showModal(); }
 
 /* ---------- Result dialogs ---------- */
 /* bar chart of how many players scored in each band; xLabels = {column index: text} */
@@ -804,39 +873,45 @@ function openDailyStats(){
   var rd=S.round, st=S.lastStats || (S.daily && S.daily.stats);
   if(!rd || rd.mode!=='daily' || !st){ return; }
   $('drTitle').textContent = rd.won ? 'Daily card named!' : 'Daily card missed';
-  $('drScore').innerHTML = fmt(rd.score||0)+'<small>/ '+fmt(POINTS)+'</small>';
+  var w=st.width||(rd.hard?10:50);
+  $('drTitle').textContent += rd.hard ? ' (Hard)' : '';
+  $('drScore').innerHTML = fmt(rd.score||0)+'<small>/ '+fmt(rd.points)+'</small>';
   $('drVerdict').textContent = verdictText(st);
-  drawHist(st, rd.won ? Math.min(20, Math.floor((rd.score||0)/50)) : 0, st.width||50);
-  $('drChart').setAttribute('aria-label','How many players scored each band of 50 points today, from 0 to 1,000 (a missed card counts as 0)');
+  drawHist(st, rd.won ? Math.min(20, Math.floor((rd.score||0)/w)) : 0, w);
+  $('drChart').setAttribute('aria-label','How many players scored each band of '+w+' points today, from 0 to '+fmt(rd.points)+' (a missed card counts as 0)');
   $('drPlayers').textContent = fmt(st.players)+' player'+(st.players===1?'':'s')+' today. Next card in '+untilText(S.daily&&S.daily.next_reset)+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
-  main.textContent='Play Booster'; main.onclick=function(){ closeAll(); switchMode('g10'); };
+  main.textContent='Play Booster'+(rd.hard?' (Hard)':''); main.onclick=function(){ closeAll(); switchMode('booster', rd.hard); };
   alt.hidden=true;
   $('dlgResult').showModal();
 }
-function openG10Stats(total, st){
+function openBoosterStats(total, st, hard){
   st = st || {players:1,buckets:[],beaten:0};
-  $('drTitle').textContent='Booster complete';
-  $('drScore').innerHTML = fmt(total)+'<small>/ 10,000</small>';
+  var w=st.width||(hard?100:500), max=pointsFor(hard)*RUN_CARDS;
+  $('drTitle').textContent='Booster complete'+(hard?' (Hard)':'');
+  $('drScore').innerHTML = fmt(total)+'<small>/ '+fmt(max)+'</small>';
   $('drVerdict').textContent = verdictText(st);
-  drawHist(st, Math.min(20, Math.floor(total/500)), st.width||500);
-  $('drChart').setAttribute('aria-label','How many players reached each band of 500 points with their best booster, from 0 to 10,000');
+  drawHist(st, Math.min(20, Math.floor(total/w)), w);
+  $('drChart').setAttribute('aria-label','How many players reached each band of '+w+' points with their best booster, from 0 to '+fmt(max));
   $('drPlayers').textContent = 'Compared with the best booster of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
-  main.textContent='Play again'; main.onclick=function(){ closeAll(); startG10(); };
-  alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(); };
+  main.textContent='Play again'; main.onclick=function(){ closeAll(); startBooster(); };
+  alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(hard); };
   $('dlgResult').showModal();
 }
-function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
+function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn','dlgNew'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
 
 /* ---------- Leaderboard ---------- */
-function openBoard(){
+function openBoard(hard){
+  if(hard===undefined) hard=S.hard;
   var ul=$('boardList'); ul.innerHTML='<li><span></span><span>Loading…</span><span></span></li>';
+  $('lbNormal').setAttribute('aria-selected', !hard); $('lbHard').setAttribute('aria-selected', !!hard);
+  $('lbNote').textContent = 'Best '+(hard?'Hard ':'')+'booster of each player, out of '+fmt(pointsFor(hard)*RUN_CARDS)+'.';
   $('dbGuest').hidden=!!S.user;
-  $('dlgBoard').showModal();
-  rpc('leaderboard',{p_limit:100}).then(function(d){
+  if(!$('dlgBoard').open) $('dlgBoard').showModal();
+  rpc('leaderboard',{p_limit:100, p_hard:!!hard}).then(function(d){
     ul.innerHTML='';
     var top=d.top||[], me=d.me, meShown=false;
     if(!top.length){ ul.innerHTML='<li><span></span><span>No scores yet. Be the first!</span><span></span></li>'; }
@@ -884,7 +959,8 @@ function signIn(){
         }).catch(function(e){ $('signErr').textContent="Couldn't sign in ("+errText(e)+'). Try the other way below.'; });
       }
     });
-    google.accounts.id.renderButton($('gsiBtn'),{type:'standard',theme:'outline',size:'large',text:'signin_with',shape:'pill',width:260});
+    var w=Math.max(200, Math.min(300, ($('gsiBtn').clientWidth||240)-4));
+    google.accounts.id.renderButton($('gsiBtn'),{type:'standard',theme:'outline',size:'large',text:'signin_with',shape:'pill',width:w});
   }).catch(function(){ $('btnOAuth').hidden=false; $('gsiBtn').hidden=true; $('btnOAuthAlt').hidden=true; });
 }
 function signOut(){
@@ -975,10 +1051,19 @@ $('grid').addEventListener('keydown',function(e){
   e.preventDefault(); pickBlock(parseInt(i,10));
 });
 $('btnGiveUp').addEventListener('click',giveUp);
-$('tabDaily').addEventListener('click',function(){ if(S.mode!=='daily') switchMode('daily'); });
-$('tabG10').addEventListener('click',function(){ if(S.mode!=='g10') switchMode('g10'); });
-$('btnStart').addEventListener('click',startG10);
-$('btnBoard').addEventListener('click',openBoard);
+Object.keys(TABS).forEach(function(id){
+  $(id).addEventListener('click',function(){ var t=TABS[id]; if(S.mode!==t[0] || S.hard!==t[1]) switchMode(t[0], t[1]); });
+});
+$('btnStart').addEventListener('click',function(){
+  if(!$('btnContinue').hidden){ newGame(); return; }   // a booster is in progress: ask first
+  startBooster();
+});
+$('btnNew').addEventListener('click',newGame);
+$('newNo').addEventListener('click',function(){ $('dlgNew').close(); });
+$('newYes').addEventListener('click',function(){ $('dlgNew').close(); lsDel(runKey(S.hard)); S.run=null; startBooster(); });
+$('btnBoard').addEventListener('click',function(){ openBoard(); });
+$('lbNormal').addEventListener('click',function(){ openBoard(false); });
+$('lbHard').addEventListener('click',function(){ openBoard(true); });
 $('btnAcct').addEventListener('click',function(){
   if(!S.user){ signIn(); return; }
   $('daTitle').textContent=(S.profile&&S.profile.username)||'Your account';
@@ -1016,11 +1101,11 @@ function boot(){
   }).catch(function(){}).then(function(){
     sb.auth.onAuthStateChange(function(ev,session){
       if(ev==='SIGNED_IN' && session && (!S.user || S.user.id!==session.user.id)){
-        onSignedIn(session.user).then(function(){ switchMode(S.mode); });
+        onSignedIn(session.user).then(function(){ switchMode(S.mode, S.hard); });
       }
     });
     renderAccount();
-    switchMode('daily');   // Daily first: if today's card is done, its final screen shows
+    switchMode('daily', false);   // Daily first: if today's card is done, its final screen shows
   });
 }
 boot();

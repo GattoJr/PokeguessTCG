@@ -85,3 +85,9 @@ Se il pulsante non si carica, la finestra di accesso offre comunque il vecchio m
   la funzione `art` lavora solo la prima volta per ogni carta.
 - La carta del giorno programmata dal pannello è già pronta (l'anteprima la genera); nel Booster la carta successiva
   viene preparata mentre si gioca quella attuale.
+
+## Modalità (dal 24/10/2026)
+- Daily, Booster (ex Guess10), Daily (Hard), Booster (Hard).
+- Hard: si aprono solo i blocchi della cornice esterna (5 punti l'uno), 200 punti in palio per carta, −30 per risposta sbagliata,
+  2 tentativi. Daily (Hard) ha una carta del giorno diversa e il suo calendario nel pannello (interruttore Daily / Daily (Hard));
+  il blocco di partenza Hard deve stare sulla cornice esterna. Booster (Hard) ha la sua classifica (massimo 2.000).

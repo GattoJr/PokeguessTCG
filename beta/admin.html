@@ -81,6 +81,9 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
 .blk{display:grid;place-items:center;cursor:pointer;background:linear-gradient(118deg,var(--tile-1),var(--tile-2) 30%,var(--tile-3) 40%,var(--tile-2) 50%,var(--tile-1));box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1);color:var(--tile-ink);font:700 2.6cqw/1 var(--display);transition:opacity .2s}
 .blk.mid{color:var(--tile-ink-mid)} .blk.hi{color:var(--gold)}
 .blk.start{opacity:0}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1.5px solid var(--line);margin-bottom:10px}
+.modes button{border:0;border-radius:9px;padding:8px;background:transparent;cursor:pointer;font:800 15px/1 var(--display);font-stretch:110%;color:var(--muted)}
+.modes button[aria-selected="true"]{background:var(--tile-1);color:#fff;box-shadow:0 -3px 0 var(--gold) inset}
 .blk.useless{background:repeating-linear-gradient(135deg,#3a2230 0 4px,#2a1a26 4px 8px);color:#c98}
 .stage.peek .blk{opacity:.12}
 .stage.peek .blk.start{opacity:0}
@@ -112,6 +115,10 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
   <div class="cols" id="main" hidden>
     <section class="panel">
       <h2>Daily calendar</h2>
+      <div class="modes" role="tablist" aria-label="Daily mode">
+        <button type="button" role="tab" id="calNormal" aria-selected="true">Daily</button>
+        <button type="button" role="tab" id="calHard" aria-selected="false">Daily (Hard)</button>
+      </div>
       <ul class="days" id="days"></ul>
       <p class="legend">Days without a card get a random one, picked when the first player opens the game.</p>
     </section>
@@ -149,7 +156,7 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
+<script src="config.js?v=5"></script>
 <script>
 (function(){
 'use strict';
@@ -167,7 +174,7 @@ var configured = CFG.supabaseUrl && CFG.supabaseKey && !/YOUR-/.test(CFG.supabas
 var sb = configured ? window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:true,detectSessionInUrl:true,flowType:'pkce'}}) : null;
 function rpc(n,a){ return sb.rpc(n,a||{}).then(function(r){ if(r.error) throw r.error; return r.data; }); }
 
-var A={ today:null, days:{}, sel:null, card:null, start:null, useful:[], token:null, artUrl:null };
+var A={ hard:false, all:[], today:null, days:{}, sel:null, card:null, start:null, useful:[], token:null, artUrl:null };
 
 function gate(title,text,showSignIn){
   $('main').hidden=true; $('gate').hidden=false;
@@ -179,11 +186,18 @@ function msg(t,kind){ var m=$('msg'); m.textContent=t||''; m.className='msg'+(ki
 function loadCalendar(){
   var from = addDays(A.today||iso(new Date()), -7), to = addDays(A.today||iso(new Date()), 60);
   return rpc('admin_schedule',{p_from:from,p_to:to}).then(function(d){
-    A.today=d.today; A.days={};
-    (d.days||[]).forEach(function(x){ A.days[x.day]=x; });
+    A.today=d.today; A.all=d.days||[]; mapDays();
     renderDays();
   });
 }
+/* the calendar shows Daily or Daily (Hard): each has its own card every day */
+function mapDays(){ A.days={}; A.all.forEach(function(x){ if(!!x.hard===A.hard) A.days[x.day]=x; }); }
+function setHard(h){
+  A.hard=h; $('calNormal').setAttribute('aria-selected',!h); $('calHard').setAttribute('aria-selected',h);
+  mapDays(); if(A.sel) selectDay(A.sel); else renderDays();
+}
+/* a tile can be the free start if it shows something, and in Hard only on the outer frame */
+function usable(i){ return A.useful.indexOf(i)>=0 && (!A.hard || tileValue(i)===5); }
 function editable(day){ var x=A.days[day]; return day>=A.today && !(x && x.players>0); }
 function renderDays(){
   var ul=$('days'); ul.innerHTML='';
@@ -210,7 +224,7 @@ function renderDays(){
 function selectDay(day){
   A.sel=day; renderDays(); msg('');
   var x=A.days[day], d=new Date(day+'T00:00:00Z');
-  $('edTitle').textContent=(day===A.today?'Today, ':'')+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  $('edTitle').textContent=(A.hard?'Hard · ':'')+(day===A.today?'Today, ':'')+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
   var tag=$('edTag'); tag.hidden=!x; if(x){ tag.textContent = x.players>0 ? x.players+' played' : (x.auto?'random card':'scheduled'); tag.className='tag '+(x.players>0?'lock':(x.auto?'auto':'set')); }
   var can=editable(day);
   $('edBody').hidden=false; $('q').disabled=!can; $('btnClear').hidden=!(can && x);
@@ -256,7 +270,8 @@ function loadCard(id,start){
   }).catch(function(e){ msg("Couldn't load the preview: "+errText(e),'err'); }).then(updateButtons);
 }
 function randomStart(){
-  var u=A.useful.length?A.useful:Array.from({length:TOTAL},function(_,i){return i;});
+  var u=Array.from({length:TOTAL},function(_,i){return i;}).filter(usable);
+  if(!u.length) u=Array.from({length:TOTAL},function(_,i){return i;}).filter(function(i){ return !A.hard || tileValue(i)===5; });
   var min=Math.min.apply(null,u.map(tileValue)), cheap=u.filter(function(t){ return tileValue(t)===min; });
   return cheap[Math.floor(Math.random()*cheap.length)];
 }
@@ -264,8 +279,8 @@ function buildGrid(){
   var g=$('grid'); g.innerHTML='';
   for(var i=0;i<TOTAL;i++){
     var v=tileValue(i), b=document.createElement('div');
-    b.className='blk'+(v>=40?' hi':(v>=15?' mid':''))+(A.useful.indexOf(i)<0?' useless':'')+(i===A.start?' start':'');
-    b.textContent=v; b.dataset.i=i; b.title='Tile '+(i+1)+(A.useful.indexOf(i)<0?' (mostly covered)':'');
+    b.className='blk'+(v>=40?' hi':(v>=15?' mid':''))+(usable(i)?'':' useless')+(i===A.start?' start':'');
+    b.textContent=v; b.dataset.i=i; b.title='Tile '+(i+1)+(usable(i)?'':(A.useful.indexOf(i)<0?' (mostly covered)':' (Hard: outer frame only)'));
     g.appendChild(b);
   }
   placeMark();
@@ -277,7 +292,7 @@ function placeMark(){
 }
 function setStart(i){
   if(!A.card || !editable(A.sel)) return;
-  if(A.useful.indexOf(i)<0){ msg('That tile is mostly covered: pick another one.','err'); return; }
+  if(!usable(i)){ msg(A.useful.indexOf(i)<0 ? 'That tile is mostly covered: pick another one.' : 'In Hard the starting tile must be on the outer frame.','err'); return; }
   A.start=i; buildGrid(); msg('Starting tile: '+(i+1)+' ('+tileValue(i)+' points).'); updateButtons();
 }
 function updateButtons(){
@@ -288,7 +303,7 @@ function updateButtons(){
 function save(){
   if(!A.card||A.start===null) return;
   $('btnSave').disabled=true;
-  rpc('admin_set_daily',{p_day:A.sel,p_card:A.card.id,p_start:A.start}).then(function(){
+  rpc('admin_set_daily',{p_day:A.sel,p_card:A.card.id,p_start:A.start,p_hard:A.hard}).then(function(){
     return loadCalendar().then(function(){
       var x=A.days[A.sel], tag=$('edTag');
       tag.hidden=false; tag.textContent='scheduled'; tag.className='tag set';
@@ -299,7 +314,7 @@ function save(){
 }
 function clearDay(){
   if(!confirm('Remove the card scheduled for '+A.sel+'? A random card will be used if nothing else is scheduled.')) return;
-  rpc('admin_clear_daily',{p_day:A.sel}).then(loadCalendar).then(function(){ selectDay(A.sel); msg('Removed.','ok'); })
+  rpc('admin_clear_daily',{p_day:A.sel,p_hard:A.hard}).then(loadCalendar).then(function(){ selectDay(A.sel); msg('Removed.','ok'); })
   .catch(function(e){ msg("Couldn't remove it: "+errText(e),'err'); });
 }
 
@@ -308,6 +323,8 @@ $('btnIn').innerHTML=GOOGLE_G+'<span>Sign in with Google</span>';
 $('btnIn').onclick=function(){ sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); };
 $('btnOut').onclick=function(){ sb.auth.signOut().then(function(){ location.reload(); }); };
 $('q').addEventListener('input',search);
+$('calNormal').addEventListener('click',function(){ if(A.hard) setHard(false); });
+$('calHard').addEventListener('click',function(){ if(!A.hard) setHard(true); });
 $('grid').addEventListener('click',function(e){ var i=e.target.dataset && e.target.dataset.i; if(i!==undefined) setStart(+i); });
 $('peek').addEventListener('change',function(){ $('stage').classList.toggle('peek',this.checked); });
 $('btnSave').onclick=save;
