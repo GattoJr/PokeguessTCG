@@ -1,7 +1,13 @@
-// GET /functions/v1/art?round=<round id>   artwork of the card being played, cropped and covered.
-//     The answer never contains the card's name, number or TCGdex address.
-// GET /functions/v1/art?round=<id>&full=1  the same window without the covers, only once the round is over.
-// GET /functions/v1/art?card=<card id>     same picture for the admin panel (admin sign-in required).
+// Artwork of a card, cropped to the artwork window, with the giveaway parts covered.
+// The browser normally loads pictures straight from the public bucket "art" (fast, through Supabase's CDN),
+// under a secret name returned by the game functions. This function is called only when a picture is not
+// there yet: it builds it, saves it in the bucket, and returns it.
+//
+// GET /functions/v1/art?round=<round id>        covered artwork of the card being played
+// GET /functions/v1/art?round=<id>&full=1       uncovered artwork, only once the round is over
+// GET /functions/v1/art?run=<run id>&idx=<0-9>  covered artwork of a Guess10 card (to get the next one ready)
+// GET /functions/v1/art?card=<card id>          covered artwork for the admin panel (admin sign-in required)
+// The answer never contains the card's name, number or TCGdex address.
 // Deployed with --no-verify-jwt so a plain <img src> works; access is checked here.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Image } from "npm:imagescript@3.3.0";
@@ -10,8 +16,7 @@ import { censorsFor, renderArt } from "./crop.js";
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false },
 });
-const BUCKET = "art-cache";
-const VERSION = "v1"; // change it to rebuild every cached picture (for example after measuring new layouts)
+const BUCKET = "art";   // public; file names are unguessable (see art_key in the database)
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
@@ -51,10 +56,11 @@ async function cached(path: string) {
 }
 
 async function store(path: string, bytes: Uint8Array) {
-  let { error } = await db.storage.from(BUCKET).upload(path, bytes, { contentType: "image/jpeg", upsert: true });
+  const opts = { contentType: "image/jpeg", upsert: true, cacheControl: "31536000" };
+  let { error } = await db.storage.from(BUCKET).upload(path, bytes, opts);
   if (error && /not found/i.test(error.message)) {
-    await db.storage.createBucket(BUCKET, { public: false });
-    ({ error } = await db.storage.from(BUCKET).upload(path, bytes, { contentType: "image/jpeg", upsert: true }));
+    await db.storage.createBucket(BUCKET, { public: true });
+    ({ error } = await db.storage.from(BUCKET).upload(path, bytes, opts));
   }
   if (error) console.error("cache upload failed", error.message);
 }
@@ -63,7 +69,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "GET") return fail(405, "GET only");
   const q = new URL(req.url).searchParams;
-  const round = q.get("round"), cardParam = q.get("card"), full = q.get("full") === "1";
+  const round = q.get("round"), run = q.get("run"), cardParam = q.get("card"), full = q.get("full") === "1";
   let cardId: string | null = null, forAdmin = false;
   try {
     if (round) {
@@ -71,6 +77,11 @@ Deno.serve(async (req) => {
       const { data } = await db.from("rounds").select("card_id, over").eq("id", round).maybeSingle();
       if (data && full && !data.over) return fail(403, "the card is still in play");
       cardId = data?.card_id ?? null;
+    } else if (run) {
+      const idx = Number(q.get("idx"));
+      if (!UUID.test(run) || !Number.isInteger(idx) || idx < 0 || idx > 9 || full) return fail(400, "bad request");
+      const { data } = await db.from("runs").select("cards").eq("id", run).maybeSingle();
+      cardId = data?.cards?.[idx] ?? null;
     } else if (cardParam) {
       if (!(await isAdmin(req))) return fail(403, "not allowed");
       cardId = cardParam;
@@ -80,12 +91,14 @@ Deno.serve(async (req) => {
 
     const { data: card } = await db.from("cards").select("id, serie, image, has_evo, name").eq("id", cardId).maybeSingle();
     if (!card) return fail(404, "not found");
-    const { data: layout } = await db.from("layouts").select("crop, evo, evot, mega").eq("serie", card.serie).maybeSingle();
-    if (!layout) return fail(500, "no layout for this series");
+    const { data: key, error: keyErr } = await db.rpc("art_key", { p_card: card.id, p_full: full });
+    if (keyErr || !key) throw keyErr ?? new Error("no art key");
+    const path = `${key}.jpg`;
 
-    const path = `${VERSION}/${card.id}${full ? "-full" : ""}.jpg`;
     let jpg: Uint8Array | null = await cached(path);
     if (!jpg) {
+      const { data: layout } = await db.from("layouts").select("crop, evo, evot, mega").eq("serie", card.serie).maybeSingle();
+      if (!layout) return fail(500, "no layout for this series");
       const fresh: Uint8Array = await buildArt(card.image, layout.crop, full ? [] : censorsFor(card, layout));
       await store(path, fresh);
       jpg = fresh;

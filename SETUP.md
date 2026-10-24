@@ -71,3 +71,17 @@ python3 scripts/build_game_data.py supabase/migrations/AAAAMMGG000001_cards_upda
 ```
 
 Il comando scrive le carte (le esistenti vengono aggiornate, le nuove aggiunte) e rigenera `beta/names.json`.
+
+## Accesso con il pulsante Google sul sito (al posto dell'indirizzo supabase.co)
+Con il login "a redirect" la finestra di Google mostra l'indirizzo del progetto Supabase. Con il pulsante Google
+disegnato direttamente sul sito (Google Identity Services) mostra invece il sito.
+1. Google Cloud → il client OAuth "Web application" → **Authorized JavaScript origins** → aggiungi `https://gattojr.github.io`.
+2. Copia il **Client ID** (finisce con `.apps.googleusercontent.com`) in `beta/config.js`, campo `googleClientId`.
+3. In Supabase → Authentication → Providers → Google lo stesso Client ID deve già esserci (è quello usato per il redirect).
+Se il pulsante non si carica, la finestra di accesso offre comunque il vecchio metodo.
+
+## Velocità
+- Le immagini dei disegni vengono salvate nel bucket pubblico `art` con nomi segreti e da lì passano per la CDN di Supabase:
+  la funzione `art` lavora solo la prima volta per ogni carta.
+- La carta del giorno programmata dal pannello è già pronta (l'anteprima la genera); nel Guess10 la carta successiva
+  viene preparata mentre si gioca quella attuale.

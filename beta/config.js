@@ -4,5 +4,8 @@
    Find them in Supabase > Project Settings > API (or "API Keys"): Project URL and the publishable / anon key. */
 window.PG_CONFIG = {
   supabaseUrl: 'https://uyqcrpixzmfjcvqsgctk.supabase.co',
-  supabaseKey: 'sb_publishable_3Md2uJXPdZQEX4roGASxsw_TWBCy6S2'
+  supabaseKey: 'sb_publishable_3Md2uJXPdZQEX4roGASxsw_TWBCy6S2',
+  /* Google OAuth "Web application" client ID (public). When set, sign-in uses Google's button on this site,
+     so the Google window names this site instead of the Supabase address. Empty = the old redirect sign-in. */
+  googleClientId: ''
 };
