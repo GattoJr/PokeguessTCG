@@ -67,11 +67,16 @@ button,input{font:inherit;color:inherit}
 /* ---------- Mode switch ---------- */
 .modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line)}
 .modes button{border:0;border-radius:10px;padding:10px 8px;background:transparent;cursor:pointer;font:800 17px/1 var(--display);font-stretch:115%;color:var(--muted)}
-.modes button.hardtab{padding:8px 8px;font-size:14px;font-stretch:105%}
+.modes button{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.modes button{font-size:15px;font-stretch:104%;padding:10px 4px}}
 .modes button.hardtab span{color:var(--bad)}
 .modes button.hardtab[aria-selected="true"] span{color:#FF9C8C}
 .status .sr{display:flex;gap:12px;align-items:baseline}
-.status .link{padding:0;font-size:14px}
+.runbtns{display:flex;gap:6px}
+.runbtns[hidden]{display:none}
+.mini{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:5px 10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.mini:active{transform:translateY(1px)}
+.status{align-items:center;flex-wrap:wrap;row-gap:6px}
 .modes button[aria-selected="true"]{background:var(--tile-1);color:#fff;box-shadow:0 -3px 0 var(--gold) inset}
 .status{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);padding:0 4px;min-height:21px}
 .status b{color:var(--ink);font-variant-numeric:tabular-nums}
@@ -238,7 +243,7 @@ details p{color:var(--muted);margin:8px 0}
     <button type="button" role="tab" id="tabDailyHard" class="hardtab" aria-selected="false">Daily <span>(Hard)</span></button>
     <button type="button" role="tab" id="tabBoosterHard" class="hardtab" aria-selected="false">Booster <span>(Hard)</span></button>
   </div>
-  <div class="status" id="status"><span id="statusL"></span><span class="sr"><span id="statusR"></span><button class="link" id="btnNew" type="button" hidden>New game</button></span></div>
+  <div class="status" id="status"><span id="statusL"></span><span class="sr"><span id="statusR"></span><span class="runbtns" id="runBtns" hidden><button class="mini" id="btnNew" type="button">New game</button><button class="mini" id="btnEnd" type="button">End booster</button></span></span></div>
 
 
   <div id="board">
@@ -385,7 +390,7 @@ details p{color:var(--muted);margin:8px 0}
 <dialog id="dlgNew" aria-labelledby="dnwTitle">
   <div class="dlg">
     <h2 id="dnwTitle">Start a new game?</h2>
-    <p class="muted">This booster will be dropped and won't count for the leaderboard.</p>
+    <p class="muted" id="dnwText">This booster will be dropped and won't count for the leaderboard.</p>
     <div class="row">
       <button class="btn" type="button" id="newYes">New game</button>
       <button class="btn ghost" type="button" id="newNo">Keep playing</button>
@@ -579,7 +584,7 @@ function renderStatus(){
     L = 'Booster'+hardTag;
   }
   $('statusL').innerHTML=L; $('statusR').innerHTML=R;
-  $('btnNew').hidden = !(S.mode==='booster' && S.run && !S.run.finished && S.round && $('startOv').hidden);
+  $('runBtns').hidden = !(S.mode==='booster' && S.run && !S.run.finished && S.round && $('startOv').hidden);
 }
 
 /* show a round received from the server */
@@ -834,7 +839,15 @@ function nextCard(){
   .then(function(){ S.busy=false; $('btnResMain').disabled=false; });
 }
 /* drop the booster in progress and open a new one */
-function newGame(){ closeAll(); $('dlgNew').showModal(); }
+/* end = drop the booster and go back to the Start game screen; new = drop it and open another one */
+var pendingAction='new';
+function askDrop(action){
+  closeAll(); pendingAction=action;
+  $('dnwTitle').textContent = action==='end' ? 'End this booster?' : 'Start a new game?';
+  $('newYes').textContent = action==='end' ? 'End booster' : 'New game';
+  $('dlgNew').showModal();
+}
+function newGame(){ askDrop('new'); }
 
 /* ---------- Result dialogs ---------- */
 /* bar chart of how many players scored in each band; xLabels = {column index: text} */
@@ -1064,8 +1077,12 @@ $('btnStart').addEventListener('click',function(){
   startBooster();
 });
 $('btnNew').addEventListener('click',newGame);
+$('btnEnd').addEventListener('click',function(){ askDrop('end'); });
 $('newNo').addEventListener('click',function(){ $('dlgNew').close(); });
-$('newYes').addEventListener('click',function(){ $('dlgNew').close(); lsDel(runKey(S.hard)); S.run=null; startBooster(); });
+$('newYes').addEventListener('click',function(){
+  $('dlgNew').close(); lsDel(runKey(S.hard)); S.run=null; closeAll();
+  if(pendingAction==='end'){ clearArt(); buildGrid(S.hard); showIntro(); } else startBooster();
+});
 $('btnBoard').addEventListener('click',function(){ openBoard(); });
 $('lbNormal').addEventListener('click',function(){ openBoard(false); });
 $('lbHard').addEventListener('click',function(){ openBoard(true); });
