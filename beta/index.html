@@ -103,7 +103,7 @@ button,input{font:inherit;color:inherit}
 .loading.err .spin{display:none}
 .hint{margin:0;min-height:22px;text-align:center;color:var(--muted);font-size:14px}
 
-/* ---------- Guess10 start ---------- */
+/* ---------- Booster start ---------- */
 .intro{text-align:center;padding:26px 18px;border-radius:20px;background:var(--tile-1);color:#DCE6F7;box-shadow:0 18px 40px rgba(8,18,40,.28)}
 .intro h2{margin:0;color:#fff;font:900 clamp(30px,9vw,44px)/.95 var(--display);font-stretch:130%}
 .intro h2 span{color:var(--gold)}
@@ -217,15 +217,15 @@ details p{color:var(--muted);margin:8px 0}
 
   <div class="modes" role="tablist" aria-label="Game mode">
     <button type="button" role="tab" id="tabDaily" aria-selected="true">Daily</button>
-    <button type="button" role="tab" id="tabG10" aria-selected="false">Guess10</button>
+    <button type="button" role="tab" id="tabG10" aria-selected="false">Booster</button>
   </div>
   <div class="status" id="status"><span id="statusL"></span><span id="statusR"></span></div>
 
   <section class="intro" id="intro" hidden>
-    <h2>Guess<span>10</span></h2>
-    <p>Ten random cards in a row, up to 1,000 points each. Your best total goes on the world leaderboard.</p>
+    <h2>Booster<span>.</span></h2>
+    <p>Open a pack of ten random cards and name them one after another, up to 1,000 points each. Your best booster goes on the world leaderboard.</p>
     <p class="last" id="introLast" hidden></p>
-    <button class="btn" id="btnStart" type="button">Start a Guess10</button>
+    <button class="btn" id="btnStart" type="button">Open a booster</button>
   </section>
 
   <div id="board">
@@ -279,7 +279,7 @@ details p{color:var(--muted);margin:8px 0}
     <summary>How to play</summary>
     <p>You only see the card's artwork. Tap tiles to reveal it, then type the card's exact English name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate). You have 2 guesses per card.</p>
     <p>Each card puts 1,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play. Once you reach 0 you can still open tiles and guess, just for no points.</p>
-    <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. <b>Guess10</b>: ten random cards in a row, up to 10,000 points; play as many as you like. Sign in with Google to save your results and enter the leaderboard.</p>
+    <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. <b>Booster</b>: like opening a pack, ten random cards in a row, up to 10,000 points; open as many as you like. Sign in with Google to save your results and enter the leaderboard.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
       <i class="mid">15</i><span>Inner frame</span>
@@ -304,7 +304,7 @@ details p{color:var(--muted);margin:8px 0}
   </div>
 </dialog>
 
-<!-- End of a Daily or of a Guess10 -->
+<!-- End of a Daily or of a Booster -->
 <dialog id="dlgResult" aria-labelledby="drTitle">
   <div class="dlg">
     <button class="x" type="button" data-close aria-label="Close">×</button>
@@ -365,7 +365,7 @@ details p{color:var(--muted);margin:8px 0}
   <div class="dlg">
     <button class="x" type="button" data-close aria-label="Close">×</button>
     <h2 id="dbTitle">Leaderboard</h2>
-    <p class="muted">Best Guess10 of each player.</p>
+    <p class="muted">Best booster of each player.</p>
     <ol class="board" id="boardList"></ol>
     <div class="note" id="dbGuest" hidden>
       <b>Sign in to enter the leaderboard</b>
@@ -452,7 +452,7 @@ function setArt(rd, full){
   };
   img.src=list[0];
 }
-/* Guess10: get the next card's picture into the browser (and onto the CDN) while this one is played */
+/* Booster: get the next card's picture into the browser (and onto the CDN) while this one is played */
 var warmed={};
 function warmNext(data){
   if(!data.next_art || warmed[data.next_art] || !data.run_id) return;
@@ -468,7 +468,7 @@ var S = {
   user: null,              // signed-in user (supabase), or null for a guest
   profile: null,           // {username, is_admin}
   round: null,             // the card on screen
-  run: null,               // the Guess10 in progress: {run_id, total, done, finished}
+  run: null,               // the Booster in progress: {run_id, total, done, finished}
   daily: null,             // today's daily, as last received
   lastStats: null,         // stats for the result dialog
   names: [], busy: false
@@ -600,7 +600,7 @@ function showResult(fresh){
   var main=$('btnResMain'), alt=$('btnResAlt'), small=$('resSmall');
   alt.hidden=true; small.hidden=true;
   if(rd.mode==='daily'){
-    main.textContent='Play Guess10'; main.onclick=function(){ switchMode('g10'); };
+    main.textContent='Play Booster'; main.onclick=function(){ switchMode('g10'); };
     alt.hidden=false; alt.textContent='See how you did'; alt.onclick=function(){ openDailyStats(); };
     if(S.daily && S.daily.next_reset){ small.hidden=false; small.textContent='Next daily card in '+untilText(S.daily.next_reset)+'.'; }
   } else if(rd.idx < RUN_CARDS-1){
@@ -629,7 +629,7 @@ function openCardPopup(){
   var main=$('dcMain'), alt=$('dcAlt'); alt.hidden=true;
   if(rd.mode==='daily'){
     main.textContent='See how you did'; main.onclick=function(){ $('dlgCard').close(); openDailyStats(); };
-    alt.hidden=false; alt.textContent='Play Guess10'; alt.onclick=function(){ $('dlgCard').close(); switchMode('g10'); };
+    alt.hidden=false; alt.textContent='Play Booster'; alt.onclick=function(){ $('dlgCard').close(); switchMode('g10'); };
   } else if(rd.idx < RUN_CARDS-1){
     main.textContent='Next card ('+(rd.idx+2)+'/'+RUN_CARDS+')'; main.onclick=function(){ $('dlgCard').close(); nextCard(); };
   } else {
@@ -717,7 +717,7 @@ function loadG10(){
   var runId = lsGet('pg_run');
   if(!runId){ showIntro(); return; }
   S.round=null; $('intro').hidden=true; $('board').hidden=false; $('result').hidden=true;
-  setControls(false); buildGrid(); renderMeter(); setLoading(true,'Loading your Guess10…');
+  setControls(false); buildGrid(); renderMeter(); setLoading(true,'Loading your booster…');
   return rpc('g10_state',{p_run:runId, p_guest:GUEST}).then(function(d){
     if(S.mode!=='g10') return;
     if(d.finished){ lsDel('pg_run'); S.run=null; showIntro(d.total); return; }
@@ -732,7 +732,7 @@ function showIntro(lastTotal){
   var best=lsGet('pg_last_g10');
   if(lastTotal!==undefined && lastTotal!==null) best=lastTotal;
   $('introLast').hidden = best===null || best===undefined;
-  if(best!==null && best!==undefined) $('introLast').textContent='Your last Guess10: '+fmt(best)+' points';
+  if(best!==null && best!==undefined) $('introLast').textContent='Your last booster: '+fmt(best)+' points';
 }
 function startG10(){
   if(S.busy) return; S.busy=true;
@@ -742,7 +742,7 @@ function startG10(){
     S.run={run_id:d.run_id,total:0,done:0,finished:false};
     $('play').hidden=false;
     showRound(d.round);
-  }).catch(function(e){ alert("Couldn't start a Guess10 ("+errText(e)+')'); })
+  }).catch(function(e){ alert("Couldn't open a booster ("+errText(e)+')'); })
   .then(function(){ S.busy=false; $('btnStart').disabled=false; });
 }
 function nextCard(){
@@ -754,7 +754,7 @@ function nextCard(){
       S.run.finished=true; lsDel('pg_run'); lsSet('pg_last_g10', d.total);
       renderStatus();
       openG10Stats(d.total, d.stats);
-      $('btnResMain').textContent='Start a new Guess10'; $('btnResMain').onclick=function(){ closeAll(); startG10(); };
+      $('btnResMain').textContent='Open another booster'; $('btnResMain').onclick=function(){ closeAll(); startG10(); };
       return;
     }
     $('play').hidden=false; showRound(d.round);
@@ -811,18 +811,18 @@ function openDailyStats(){
   $('drPlayers').textContent = fmt(st.players)+' player'+(st.players===1?'':'s')+' today. Next card in '+untilText(S.daily&&S.daily.next_reset)+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
-  main.textContent='Play Guess10'; main.onclick=function(){ closeAll(); switchMode('g10'); };
+  main.textContent='Play Booster'; main.onclick=function(){ closeAll(); switchMode('g10'); };
   alt.hidden=true;
   $('dlgResult').showModal();
 }
 function openG10Stats(total, st){
   st = st || {players:1,buckets:[],beaten:0};
-  $('drTitle').textContent='Guess10 complete';
+  $('drTitle').textContent='Booster complete';
   $('drScore').innerHTML = fmt(total)+'<small>/ 10,000</small>';
   $('drVerdict').textContent = verdictText(st);
   drawHist(st, Math.min(20, Math.floor(total/500)), st.width||500);
-  $('drChart').setAttribute('aria-label','How many players reached each band of 500 points with their best Guess10, from 0 to 10,000');
-  $('drPlayers').textContent = 'Compared with the best Guess10 of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
+  $('drChart').setAttribute('aria-label','How many players reached each band of 500 points with their best booster, from 0 to 10,000');
+  $('drPlayers').textContent = 'Compared with the best booster of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
   main.textContent='Play again'; main.onclick=function(){ closeAll(); startG10(); };

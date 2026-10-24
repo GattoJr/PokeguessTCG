@@ -8,7 +8,7 @@ Il prototipo è salvato anche nel ramo `prototype-v1`: per tornare indietro bast
 - **GitHub Pages** serve le pagine: `beta/index.html` (gioco) e `beta/admin.html` (pannello).
 - **Supabase** fa da server:
   - login con Google;
-  - database (`supabase/migrations/`): carte giocabili, calendario Daily, partite, Guess10, profili, classifica;
+  - database (`supabase/migrations/`): carte giocabili, calendario Daily, partite, Booster (10 carte), profili, classifica;
   - funzione `art` (`supabase/functions/art/`): dà al browser solo il riquadro del disegno, già ritagliato e censurato, senza nome né indirizzo della carta.
 - Il browser non legge mai le tabelle: chiama funzioni del database che controllano le risposte e calcolano i punti.
 - **GitHub Actions** (`.github/workflows/supabase.yml`) pubblica database e funzione su Supabase a ogni modifica in `supabase/`.
@@ -58,8 +58,8 @@ In `beta/config.js` vanno Project URL e chiave publishable. Sono pubblici per na
 - Daily: una carta al giorno, uguale per tutti, stesso blocco di partenza. Cambia a mezzanotte UTC.
   Se un giorno non è programmato, il server ne sceglie una a caso (mai una usata nell'ultimo anno) e la fissa per tutti.
 - Un giorno si può modificare dal pannello solo finché nessuno l'ha giocato.
-- Guess10: 10 carte casuali (mai quella del giorno), massimo 10.000 punti, rigiocabile.
-- Classifica: miglior Guess10 di ogni giocatore registrato.
+- Booster: 10 carte casuali (mai quella del giorno), massimo 10.000 punti, rigiocabile.
+- Classifica: miglior Booster di ogni giocatore registrato.
 - Gli ospiti giocano tutto; se poi entrano con Google, le partite fatte in quel browser passano al loro account.
 
 ## Aggiornare le carte
@@ -83,5 +83,5 @@ Se il pulsante non si carica, la finestra di accesso offre comunque il vecchio m
 ## Velocità
 - Le immagini dei disegni vengono salvate nel bucket pubblico `art` con nomi segreti e da lì passano per la CDN di Supabase:
   la funzione `art` lavora solo la prima volta per ogni carta.
-- La carta del giorno programmata dal pannello è già pronta (l'anteprima la genera); nel Guess10 la carta successiva
+- La carta del giorno programmata dal pannello è già pronta (l'anteprima la genera); nel Booster la carta successiva
   viene preparata mentre si gioca quella attuale.
