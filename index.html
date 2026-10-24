@@ -136,8 +136,20 @@ button,input{font:inherit;color:inherit}
 .play{display:flex;flex-direction:column;gap:10px}
 form{display:flex;gap:8px}
 .combo{position:relative;flex:1;min-width:0}
-input[type=text]{width:100%;font-size:17px;font-weight:500;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface)}
+input[type=text],input[type=email],input[type=password]{width:100%;font-size:17px;font-weight:500;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface)}
 input[type=text]:disabled{opacity:.6}
+.auth{display:flex;flex-direction:column;gap:10px}
+.auth .btn{width:100%}
+.auth .field input{margin-top:4px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;font-weight:600;margin:2px 0}
+.or::before,.or::after{content:'';flex:1;height:1.5px;background:var(--line)}
+.pw{position:relative;display:block}
+.pw input{padding-right:66px}
+.pw .link{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:13px}
+.auth .pmuser{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;padding:0;border:0}
+#dlgSignIn h2{padding-right:40px}
+.authlinks{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.okmsg{margin:0;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:15px}
 .sugg{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:20;margin:0;padding:4px;list-style:none;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;box-shadow:0 -10px 30px rgba(8,18,40,.25);max-height:240px;overflow:auto}
 .sugg li{padding:10px;border-radius:8px;cursor:pointer}
 .sugg li[aria-selected="true"],.sugg li:hover{background:var(--surface-2)}
@@ -308,7 +320,7 @@ details p{color:var(--muted);margin:8px 0}
     <p><b>Hard mode</b>: each card puts 200 points in play. You can only open the outer tiles (5 points each). Each wrong guess costs 30 points.</p>
     <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. Challenge the other players: can you name it with more points than they did?</p>
     <p><b>Booster</b>: like opening a pack, guess ten random cards in a row. Open as many boosters as you like.</p>
-    <p>Both come in Normal and Hard mode. Sign in with Google to save your results on every device and enter the leaderboard.</p>
+    <p>Both come in Normal and Hard mode. Sign in with Google or with your email to save your results on every device and enter the leaderboard.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
       <i class="mid">15</i><span>Inner frame</span>
@@ -350,7 +362,7 @@ details p{color:var(--muted);margin:8px 0}
     <p class="muted" id="drPlayers"></p>
     <div class="note" id="drGuest" hidden>
       <b>Sign in to save your progress</b>
-      <button class="btn gbtn" type="button" data-signin></button>
+      <button class="btn ghost" type="button" data-signin>Sign in</button>
     </div>
     <div class="row">
       <button class="btn" id="drMain" type="button"></button>
@@ -381,10 +393,60 @@ details p{color:var(--muted);margin:8px 0}
   <div class="dlg">
     <button class="x" type="button" data-close aria-label="Close">×</button>
     <h2 id="dsTitle">Sign in</h2>
-    <p class="muted">Save your results on every device and enter the world leaderboard.</p>
-    <div id="gsiBtn" style="min-height:44px;display:flex;justify-content:center;max-width:100%;overflow:hidden"></div>
-    <button class="btn gbtn" type="button" id="btnOAuth" hidden></button>
-    <button class="link" type="button" id="btnOAuthAlt" hidden>Trouble signing in? Try the other way</button>
+    <p class="muted" id="dsLead">Save your results on every device and enter the world leaderboard.</p>
+    <p class="okmsg" id="dsMsg" aria-live="polite" hidden></p>
+    <div class="auth" id="dsGoogle">
+      <div id="gsiBtn" style="min-height:44px;display:flex;justify-content:center;max-width:100%;overflow:hidden"></div>
+      <button class="btn gbtn" type="button" id="btnOAuth" hidden></button>
+      <button class="link" type="button" id="btnOAuthAlt" hidden>Trouble signing in? Try the other way</button>
+      <div class="or">or with your email</div>
+    </div>
+    <!-- sign in / create account with email and password -->
+    <form class="auth" id="fmPass" novalidate>
+      <label class="field"><span class="muted">Email</span>
+        <input type="email" id="emIn" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email" required>
+      </label>
+      <label class="field"><span class="muted">Password</span>
+        <span class="pw"><input type="password" id="pwIn" autocomplete="current-password" required><button class="link" type="button" data-showpw>Show</button></span>
+      </label>
+      <p class="muted" id="pwHint" hidden>At least 8 characters.</p>
+      <button class="btn" type="submit" id="pwGo">Sign in</button>
+      <div class="authlinks">
+        <button class="link" type="button" id="pwSwap">Create an account</button>
+        <button class="link" type="button" id="pwForgot">Forgot password?</button>
+      </div>
+    </form>
+    <!-- forgot password: ask for the email -->
+    <form class="auth" id="fmForgot" novalidate hidden>
+      <label class="field"><span class="muted">Email</span>
+        <input type="email" id="fgIn" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email" required>
+      </label>
+      <button class="btn" type="submit" id="fgGo">Send me a code</button>
+      <div class="authlinks"><button class="link" type="button" data-back>Back to sign in</button></div>
+    </form>
+    <!-- the code from the email (confirming a new account, or setting a new password) -->
+    <form class="auth" id="fmCode" novalidate hidden>
+      <input type="email" class="pmuser" autocomplete="username" tabindex="-1" aria-hidden="true">
+      <label class="field"><span class="muted">Code from the email</span>
+        <input type="text" id="codeIn" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required>
+      </label>
+      <label class="field" id="codePwWrap"><span class="muted">New password (at least 8 characters)</span>
+        <span class="pw"><input type="password" id="codePw" autocomplete="new-password"><button class="link" type="button" data-showpw>Show</button></span>
+      </label>
+      <button class="btn" type="submit" id="codeGo">Confirm</button>
+      <div class="authlinks">
+        <button class="link" type="button" id="codeResend">Send a new code</button>
+        <button class="link" type="button" data-back>Back to sign in</button>
+      </div>
+    </form>
+    <!-- new password after opening the reset link from the email -->
+    <form class="auth" id="fmNewPw" novalidate hidden>
+      <input type="email" class="pmuser" autocomplete="username" tabindex="-1" aria-hidden="true">
+      <label class="field"><span class="muted">New password (at least 8 characters)</span>
+        <span class="pw"><input type="password" id="npIn" autocomplete="new-password" required><button class="link" type="button" data-showpw>Show</button></span>
+      </label>
+      <button class="btn" type="submit" id="npGo">Save password</button>
+    </form>
     <p class="err" id="signErr" aria-live="polite"></p>
   </div>
 </dialog>
@@ -414,7 +476,7 @@ details p{color:var(--muted);margin:8px 0}
     <ol class="board" id="boardList"></ol>
     <div class="note" id="dbGuest" hidden>
       <b>Sign in to enter the leaderboard</b>
-      <button class="btn gbtn" type="button" data-signin></button>
+      <button class="btn ghost" type="button" data-signin>Sign in</button>
     </div>
   </div>
 </dialog>
@@ -479,7 +541,21 @@ function saveTiles(id,list){
 
 /* ---------- Supabase ---------- */
 var configured = CFG.supabaseUrl && CFG.supabaseKey && !/YOUR-/.test(CFG.supabaseUrl+CFG.supabaseKey) && window.supabase;
+/* links from the emails come back here with ?code=… (or ?error=… when expired): note it before Supabase reads and cleans the address */
+var URL_AUTH = (function(){
+  var q=new URLSearchParams(location.search+'&'+location.hash.replace(/^#/,''));
+  return {code: q.has('code'), error: q.get('error_code')||q.get('error')||'', desc: q.get('error_description')||''};
+})();
 var sb = configured ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce'}}) : null;
+/* the reset-password link signs the player in with a PASSWORD_RECOVERY event while the page is still starting:
+   listen from the very beginning so it is not missed (only a flag here: no Supabase calls inside this callback) */
+var pendingRecovery=false, booted=false;
+if(sb) sb.auth.onAuthStateChange(function(ev){
+  if(ev!=='PASSWORD_RECOVERY') return;
+  if(AUTH.view==='code-recovery' && AUTH.busy) return;   // reset with the code: the new password is already being saved
+  pendingRecovery=true;
+  if(booted) setTimeout(openRecovery,0);
+});
 function rpc(name,args){
   return sb.rpc(name,args||{}).then(function(r){ if(r.error) throw r.error; return r.data; });
 }
@@ -960,29 +1036,189 @@ function redirectSignIn(){
 function gsiReady(){ return !!(CFG.googleClientId && window.google && google.accounts && google.accounts.id && window.crypto && crypto.subtle); }
 function randomNonce(){ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(b){ return ('0'+b.toString(16)).slice(-2); }).join(''); }
 function sha256hex(t){ return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function(buf){ return Array.prototype.map.call(new Uint8Array(buf),function(b){ return ('0'+b.toString(16)).slice(-2); }).join(''); }); }
-function signIn(){
-  if(!sb) return;
-  closeAll();
-  $('signErr').textContent=''; $('gsiBtn').innerHTML='';
+/* the sign-in window has a few views: 'signin' and 'signup' (email + password, with Google above),
+   'forgot' (email for the reset code), 'code-signup' / 'code-recovery' (code from the email), 'newpw' (after the reset link) */
+var AUTH={view:'signin', email:'', busy:false};
+var PW_MIN=8;
+function emailOk(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
+function backUrl(){ return location.origin+location.pathname; }
+function authErr(msg){ $('signErr').textContent=msg||''; }
+function authMsg(msg){ $('dsMsg').textContent=msg||''; $('dsMsg').hidden=!msg; }
+/* Supabase error → plain English for the player */
+function authErrText(e){
+  var c=(e&&(e.code||e.error_code))||'', m=errText(e);
+  if(c==='invalid_credentials'||/invalid login/i.test(m)) return 'Wrong email or password.';
+  if(c==='weak_password'||/password should/i.test(m)) return 'Choose a longer password: at least '+PW_MIN+' characters.';
+  if(c==='otp_expired'||/expired|invalid.*(otp|token)|token.*invalid/i.test(m)) return 'That code is wrong or has expired. Check the latest email, or ask for a new code.';
+  if(c==='over_email_send_rate_limit'||/rate limit|security purposes/i.test(m)) return 'Too many emails for now. Wait a few minutes, then try again.';
+  if(c==='over_request_rate_limit') return 'Too many tries. Wait a minute, then try again.';
+  if(c==='email_address_invalid'||/invalid.*email|email.*invalid/i.test(m)) return 'That email address doesn\'t look right.';
+  if(c==='signup_disabled'||c==='email_provider_disabled') return 'Creating accounts with an email is not available right now. Use Google instead.';
+  if(c==='same_password') return 'That\'s already your password. Choose a different one.';
+  if(/fetch|network/i.test(m)) return 'No connection to the server. Check your internet and try again.';
+  return 'Something went wrong ('+m+').';
+}
+function setBusy(btn,on){ AUTH.busy=on; btn.disabled=on; }
+function setView(v){
+  AUTH.view=v; authErr('');
+  var pass=(v==='signin'||v==='signup'), code=(v==='code-signup'||v==='code-recovery');
+  $('dsGoogle').hidden=!pass; $('fmPass').hidden=!pass; $('fmForgot').hidden=v!=='forgot';
+  $('fmCode').hidden=!code; $('fmNewPw').hidden=v!=='newpw';
+  $('dsLead').hidden=!pass;
+  $('dsTitle').textContent = {signin:'Sign in', signup:'Create an account', forgot:'Forgot password', 'code-signup':'Check your email',
+    'code-recovery':'Check your email', newpw:'Choose a new password'}[v];
+  if(pass){
+    var up=v==='signup';
+    $('pwIn').autocomplete = up ? 'new-password' : 'current-password';
+    $('pwHint').hidden=!up; $('pwForgot').hidden=up;
+    $('pwGo').textContent = up ? 'Create account' : 'Sign in';
+    $('pwSwap').textContent = up ? 'I already have an account' : 'Create an account';
+    if(AUTH.email) $('emIn').value=AUTH.email;
+  }
+  if(v==='forgot') $('fgIn').value=AUTH.email||$('emIn').value.trim();
+  if(code){
+    $('codeIn').value=''; $('codePw').value='';
+    $('codePwWrap').hidden = v!=='code-recovery';
+    $('codeGo').textContent = v==='code-recovery' ? 'Save new password' : 'Confirm';
+  }
+  if(v==='newpw') $('npIn').value='';
+  document.querySelectorAll('#dlgSignIn .pmuser').forEach(function(i){ i.value = AUTH.email || (S.user&&S.user.email) || ''; });
+  document.querySelectorAll('#dlgSignIn [data-showpw]').forEach(function(b){ b.textContent='Show'; b.previousElementSibling.type='password'; });
+}
+function focusView(){
+  var v=AUTH.view, el = v==='forgot' ? $('fgIn') : (v==='newpw' ? $('npIn') : (v.indexOf('code')===0 ? $('codeIn') : ($('emIn').value ? $('pwIn') : $('emIn'))));
+  if(el && !('ontouchstart' in window)) el.focus();   // on phones the keyboard would cover the window
+}
+function renderGoogle(){
+  $('gsiBtn').innerHTML='';
   var useGsi=gsiReady();
   $('btnOAuth').hidden=useGsi; $('btnOAuthAlt').hidden=!useGsi; $('gsiBtn').hidden=!useGsi;
-  $('dlgSignIn').showModal();
   if(!useGsi) return;
   var nonce=randomNonce();
   sha256hex(nonce).then(function(hashed){
     google.accounts.id.initialize({
       client_id: CFG.googleClientId, nonce: hashed, ux_mode: 'popup', use_fedcm_for_prompt: true,
       callback: function(resp){
-        $('signErr').textContent='';
+        authErr('');
         sb.auth.signInWithIdToken({provider:'google', token:resp.credential, nonce:nonce}).then(function(r){
           if(r.error) throw r.error;
           $('dlgSignIn').close();   // onAuthStateChange takes it from here
-        }).catch(function(e){ $('signErr').textContent="Couldn't sign in ("+errText(e)+'). Try the other way below.'; });
+        }).catch(function(e){ authErr("Couldn't sign in ("+errText(e)+'). Try the other way below.'); });
       }
     });
     var w=Math.max(200, Math.min(300, ($('gsiBtn').clientWidth||240)-4));
     google.accounts.id.renderButton($('gsiBtn'),{type:'standard',theme:'outline',size:'large',text:'signin_with',shape:'pill',width:w});
   }).catch(function(){ $('btnOAuth').hidden=false; $('gsiBtn').hidden=true; $('btnOAuthAlt').hidden=true; });
+}
+function signIn(view, msg){
+  if(!sb) return;
+  closeAll();
+  setView(view||'signin'); authMsg(msg||'');
+  $('dlgSignIn').showModal();
+  if(AUTH.view==='signin'||AUTH.view==='signup') renderGoogle();
+  focusView();
+}
+function openRecovery(){
+  pendingRecovery=false;
+  signIn('newpw','Your email is verified. Choose a new password for your account.');
+}
+/* email + password: sign in, or create the account (Supabase then emails a code and a link to confirm the address) */
+function submitPass(e){
+  e.preventDefault(); if(AUTH.busy) return;
+  var email=$('emIn').value.trim(), pw=$('pwIn').value, up=AUTH.view==='signup';
+  AUTH.email=email; authMsg('');
+  if(!emailOk(email)){ authErr('Enter your email address.'); $('emIn').focus(); return; }
+  if(!pw){ authErr('Enter your password.'); $('pwIn').focus(); return; }
+  if(up && pw.length<PW_MIN){ authErr('Choose a longer password: at least '+PW_MIN+' characters.'); $('pwIn').focus(); return; }
+  authErr(''); setBusy($('pwGo'),true);
+  var call = up ? sb.auth.signUp({email:email, password:pw, options:{emailRedirectTo:backUrl()}})
+                : sb.auth.signInWithPassword({email:email, password:pw});
+  call.then(function(r){
+    if(r.error) throw r.error;
+    var d=r.data||{};
+    if(d.session){ $('dlgSignIn').close(); return; }   // onAuthStateChange takes it from here
+    if(up && d.user && d.user.identities && d.user.identities.length===0){
+      // Supabase answers like this when the email already has an account (it does not say so openly)
+      setView('signin'); $('pwIn').value='';
+      authMsg('There is already an account with this email. Sign in with your password, or with Google if you used Google. Forgot it? Choose "Forgot password?".');
+      return;
+    }
+    setView('code-signup');
+    authMsg('We sent a code to '+email+'. Type it here, or tap the link in the email. Not there? Check your spam folder.');
+    focusView();
+  }).catch(function(err){
+    var c=(err&&(err.code||err.error_code))||'';
+    if(c==='email_not_confirmed'||/not confirmed/i.test(errText(err))){
+      setView('code-signup');
+      authMsg('Confirm your email first: type the code we sent to '+email+', or tap the link in the email. No email? Choose "Send a new code".');
+      focusView(); return;
+    }
+    if(c==='user_already_exists'){ setView('signin'); authErr('There is already an account with this email. Sign in instead.'); return; }
+    authErr(authErrText(err));
+  }).then(function(){ setBusy($('pwGo'),false); });
+}
+function submitForgot(e){
+  e.preventDefault(); if(AUTH.busy) return;
+  var email=$('fgIn').value.trim();
+  if(!emailOk(email)){ authErr('Enter your email address.'); $('fgIn').focus(); return; }
+  AUTH.email=email; authErr(''); setBusy($('fgGo'),true);
+  sb.auth.resetPasswordForEmail(email,{redirectTo:backUrl()}).then(function(r){
+    if(r.error) throw r.error;
+    setView('code-recovery');
+    authMsg('If there is an account for '+email+', we sent it a code. Type it here with your new password, or tap the link in the email.');
+    focusView();
+  }).catch(function(err){ authErr(authErrText(err)); })
+  .then(function(){ setBusy($('fgGo'),false); });
+}
+function submitCode(e){
+  e.preventDefault(); if(AUTH.busy) return;
+  var token=$('codeIn').value.replace(/\D/g,''), rec=AUTH.view==='code-recovery', pw=$('codePw').value;
+  if(token.length<6){ authErr('Type the code from the email (6 digits).'); $('codeIn').focus(); return; }
+  if(rec && pw.length<PW_MIN){ authErr('Choose a new password: at least '+PW_MIN+' characters.'); $('codePw').focus(); return; }
+  authErr(''); setBusy($('codeGo'),true);
+  sb.auth.verifyOtp({email:AUTH.email, token:token, type: rec ? 'recovery' : 'signup'}).then(function(r){
+    if(r.error) throw r.error;
+    if(!rec) return;
+    return sb.auth.updateUser({password:pw}).then(function(u){ if(u.error) throw u.error; });
+  }).then(function(){ $('dlgSignIn').close(); })
+  .catch(function(err){ authErr(authErrText(err)); })
+  .then(function(){ setBusy($('codeGo'),false); });
+}
+function resendCode(){
+  if(AUTH.busy) return;
+  var b=$('codeResend'), rec=AUTH.view==='code-recovery';
+  authErr(''); setBusy(b,true);
+  var call = rec ? sb.auth.resetPasswordForEmail(AUTH.email,{redirectTo:backUrl()})
+                 : sb.auth.resend({type:'signup', email:AUTH.email, options:{emailRedirectTo:backUrl()}});
+  call.then(function(r){
+    if(r.error) throw r.error;
+    authMsg('We sent a new code to '+AUTH.email+'. Use the newest email.');
+  }).catch(function(err){ authErr(authErrText(err)); })
+  .then(function(){ setBusy(b,false); });
+}
+function submitNewPw(e){
+  e.preventDefault(); if(AUTH.busy) return;
+  var pw=$('npIn').value;
+  if(pw.length<PW_MIN){ authErr('Choose a new password: at least '+PW_MIN+' characters.'); $('npIn').focus(); return; }
+  authErr(''); setBusy($('npGo'),true);
+  sb.auth.updateUser({password:pw}).then(function(r){
+    if(r.error) throw r.error;
+    $('dlgSignIn').close();
+  }).catch(function(err){ authErr(authErrText(err)); })
+  .then(function(){ setBusy($('npGo'),false); });
+}
+/* a link from an email that could not finish here (expired, or opened in another browser than the one that asked) */
+function checkEmailLink(signedIn){
+  if(!(URL_AUTH.code||URL_AUTH.error)) return;
+  if(history.replaceState) history.replaceState(null,'',backUrl());
+  if(signedIn || pendingRecovery) return;
+  if(URL_AUTH.error){
+    signIn('signin', /expired|invalid/i.test(URL_AUTH.error+' '+URL_AUTH.desc)
+      ? 'That link has expired or was already used. Sign in, or ask for a new email. In the email you can also use the code instead of the link.'
+      : 'Couldn\'t finish signing in with that link. Please try again.');
+    return;
+  }
+  signIn('signin','That link only works in the browser where you asked for it. If you were confirming a new account, your email is now confirmed: sign in with your password. To reset your password, ask for a new code here.');
 }
 function signOut(){
   closeAll(); if($('dlgName').open) $('dlgName').close();
@@ -1001,7 +1237,10 @@ function askUsername(required){
 function loadProfile(){
   return rpc('my_profile').then(function(p){
     S.profile=p; renderAccount();
-    if(p && !p.username) askUsername(true);
+    if(!(p && !p.username)) return;
+    // while the sign-in window is still open (e.g. choosing a new password) ask afterwards, not on top of it
+    if($('dlgSignIn').open) $('dlgSignIn').addEventListener('close',function(){ askUsername(true); },{once:true});
+    else askUsername(true);
   });
 }
 /* resolves as soon as the game can load; the profile arrives in parallel */
@@ -1111,7 +1350,18 @@ $('nameForm').addEventListener('submit',function(e){
   .then(function(){ $('nameSave').disabled=false; });
 });
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',function(){ b.closest('dialog').close(); }); });
-document.querySelectorAll('[data-signin]').forEach(function(b){ b.innerHTML=GOOGLE_G+'<span>Sign in with Google</span>'; b.addEventListener('click',signIn); });
+document.querySelectorAll('[data-signin]').forEach(function(b){ b.addEventListener('click',function(){ signIn(); }); });
+$('fmPass').addEventListener('submit',submitPass);
+$('fmForgot').addEventListener('submit',submitForgot);
+$('fmCode').addEventListener('submit',submitCode);
+$('fmNewPw').addEventListener('submit',submitNewPw);
+$('codeResend').addEventListener('click',resendCode);
+$('pwSwap').addEventListener('click',function(){ AUTH.email=$('emIn').value.trim(); authMsg(''); var v=AUTH.view==='signup'?'signin':'signup'; setView(v); focusView(); });
+$('pwForgot').addEventListener('click',function(){ AUTH.email=$('emIn').value.trim(); authMsg(''); setView('forgot'); focusView(); });
+document.querySelectorAll('#dlgSignIn [data-back]').forEach(function(b){ b.addEventListener('click',function(){ authMsg(''); setView('signin'); renderGoogle(); focusView(); }); });
+document.querySelectorAll('#dlgSignIn [data-showpw]').forEach(function(b){ b.addEventListener('click',function(){
+  var inp=b.previousElementSibling, show=inp.type==='password'; inp.type=show?'text':'password'; b.textContent=show?'Hide':'Show';
+}); });
 $('btnOAuth').innerHTML=GOOGLE_G+'<span>Sign in with Google</span>';
 $('btnOAuth').addEventListener('click',redirectSignIn);
 $('btnOAuthAlt').addEventListener('click',redirectSignIn);
@@ -1120,17 +1370,22 @@ $('btnOAuthAlt').addEventListener('click',redirectSignIn);
 function boot(){
   buildGrid(); renderMeter();
   if(!sb){ showError('The game server is not configured yet (config.js).'); $('btnAcct').hidden=true; return; }
+  var signedIn=false;
   sb.auth.getSession().then(function(r){
     var user = r && r.data && r.data.session ? r.data.session.user : null;
+    signedIn=!!user;
     return user ? onSignedIn(user) : null;
   }).catch(function(){}).then(function(){
     sb.auth.onAuthStateChange(function(ev,session){
-      if(ev==='SIGNED_IN' && session && (!S.user || S.user.id!==session.user.id)){
+      // signing in with the reset code or link arrives as PASSWORD_RECOVERY instead of SIGNED_IN
+      if((ev==='SIGNED_IN'||ev==='PASSWORD_RECOVERY') && session && (!S.user || S.user.id!==session.user.id)){
         onSignedIn(session.user).then(function(){ switchMode(S.mode, S.hard); });
       }
     });
     renderAccount();
     switchMode('daily', false);   // Daily first: if today's card is done, its final screen shows
+    booted=true;
+    if(pendingRecovery) openRecovery(); else checkEmailLink(signedIn);
   });
 }
 boot();

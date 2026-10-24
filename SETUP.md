@@ -92,3 +92,24 @@ Se il pulsante non si carica, la finestra di accesso offre comunque il vecchio m
 - Hard: si aprono solo i blocchi della cornice esterna (5 punti l'uno), 200 punti in palio per carta, −30 per risposta sbagliata,
   2 tentativi. Daily (Hard) ha una carta del giorno diversa e il suo calendario nel pannello (interruttore Daily / Daily (Hard));
   il blocco di partenza Hard deve stare sulla cornice esterna. Booster (Hard) ha la sua classifica (massimo 2.000).
+
+## Accesso con email e password (dal 24/10/2026)
+
+Nella finestra "Sign in", sotto Google, si può entrare o creare un account con email e password.
+- **Create an account**: email e password (minimo 8 caratteri). Supabase manda una mail con un **codice di 6 cifre** e un link; il giocatore scrive il codice sul sito (funziona da qualsiasi dispositivo) oppure tocca il link (funziona solo nel browser dove ha chiesto la mail). Poi sceglie il nome utente come con Google.
+- **Forgot password?**: arriva un codice; sul sito si scrivono codice e nuova password. Anche qui il link è un'alternativa.
+- Se l'email ha già un account (anche via Google) il sito lo dice e propone di entrare. Chi è entrato con Google può aggiungersi una password con "Forgot password?".
+- Le partite da ospite passano all'account come con Google.
+
+Impostazioni e modelli delle email stanno in `supabase/auth/` (`settings.json`, `confirmation.html`, `recovery.html`). L'Action **"Configure Supabase sign-in"** li applica a Supabase a ogni modifica di quei file (o a mano dalla scheda Actions), con i segreti già presenti. Imposta anche il Site URL a `https://gattojr.github.io/PokeguessTCG/`. Se cambi i modelli dal pannello Supabase, la prossima esecuzione li sovrascrive: modificali qui.
+
+### Servizio per l'invio delle email (da fare una volta, a mano)
+Il servizio email incluso in Supabase manda messaggi **solo agli indirizzi dei membri del progetto** (cioè a te) e pochi all'ora: va bene per provare, non per i giocatori. Serve un servizio SMTP esterno. Brevo è gratuito fino a 300 email al giorno e non richiede un dominio:
+1. Crea un account su brevo.com.
+2. Senders, Domains & Dedicated IPs → Senders: aggiungi e verifica l'indirizzo mittente (per ora la tua Gmail).
+3. SMTP & API → SMTP: annota server (`smtp-relay.brevo.com`), porta (`587`), login, e genera una **SMTP key** (è la password).
+4. Supabase → Authentication → Emails → SMTP Settings → Enable custom SMTP: mittente (l'indirizzo verificato), nome mittente `PokeguessTCG`, host, porta, username (il login Brevo), password (la SMTP key). Salva.
+5. Supabase → Authentication → Rate Limits: il limite di email all'ora (30 di default con SMTP esterno) si può alzare.
+6. Prova: crea un account con un'altra email. Se la mail finisce nello spam, la soluzione definitiva è un dominio tuo (es. pokeguesstcg.io) verificato su Brevo come mittente.
+
+L'Action "Configure Supabase sign-in" nel suo riepilogo dice se l'SMTP esterno risulta impostato.

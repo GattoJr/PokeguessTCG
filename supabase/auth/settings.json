@@ -1,0 +1,10 @@
+{
+  "site_url": "https://gattojr.github.io/PokeguessTCG/",
+  "external_email_enabled": true,
+  "mailer_autoconfirm": false,
+  "mailer_otp_length": 6,
+  "mailer_otp_exp": 3600,
+  "password_min_length": 8,
+  "mailer_subjects_confirmation": "Your PokeguessTCG code",
+  "mailer_subjects_recovery": "Reset your PokeguessTCG password"
+}

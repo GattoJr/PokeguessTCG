@@ -1,0 +1,20 @@
+# Applies the sign-in settings and the email templates (supabase/auth/) to Supabase whenever they change on main,
+# or by hand from the Actions tab. Uses the same secrets as "Deploy Supabase" (SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID).
+# The email sending service (SMTP) is set in the Supabase dashboard, not here: see SETUP.md.
+name: Configure Supabase sign-in
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/auth/**', 'scripts/configure_auth.py', '.github/workflows/supabase-auth.yml']
+  workflow_dispatch:
+concurrency: supabase-auth
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign-in settings and email templates
+        run: python3 scripts/configure_auth.py
