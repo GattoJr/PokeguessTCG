@@ -84,6 +84,28 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
 .modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1.5px solid var(--line);margin-bottom:10px}
 .modes button{border:0;border-radius:9px;padding:8px;background:transparent;cursor:pointer;font:800 15px/1 var(--display);font-stretch:110%;color:var(--muted)}
 .modes button[aria-selected="true"]{background:var(--tile-1);color:#fff;box-shadow:0 -3px 0 var(--gold) inset}
+.cols.wide{grid-template-columns:1fr}
+.viewsw{display:flex;gap:6px;margin-bottom:10px}
+.viewsw button{flex:1;border:1.5px solid var(--line);background:var(--surface);border-radius:9px;padding:7px;font-weight:700;cursor:pointer;color:var(--muted)}
+.viewsw button[aria-pressed="true"]{border-color:var(--gold);color:var(--ink);background:var(--surface-2)}
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.monthbar h3{margin:0;font:800 18px/1 var(--display);font-stretch:110%}
+.monthbar button{border:1.5px solid var(--line);background:var(--surface);border-radius:9px;width:38px;height:34px;font-size:18px;cursor:pointer}
+.month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.month .wd{font-size:12px;color:var(--muted);text-align:center;font-weight:700;padding:2px 0}
+.mday{min-height:84px;border:1.5px solid var(--line);border-radius:9px;padding:5px 6px;cursor:pointer;background:var(--surface);display:flex;flex-direction:column;gap:2px;min-width:0;border-left-width:5px}
+.mday:hover{background:var(--surface-2)}
+.mday.out{opacity:.35}
+.mday.past{opacity:.6}
+.mday.sel{outline:2.5px solid var(--gold);outline-offset:-1px}
+.mday.today .n{background:var(--tile-1);color:#fff;border-radius:6px;padding:0 5px}
+.mday .n{font:800 13px/1.3 var(--display);align-self:flex-start}
+.mday .nm{font-size:12.5px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.mday .st{font-size:11px;color:var(--muted);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mday.s-set{border-left-color:var(--good)} .mday.s-auto{border-left-color:var(--gold-deep)} .mday.s-lock{border-left-color:var(--bad)} .mday.s-empty{border-left-color:var(--line)}
+.mlegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.mlegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+@media (max-width:640px){.mday{min-height:64px;padding:3px 4px;border-left-width:4px}.mday .st{display:none}.mday .nm{font-size:11px}}
 .blk.useless{background:repeating-linear-gradient(135deg,#3a2230 0 4px,#2a1a26 4px 8px);color:#c98}
 .stage.peek .blk{opacity:.12}
 .stage.peek .blk.start{opacity:0}
@@ -119,8 +141,15 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
         <button type="button" role="tab" id="calNormal" aria-selected="true">Daily</button>
         <button type="button" role="tab" id="calHard" aria-selected="false">Daily (Hard)</button>
       </div>
+      <div class="viewsw"><button type="button" id="vList" aria-pressed="true">List</button><button type="button" id="vMonth" aria-pressed="false">Calendar</button></div>
       <ul class="days" id="days"></ul>
-      <p class="legend">Days without a card get a random one, picked when the first player opens the game.</p>
+      <div id="monthView" hidden>
+        <div class="monthbar"><button type="button" id="mPrev" aria-label="Previous month">‹</button><h3 id="mTitle"></h3><button type="button" id="mNext" aria-label="Next month">›</button></div>
+        <div class="month" id="month"></div>
+        <div class="mlegend"><span><i style="background:var(--good)"></i>confirmed</span><span><i style="background:var(--gold-deep)"></i>to confirm</span><span><i style="background:var(--bad)"></i>already played</span><span><i style="background:var(--line)"></i>empty</span></div>
+      </div>
+      <p class="legend">Cards marked "to confirm" were picked at random: they are played as they are unless you change them. Empty days get a random card when the first player opens the game.</p>
+      <div class="actions"><button class="btn ghost" id="btnFill" type="button">Fill the next 100 days</button></div>
     </section>
 
     <section class="panel" id="editor">
@@ -146,6 +175,7 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
         <div class="actions">
           <button class="btn" id="btnSave" type="button" disabled>Save</button>
           <button class="btn ghost" id="btnRandom" type="button" disabled>Random start tile</button>
+          <button class="btn ghost" id="btnNext" type="button">Next to confirm ›</button>
           <button class="btn danger" id="btnClear" type="button" hidden>Remove this day's card</button>
         </div>
         <p class="msg" id="msg" aria-live="polite"></p>
@@ -174,7 +204,7 @@ var configured = CFG.supabaseUrl && CFG.supabaseKey && !/YOUR-/.test(CFG.supabas
 var sb = configured ? window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:true,detectSessionInUrl:true,flowType:'pkce'}}) : null;
 function rpc(n,a){ return sb.rpc(n,a||{}).then(function(r){ if(r.error) throw r.error; return r.data; }); }
 
-var A={ hard:false, all:[], today:null, days:{}, sel:null, card:null, start:null, useful:[], token:null, artUrl:null };
+var A={ view:'list', month:null, hard:false, all:[], today:null, days:{}, sel:null, card:null, start:null, useful:[], token:null, artUrl:null };
 
 function gate(title,text,showSignIn){
   $('main').hidden=true; $('gate').hidden=false;
@@ -184,9 +214,10 @@ function msg(t,kind){ var m=$('msg'); m.textContent=t||''; m.className='msg'+(ki
 
 /* ---------- Calendar ---------- */
 function loadCalendar(){
-  var from = addDays(A.today||iso(new Date()), -7), to = addDays(A.today||iso(new Date()), 60);
+  var base=A.today||iso(new Date()), from = addDays(base, -62), to = addDays(base, 200);
   return rpc('admin_schedule',{p_from:from,p_to:to}).then(function(d){
     A.today=d.today; A.all=d.days||[]; mapDays();
+    if(!A.month) A.month=A.today.slice(0,7);
     renderDays();
   });
 }
@@ -196,12 +227,58 @@ function setHard(h){
   A.hard=h; $('calNormal').setAttribute('aria-selected',!h); $('calHard').setAttribute('aria-selected',h);
   mapDays(); if(A.sel) selectDay(A.sel); else renderDays();
 }
+function setView(v){
+  A.view=v; $('vList').setAttribute('aria-pressed',v==='list'); $('vMonth').setAttribute('aria-pressed',v==='month');
+  $('days').hidden=v!=='list'; $('monthView').hidden=v!=='month';
+  $('main').classList.toggle('wide', v==='month');   // the month grid takes the whole width, the editor goes below
+  renderDays();
+}
+function status(x){ return !x ? 'empty' : (x.players>0 ? 'lock' : (x.auto ? 'auto' : 'set')); }
+/* classic month grid, Monday first */
+function renderMonth(){
+  var y=+A.month.slice(0,4), m=+A.month.slice(5,7)-1;
+  var first=new Date(Date.UTC(y,m,1)), shift=(first.getUTCDay()+6)%7, start=addDays(iso(first),-shift);
+  $('mTitle').textContent=first.toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'});
+  var g=$('month'); g.innerHTML='';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(w){ var h=document.createElement('div'); h.className='wd'; h.textContent=w; g.appendChild(h); });
+  for(var i=0;i<42;i++){
+    var day=addDays(start,i); if(i>=35 && day.slice(0,7)!==A.month) break;
+    var x=A.days[day], st=status(x), el=document.createElement('div');
+    el.className='mday s-'+st+(day.slice(0,7)!==A.month?' out':'')+(day<A.today?' past':'')+(day===A.today?' today':'')+(day===A.sel?' sel':'');
+    el.title = x ? x.name+' · '+x.set_name+' #'+x.number+' · '+({set:'confirmed',auto:'to confirm',lock:x.players+' played'}[st]) : 'empty';
+    var n=document.createElement('span'); n.className='n'; n.textContent=+day.slice(8); el.appendChild(n);
+    if(x){
+      var nm=document.createElement('span'); nm.className='nm'; nm.textContent=x.name; el.appendChild(nm);
+      var se=document.createElement('span'); se.className='st'; se.textContent=x.set_name; el.appendChild(se);
+    }
+    el.onclick=(function(d){ return function(){ selectDay(d); $('editor').scrollIntoView({behavior:'smooth',block:'start'}); }; })(day);
+    g.appendChild(el);
+  }
+}
+function shiftMonth(k){
+  var y=+A.month.slice(0,4), m=+A.month.slice(5,7)-1+k, d=new Date(Date.UTC(y,m,1));
+  A.month=iso(d).slice(0,7);
+  var from=A.month+'-01', to=addDays(iso(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1))),-1);
+  var have=A.all.some(function(x){ return x.day<=from; }) && A.all.some(function(x){ return x.day>=to; });
+  if(have){ renderMonth(); return; }
+  rpc('admin_schedule',{p_from:addDays(from,-7),p_to:addDays(to,7)}).then(function(r){
+    var seen={}; A.all.forEach(function(x){ seen[x.day+'|'+x.hard]=1; });
+    (r.days||[]).forEach(function(x){ if(!seen[x.day+'|'+x.hard]) A.all.push(x); });
+    mapDays(); renderMonth();
+  }).catch(function(){ renderMonth(); });
+}
+/* the next day from today that still has a random card to confirm */
+function nextToConfirm(after){
+  for(var i=0;i<400;i++){ var d=addDays(A.today,i); if(d<=after) continue; var x=A.days[d]; if(x && x.auto && !(x.players>0)) return d; }
+  return null;
+}
 /* a tile can be the free start if it shows something, and in Hard only on the outer frame */
 function usable(i){ return A.useful.indexOf(i)>=0 && (!A.hard || tileValue(i)===5); }
 function editable(day){ var x=A.days[day]; return day>=A.today && !(x && x.players>0); }
 function renderDays(){
+  if(A.view==='month'){ renderMonth(); return; }
   var ul=$('days'); ul.innerHTML='';
-  for(var i=-7;i<=60;i++){
+  for(var i=-7;i<=120;i++){
     var day=addDays(A.today,i), x=A.days[day];
     if(i<0 && !x) continue;
     var li=document.createElement('li'); li.dataset.day=day;
@@ -209,8 +286,8 @@ function renderDays(){
     if(day===A.sel) li.classList.add('sel');
     var tag='';
     if(x && x.players>0) tag='<span class="tag lock">'+x.players+' played</span>';
-    else if(x && x.auto) tag='<span class="tag auto">random</span>';
-    else if(x) tag='<span class="tag set">set</span>';
+    else if(x && x.auto) tag='<span class="tag auto">to confirm</span>';
+    else if(x) tag='<span class="tag set">confirmed</span>';
     li.innerHTML='<span class="d">'+(day===A.today?'Today':dayLabel(day))+'</span><span class="c"></span>'+tag;
     var c=li.children[1];
     if(x){ c.textContent=x.name; var s=document.createElement('small'); s.textContent=x.set_name+' · #'+x.number+' · tile '+(x.start_tile+1); c.appendChild(s); }
@@ -225,7 +302,7 @@ function selectDay(day){
   A.sel=day; renderDays(); msg('');
   var x=A.days[day], d=new Date(day+'T00:00:00Z');
   $('edTitle').textContent=(A.hard?'Hard · ':'')+(day===A.today?'Today, ':'')+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
-  var tag=$('edTag'); tag.hidden=!x; if(x){ tag.textContent = x.players>0 ? x.players+' played' : (x.auto?'random card':'scheduled'); tag.className='tag '+(x.players>0?'lock':(x.auto?'auto':'set')); }
+  var tag=$('edTag'); tag.hidden=!x; if(x){ tag.textContent = x.players>0 ? x.players+' played' : (x.auto?'to confirm':'confirmed'); tag.className='tag '+(x.players>0?'lock':(x.auto?'auto':'set')); }
   var can=editable(day);
   $('edBody').hidden=false; $('q').disabled=!can; $('btnClear').hidden=!(can && x);
   $('edLocked').hidden=can;
@@ -298,7 +375,12 @@ function setStart(i){
 function updateButtons(){
   var can=A.sel && editable(A.sel) && A.card;
   $('btnSave').disabled=!can || A.start===null; $('btnRandom').disabled=!can;
-  if(A.sel){ var x=A.days[A.sel]; $('btnSave').textContent = x && !x.auto ? 'Save changes' : 'Schedule for this day'; }
+  if(A.sel){
+    var x=A.days[A.sel], same = x && A.card && A.card.id===x.card_id && A.start===x.start_tile;
+    $('btnSave').textContent = !x ? 'Schedule for this day' : (x.auto ? (same ? 'Confirm' : 'Save and confirm') : 'Save changes');
+    if(x && !x.auto && same) $('btnSave').disabled=true;   // nothing to save
+  }
+  $('btnNext').hidden = !nextToConfirm(A.sel||A.today);
 }
 function save(){
   if(!A.card||A.start===null) return;
@@ -306,8 +388,8 @@ function save(){
   rpc('admin_set_daily',{p_day:A.sel,p_card:A.card.id,p_start:A.start,p_hard:A.hard}).then(function(){
     return loadCalendar().then(function(){
       var x=A.days[A.sel], tag=$('edTag');
-      tag.hidden=false; tag.textContent='scheduled'; tag.className='tag set';
-      $('btnClear').hidden=false; updateButtons();
+      tag.hidden=false; tag.textContent='confirmed'; tag.className='tag set';
+      $('btnClear').hidden=false; renderDays(); updateButtons();
       msg('Saved: '+A.card.name+', starting tile '+(A.start+1)+'.','ok');
     });
   }).catch(function(e){ msg(/already played/.test(errText(e))?'Someone has already played this day: it can no longer change.':"Couldn't save: "+errText(e),'err'); updateButtons(); });
@@ -330,6 +412,17 @@ $('peek').addEventListener('change',function(){ $('stage').classList.toggle('pee
 $('btnSave').onclick=save;
 $('btnRandom').onclick=function(){ A.start=randomStart(); buildGrid(); msg('Starting tile: '+(A.start+1)+'.'); updateButtons(); };
 $('btnClear').onclick=clearDay;
+$('btnNext').onclick=function(){ var d=nextToConfirm(A.sel||A.today); if(d){ if(A.view==='month' && d.slice(0,7)!==A.month){ A.month=d.slice(0,7); } selectDay(d); } };
+$('vList').onclick=function(){ setView('list'); };
+$('vMonth').onclick=function(){ setView('month'); };
+$('mPrev').onclick=function(){ shiftMonth(-1); };
+$('mNext').onclick=function(){ shiftMonth(1); };
+$('btnFill').onclick=function(){
+  var b=$('btnFill'); b.disabled=true; b.textContent='Filling…';
+  rpc('admin_fill',{p_days:100}).then(function(n){ return loadCalendar().then(function(){ if(A.sel) selectDay(A.sel); b.textContent=n ? 'Filled '+n+' empty days' : 'Nothing to fill'; }); })
+  .catch(function(e){ b.textContent="Couldn't fill: "+errText(e); })
+  .then(function(){ setTimeout(function(){ b.disabled=false; b.textContent='Fill the next 100 days'; },4000); });
+};
 
 if(!sb){ gate('Not configured','Fill in beta/config.js with the Supabase project address and key.',false); return; }
 sb.auth.getSession().then(function(r){
