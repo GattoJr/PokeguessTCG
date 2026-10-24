@@ -108,6 +108,7 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
 @media (max-width:640px){.mday{min-height:64px;padding:3px 4px;border-left-width:4px}.mday .st{display:none}.mday .nm{font-size:11px}}
 .blk.useless{background:repeating-linear-gradient(135deg,#3a2230 0 4px,#2a1a26 4px 8px);color:#c98}
 .stage.peek .blk{opacity:.12}
+.stage.rh .blk.ring0{opacity:0}
 .stage.peek .blk.start{opacity:0}
 .startmark{position:absolute;border:3px solid var(--gold);border-radius:3px;pointer-events:none;box-shadow:0 0 0 2px rgba(0,0,0,.4)}
 .thumb{width:150px;border-radius:7px;box-shadow:0 8px 20px rgba(8,18,40,.3);background:var(--surface-2);aspect-ratio:600/825}
@@ -166,6 +167,7 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
             </div>
             <p class="legend">This is exactly what players get: tap a tile to make it the free starting tile. Striped tiles are mostly covered and can't be used.</p>
             <label class="legend"><input type="checkbox" id="peek"> Show the artwork under the tiles</label>
+            <button class="btn ghost" id="btnReveal" type="button" hidden aria-pressed="false">Reveal tiles</button>
           </div>
           <div>
             <img class="thumb" id="thumb" alt="">
@@ -357,7 +359,7 @@ function buildGrid(){
   var g=$('grid'); g.innerHTML='';
   for(var i=0;i<TOTAL;i++){
     var v=tileValue(i), b=document.createElement('div');
-    b.className='blk'+(v>=40?' hi':(v>=15?' mid':''))+(usable(i)?'':' useless')+(i===A.start?' start':'');
+    b.className='blk'+(v>=40?' hi':(v>=15?' mid':''))+(v===5?' ring0':'')+(usable(i)?'':' useless')+(i===A.start?' start':'');
     b.textContent=v; b.dataset.i=i; b.title='Tile '+(i+1)+(usable(i)?'':(A.useful.indexOf(i)<0?' (mostly covered)':' (Hard: outer frame only)'));
     g.appendChild(b);
   }
@@ -373,7 +375,14 @@ function setStart(i){
   if(!usable(i)){ msg(A.useful.indexOf(i)<0 ? 'That tile is mostly covered: pick another one.' : 'In Hard the starting tile must be on the outer frame.','err'); return; }
   A.start=i; buildGrid(); msg('Starting tile: '+(i+1)+' ('+tileValue(i)+' points).'); updateButtons();
 }
+/* Hard: show the card with the whole outer frame open, the most a Hard player can ever see */
+function setReveal(on){
+  $('stage').classList.toggle('rh', !!on);
+  $('btnReveal').setAttribute('aria-pressed', !!on); $('btnReveal').textContent = on ? 'Hide tiles' : 'Reveal tiles';
+}
 function updateButtons(){
+  $('btnReveal').hidden = !(A.hard && A.card);
+  if(!A.hard) setReveal(false);
   var can=A.sel && editable(A.sel) && A.card;
   $('btnSave').disabled=!can || A.start===null; $('btnRandom').disabled=!can;
   $('btnNewCard').disabled=!(A.sel && editable(A.sel));
@@ -414,6 +423,7 @@ $('peek').addEventListener('change',function(){ $('stage').classList.toggle('pee
 $('btnSave').onclick=save;
 $('btnRandom').onclick=function(){ A.start=randomStart(); buildGrid(); msg('Starting tile: '+(A.start+1)+'.'); updateButtons(); };
 $('btnClear').onclick=clearDay;
+$('btnReveal').onclick=function(){ setReveal(!$('stage').classList.contains('rh')); };
 /* propose another random card for the day (shown in the preview; saved only with Save) */
 $('btnNewCard').onclick=function(){
   var b=$('btnNewCard'); b.disabled=true;
