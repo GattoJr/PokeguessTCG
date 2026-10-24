@@ -174,6 +174,7 @@ input[type=search]{width:100%;padding:10px 12px;border-radius:10px;border:1.5px 
         </div>
         <div class="actions">
           <button class="btn" id="btnSave" type="button" disabled>Save</button>
+          <button class="btn ghost" id="btnNewCard" type="button" disabled>New random card</button>
           <button class="btn ghost" id="btnRandom" type="button" disabled>Random start tile</button>
           <button class="btn ghost" id="btnNext" type="button">Next to confirm ›</button>
           <button class="btn danger" id="btnClear" type="button" hidden>Remove this day's card</button>
@@ -375,6 +376,7 @@ function setStart(i){
 function updateButtons(){
   var can=A.sel && editable(A.sel) && A.card;
   $('btnSave').disabled=!can || A.start===null; $('btnRandom').disabled=!can;
+  $('btnNewCard').disabled=!(A.sel && editable(A.sel));
   if(A.sel){
     var x=A.days[A.sel], same = x && A.card && A.card.id===x.card_id && A.start===x.start_tile;
     $('btnSave').textContent = !x ? 'Schedule for this day' : (x.auto ? (same ? 'Confirm' : 'Save and confirm') : 'Save changes');
@@ -412,6 +414,15 @@ $('peek').addEventListener('change',function(){ $('stage').classList.toggle('pee
 $('btnSave').onclick=save;
 $('btnRandom').onclick=function(){ A.start=randomStart(); buildGrid(); msg('Starting tile: '+(A.start+1)+'.'); updateButtons(); };
 $('btnClear').onclick=clearDay;
+/* propose another random card for the day (shown in the preview; saved only with Save) */
+$('btnNewCard').onclick=function(){
+  var b=$('btnNewCard'); b.disabled=true;
+  rpc('admin_random_card',{p_day:A.sel, p_not:A.card?A.card.id:null}).then(function(id){
+    if(!id) throw new Error('no card left');
+    $('results').hidden=true; $('q').value='';
+    loadCard(id,null);
+  }).catch(function(e){ msg("Couldn't pick a card: "+errText(e),'err'); updateButtons(); });
+};
 $('btnNext').onclick=function(){ var d=nextToConfirm(A.sel||A.today); if(d){ if(A.view==='month' && d.slice(0,7)!==A.month){ A.month=d.slice(0,7); } selectDay(d); } };
 $('vList').onclick=function(){ setView('list'); };
 $('vMonth').onclick=function(){ setView('month'); };
