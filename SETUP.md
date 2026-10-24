@@ -1,11 +1,12 @@
-# PokeguessTCG: configurazione della versione con account (beta)
+# PokeguessTCG: configurazione (gioco con account, Supabase)
 
-La versione nuova vive in `beta/` e si apre su https://gattojr.github.io/PokeguessTCG/beta/.
-Il sito principale (`index.html`) resta il prototipo finché la beta non è pronta.
-Il prototipo è salvato anche nel ramo `prototype-v1`: per tornare indietro basta ripristinare `index.html` da lì.
+Il gioco è su https://gattojr.github.io/PokeguessTCG/ (dal 24/10/2026; prima era in `beta/`, che ora rimanda qui).
+Il pannello amministratore è su https://gattojr.github.io/PokeguessTCG/admin.html.
+Il primo prototipo è in `prototype/` (https://gattojr.github.io/PokeguessTCG/prototype/) e nel ramo `prototype-v1`.
+La versione rilasciata il 24/10/2026 è salvata anche nel ramo `release-v2`.
 
 ## Come è fatta
-- **GitHub Pages** serve le pagine: `beta/index.html` (gioco) e `beta/admin.html` (pannello).
+- **GitHub Pages** serve le pagine: `index.html` (gioco) e `admin.html` (pannello).
 - **Supabase** fa da server:
   - login con Google;
   - database (`supabase/migrations/`): carte giocabili, calendario Daily, partite, Booster (10 carte), profili, classifica;
@@ -38,20 +39,20 @@ Poi: scheda Actions → "Deploy Supabase" → Run workflow. In 2-3 minuti databa
 4. Copia Client ID e Client secret.
 5. Supabase → Authentication → Sign In / Providers → Google: attiva e incolla Client ID e secret.
 6. Supabase → Authentication → URL Configuration:
-   - Site URL: `https://gattojr.github.io/PokeguessTCG/beta/`
+   - Site URL: `https://gattojr.github.io/PokeguessTCG/`
    - Redirect URLs: aggiungi `https://gattojr.github.io/PokeguessTCG/**`
 
 ### 4. Collegare la pagina
-In `beta/config.js` vanno Project URL e chiave publishable. Sono pubblici per natura: la sicurezza sta nelle regole del database.
+In `config.js` vanno Project URL e chiave publishable. Sono pubblici per natura: la sicurezza sta nelle regole del database.
 
 ### 5. Diventare amministratore
-1. Apri la beta, entra con Google e scegli il nome utente.
+1. Apri il gioco, entra con Google e scegli il nome utente.
 2. Supabase → SQL Editor, esegui (con la tua email):
    ```sql
    insert into public.admins (user_id)
    select id from auth.users where email = 'LA-TUA-EMAIL';
    ```
-3. Ora https://gattojr.github.io/PokeguessTCG/beta/admin.html ti mostra il calendario.
+3. Ora https://gattojr.github.io/PokeguessTCG/admin.html ti mostra il calendario.
 
 ## Regole del gioco (lato server)
 - 1.000 punti per carta, blocchi da 5/15/60 (il primo è gratis), −50 per risposta sbagliata, 2 tentativi.
@@ -70,13 +71,13 @@ Dopo aver aggiornato `cards.json`:
 python3 scripts/build_game_data.py supabase/migrations/AAAAMMGG000001_cards_update.sql
 ```
 
-Il comando scrive le carte (le esistenti vengono aggiornate, le nuove aggiunte) e rigenera `beta/names.json`.
+Il comando scrive le carte (le esistenti vengono aggiornate, le nuove aggiunte) e rigenera `names.json`.
 
 ## Accesso con il pulsante Google sul sito (al posto dell'indirizzo supabase.co)
 Con il login "a redirect" la finestra di Google mostra l'indirizzo del progetto Supabase. Con il pulsante Google
 disegnato direttamente sul sito (Google Identity Services) mostra invece il sito.
 1. Google Cloud → il client OAuth "Web application" → **Authorized JavaScript origins** → aggiungi `https://gattojr.github.io`.
-2. Copia il **Client ID** (finisce con `.apps.googleusercontent.com`) in `beta/config.js`, campo `googleClientId`.
+2. Copia il **Client ID** (finisce con `.apps.googleusercontent.com`) in `config.js`, campo `googleClientId`.
 3. In Supabase → Authentication → Providers → Google lo stesso Client ID deve già esserci (è quello usato per il redirect).
 Se il pulsante non si carica, la finestra di accesso offre comunque il vecchio metodo.
 

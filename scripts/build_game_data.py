@@ -2,7 +2,7 @@
 
 Writes:
   supabase/migrations/20261022000002_cards.sql  playable cards for the database (upsert, safe to re-run)
-  beta/names.json                               names for the guess box's suggestions (no card ids, no images)
+  names.json                                    names for the guess box's suggestions (no card ids, no images)
 
 Playable = series in ERAS, and not a full art (by rarity) nor a Pokémon V / VMAX / VSTAR / ex (by name),
 the same rule as the game. Run from the repository root:  python3 scripts/build_game_data.py
@@ -52,8 +52,7 @@ def main(out_sql=None):
                      "rarity = excluded.rarity, has_evo = excluded.has_evo, image = excluded.image;")
     out = Path(out_sql) if out_sql else ROOT / "supabase/migrations/20261022000002_cards.sql"
     out.write_text("\n\n".join(sql) + "\n", encoding="utf-8")
-    (ROOT / "beta").mkdir(exist_ok=True)
-    (ROOT / "beta/names.json").write_text(json.dumps(sorted(names), ensure_ascii=False, separators=(",", ":")),
+    (ROOT / "names.json").write_text(json.dumps(sorted(names), ensure_ascii=False, separators=(",", ":")),
                                           encoding="utf-8")
     print(f"{len(rows)} playable cards, {len(names)} names")
 
