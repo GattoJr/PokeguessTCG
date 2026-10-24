@@ -80,6 +80,8 @@ button,input{font:inherit;color:inherit}
 .sleeve{padding:8px;border-radius:20px;background:var(--sleeve);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 18px 40px rgba(8,18,40,.28)}
 .stage{position:relative;width:100%;aspect-ratio:502/297;container-type:inline-size;background:var(--tile-1);border-radius:12px;overflow:hidden;touch-action:manipulation}
 .stage img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
+.stage .arttop{opacity:0;transition:opacity .35s}
+.stage .arttop.on{opacity:1}
 .grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(7,1fr)}
 .blk{
   display:grid;place-items:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
@@ -147,6 +149,14 @@ dialog::backdrop{background:var(--scrim)}
 .dlg h2{margin:0;font:900 26px/1 var(--display);font-stretch:120%}
 .dlg .x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px;line-height:1}
 .dlg p{margin:0}
+.cardpop{align-items:center;text-align:center}
+.cardpop h2{font-size:28px}
+.cardpop.win h2{color:var(--good)} .cardpop.lose h2{color:var(--bad)}
+.cardpic{position:relative;width:min(72vw,300px);aspect-ratio:600/825;border-radius:12px;overflow:hidden;background:var(--surface-2);box-shadow:0 14px 34px rgba(8,18,40,.35)}
+.cardpic img{position:absolute;inset:0;width:100%;height:100%;display:block;transition:opacity .25s}
+.cardpic img.hi{opacity:0} .cardpic img.hi.ready{opacity:1}
+.cardpop .row{width:100%;flex-direction:column}
+@media (max-height:640px){.cardpic{width:min(56vw,230px)}}
 .big{font:900 clamp(44px,13vw,60px)/.9 var(--display);font-stretch:120%;font-variant-numeric:tabular-nums}
 .big small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
 .verdict{font-weight:600}
@@ -226,6 +236,7 @@ details p{color:var(--muted);margin:8px 0}
     <div class="sleeve" style="margin-top:14px">
       <div class="stage" id="stage">
         <img id="art" alt="Pokémon card artwork covered by tiles" draggable="false">
+        <img id="artTop" class="arttop" alt="" draggable="false">
         <div class="grid" id="grid"></div>
         <div class="loading" id="loading"><div><div class="spin"></div><div id="loadingText">Loading…</div></div></div>
       </div>
@@ -278,6 +289,20 @@ details p{color:var(--muted);margin:8px 0}
 
   <p class="foot">Card data: <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>, MIT licence. Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company. Unofficial fan site, not affiliated with them.</p>
 </div>
+
+<!-- End of a card: the whole card, big -->
+<dialog id="dlgCard" aria-labelledby="dcTitle">
+  <div class="dlg cardpop" id="dcBox">
+    <button class="x" type="button" data-close aria-label="Close">×</button>
+    <h2 id="dcTitle"></h2>
+    <div class="cardpic"><img id="dcLow" alt=""><img id="dcHigh" class="hi" alt=""></div>
+    <p id="dcInfo"></p>
+    <div class="row">
+      <button class="btn" id="dcMain" type="button"></button>
+      <button class="btn ghost" id="dcAlt" type="button" hidden></button>
+    </div>
+  </div>
+</dialog>
 
 <!-- End of a Daily or of a Guess10 -->
 <dialog id="dlgResult" aria-labelledby="drTitle">
@@ -526,7 +551,8 @@ function showRound(data){
   hideSugg(); $('wrongList').innerHTML=''; say('');
   rd.guesses.forEach(function(g){ addChip(g); });
   buildGrid(); rd.opened.forEach(markOpen);
-  $('stage').classList.toggle('done', rd.over);
+  var top=$('artTop'); top.onload=null; top.onerror=null; top.classList.remove('on'); top.removeAttribute('src');
+  $('stage').classList.remove('done');
   setLoading(true,'Loading the artwork…');
   var img=$('art');
   img.onload=function(){
@@ -545,11 +571,27 @@ function addChip(text){
 }
 
 /* the card is over: show the whole card and what to do next */
-function showResult(){
+/* Reveal at the end: the uncovered picture is loaded out of sight first, then swapped in at the same moment
+   the tiles go away, so the artwork never goes blank. If it takes too long, the covered picture is revealed. */
+function revealArt(rd){
+  var stage=$('stage'), top=$('artTop');
+  if(!rd.artFull){ stage.classList.add('done'); return; }
+  var list=[cdnUrl(rd.artFull), artUrl(rd.id,true)], i=0, done=false;
+  function finish(ok){
+    if(done || S.round!==rd) return; done=true;
+    if(ok) top.classList.add('on');   // the uncovered picture fades in over the covered one
+    stage.classList.add('done');
+  }
+  top.onload=function(){ (top.decode ? top.decode() : Promise.resolve()).then(function(){ finish(true); },function(){ finish(true); }); };
+  top.onerror=function(){ if(++i<list.length) top.src=list[i]; else finish(false); };
+  top.src=list[0];
+  setTimeout(function(){ finish(false); }, 4000);
+}
+function showResult(fresh){
   var rd=S.round, c=rd.card||{};
   setControls(false); hideSugg();
-  $('stage').classList.add('done'); $('play').hidden=true;
-  if(rd.artFull && $('art').getAttribute('src')!==cdnUrl(rd.artFull)) setArt(rd,true);   // covers come off with the tiles
+  $('play').hidden=true;
+  revealArt(rd);
   var res=$('result'); res.hidden=false; res.className='result '+(rd.won?'win':'lose');
   $('resImg').src = c.image ? c.image+'/low.webp' : ''; $('resImg').alt = (c.name||'')+' card';
   $('resImg').onerror=function(){ if(c.image && !/png$/.test(this.src)) this.src=c.image+'/low.png'; };
@@ -567,6 +609,33 @@ function showResult(){
     main.textContent='See your total'; main.onclick=nextCard;
   }
   renderMeter(); renderStatus();
+  if(fresh) openCardPopup(); else setTimeout(function(){ main.focus({preventScroll:true}); },50);
+}
+/* the whole card, big, right after it is named (or missed) */
+function openCardPopup(){
+  var rd=S.round, c=rd.card||{};
+  $('dcBox').className='dlg cardpop '+(rd.won?'win':'lose');
+  $('dcTitle').textContent = rd.won ? '+'+fmt(rd.score)+' points' : (rd.wrong>=TRIES ? 'Out of guesses' : 'You gave up');
+  $('dcInfo').textContent = (rd.won?'Yes, it’s ':'It was ')+c.name+', from '+c.set_name+'.';
+  var low=$('dcLow'), hi=$('dcHigh');
+  hi.classList.remove('ready'); hi.removeAttribute('src'); low.alt=(c.name||'')+' card'; hi.alt=low.alt;
+  if(c.image){
+    low.onerror=function(){ if(!/png$/.test(low.src)) low.src=c.image+'/low.png'; };
+    low.src=c.image+'/low.webp';   // already loaded for the thumbnail: shows at once
+    hi.onload=function(){ hi.classList.add('ready'); };
+    hi.onerror=function(){ if(!/png$/.test(hi.src)) hi.src=c.image+'/high.png'; };
+    hi.src=c.image+'/high.webp';
+  }
+  var main=$('dcMain'), alt=$('dcAlt'); alt.hidden=true;
+  if(rd.mode==='daily'){
+    main.textContent='See how you did'; main.onclick=function(){ $('dlgCard').close(); openDailyStats(); };
+    alt.hidden=false; alt.textContent='Play Guess10'; alt.onclick=function(){ $('dlgCard').close(); switchMode('g10'); };
+  } else if(rd.idx < RUN_CARDS-1){
+    main.textContent='Next card ('+(rd.idx+2)+'/'+RUN_CARDS+')'; main.onclick=function(){ $('dlgCard').close(); nextCard(); };
+  } else {
+    main.textContent='See your total'; main.onclick=function(){ $('dlgCard').close(); nextCard(); };
+  }
+  $('dlgCard').showModal();
   setTimeout(function(){ main.focus({preventScroll:true}); },50);
 }
 function untilText(iso){
@@ -593,8 +662,7 @@ function afterServer(data){
   say('');
   if(rd.over){
     if(rd.mode==='daily'){ S.daily = Object.assign({}, S.daily||{}, data); S.lastStats=data.stats; }
-    showResult();
-    if(rd.mode==='daily') setTimeout(openDailyStats, 700);
+    showResult(true);
     return;
   }
   if(newWrong){
@@ -761,7 +829,7 @@ function openG10Stats(total, st){
   alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(); };
   $('dlgResult').showModal();
 }
-function closeAll(){ ['dlgResult','dlgBoard','dlgAcct','dlgSignIn'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
+function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
 
 /* ---------- Leaderboard ---------- */
 function openBoard(){
