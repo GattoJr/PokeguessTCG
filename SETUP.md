@@ -112,4 +112,6 @@ Il servizio email incluso in Supabase manda messaggi **solo agli indirizzi dei m
 5. Supabase → Authentication → Rate Limits: il limite di email all'ora (30 di default con SMTP esterno) si può alzare.
 6. Prova: crea un account con un'altra email. Se la mail finisce nello spam, la soluzione definitiva è un dominio tuo (es. pokeguesstcg.io) verificato su Brevo come mittente.
 
+**Finché l'SMTP non è impostato**: Supabase (piano gratuito) non accetta i modelli personalizzati, quindi le mail sono quelle standard di Supabase, con il solo link e senza codice. Inoltre arrivano solo a te: gli altri giocatori che provano a registrarsi vedono "Accounts with an email are not open yet. Please sign in with Google for now.". **Dopo aver impostato l'SMTP**: GitHub → Actions → "Configure Supabase sign-in" → Run workflow, così vengono applicati i modelli con il codice.
+
 L'Action "Configure Supabase sign-in" nel suo riepilogo dice se l'SMTP esterno risulta impostato.

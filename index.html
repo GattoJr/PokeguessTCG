@@ -1053,6 +1053,7 @@ function authErrText(e){
   if(c==='over_email_send_rate_limit'||/rate limit|security purposes/i.test(m)) return 'Too many emails for now. Wait a few minutes, then try again.';
   if(c==='over_request_rate_limit') return 'Too many tries. Wait a minute, then try again.';
   if(c==='email_address_invalid'||/invalid.*email|email.*invalid/i.test(m)) return 'That email address doesn\'t look right.';
+  if(c==='email_address_not_authorized'||/not authorized/i.test(m)) return 'Accounts with an email are not open yet. Please sign in with Google for now.';
   if(c==='signup_disabled'||c==='email_provider_disabled') return 'Creating accounts with an email is not available right now. Use Google instead.';
   if(c==='same_password') return 'That\'s already your password. Choose a different one.';
   if(/fetch|network/i.test(m)) return 'No connection to the server. Check your internet and try again.';
