@@ -7,5 +7,5 @@ window.PG_CONFIG = {
   supabaseKey: 'sb_publishable_3Md2uJXPdZQEX4roGASxsw_TWBCy6S2',
   /* Google OAuth "Web application" client ID (public). When set, sign-in uses Google's button on this site,
      so the Google window names this site instead of the Supabase address. Empty = the old redirect sign-in. */
-  googleClientId: ''
+  googleClientId: '537670397579-pvquktc8hus4i4k9q78vgm1jsjr6reht.apps.googleusercontent.com'
 };
