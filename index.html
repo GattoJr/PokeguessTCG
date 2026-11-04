@@ -169,6 +169,11 @@ input[type=text]:disabled{opacity:.6}
 .bgbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .bgbar i{display:block;height:100%;background:var(--gold);border-radius:3px}
 .bgdetail.locked .bgpic svg,.bgtile.locked svg{filter:grayscale(1);opacity:.42}
+.acbadges{display:flex;flex-direction:column;gap:12px;margin-top:6px;padding-top:14px;border-top:1.5px solid var(--line)}
+.acbadges > h3{margin:0;font:900 22px/1 var(--display);font-stretch:120%}
+#dlgAcct.guestview .acbadges{margin-top:0;padding-top:0;border-top:0}
+#dlgAcct.guestview .acbadges > h3{font-size:26px;padding-right:40px}
+#dsBadges{align-self:center}
 #bgGroups h3{margin:6px 0 0;font:800 15px/1 var(--display);font-stretch:110%;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .bggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
 .bgtile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 7px;border:0;border-radius:12px;background:transparent;cursor:pointer;text-align:center;min-width:0}
@@ -344,7 +349,6 @@ details p{color:var(--muted);margin:8px 0}
 
   <div class="links">
     <button class="link" id="btnBoard" type="button">Leaderboard</button>
-    <button class="link" id="btnBadges" type="button">Badges</button>
   </div>
 
   <details id="rules">
@@ -490,6 +494,7 @@ details p{color:var(--muted);margin:8px 0}
       <button class="btn" type="submit" id="npGo">Save password</button>
     </form>
     <p class="err" id="signErr" aria-live="polite"></p>
+    <button class="link" type="button" id="dsBadges">See your badges</button>
     <p class="legal">By signing in you accept the <a href="terms.html">Terms</a> and the <a href="privacy.html">Privacy Policy</a>.</p>
   </div>
 </dialog>
@@ -524,28 +529,6 @@ details p{color:var(--muted);margin:8px 0}
   </div>
 </dialog>
 
-<!-- Badges -->
-<dialog id="dlgBadges" aria-labelledby="bgTitle">
-  <div class="dlg">
-    <button class="x" type="button" data-close aria-label="Close">×</button>
-    <h2 id="bgTitle">Badges</h2>
-    <div class="modes" role="tablist" aria-label="Badges">
-      <button type="button" role="tab" id="bgNormal" aria-selected="true">Normal</button>
-      <button type="button" role="tab" id="bgHard" class="hardtab" aria-selected="false">Hard</button>
-    </div>
-    <p class="muted" id="bgCount"></p>
-    <div class="bgdetail" id="bgDetail" hidden aria-live="polite">
-      <div class="bgpic"></div><h4></h4><p class="bgdesc"></p><p class="bgstat"></p><div class="bgbar"><i></i></div>
-    </div>
-    <div id="bgGroups"></div>
-    <p class="muted" style="font-size:14px">A Daily challenge is complete when you name the card. Streaks count days in a row (UTC).</p>
-    <div class="note" id="bgGuest" hidden>
-      <b>Sign in to keep your badges on every device</b>
-      <button class="btn gbtn" type="button" data-signin></button>
-    </div>
-  </div>
-</dialog>
-
 <!-- Account -->
 <dialog id="dlgAcct" aria-labelledby="daTitle">
   <div class="dlg">
@@ -557,6 +540,24 @@ details p{color:var(--muted);margin:8px 0}
       <button class="btn ghost" type="button" id="daSignOut">Sign out</button>
     </div>
     <a class="link" id="daAdmin" href="admin.html" hidden>Admin panel</a>
+    <!-- badges: part of the profile (for guests the window shows only this) -->
+    <section class="acbadges" id="acBadges" aria-labelledby="bgTitle">
+      <h3 id="bgTitle">Badges</h3>
+      <div class="modes" role="tablist" aria-label="Badges">
+        <button type="button" role="tab" id="bgNormal" aria-selected="true">Normal</button>
+        <button type="button" role="tab" id="bgHard" class="hardtab" aria-selected="false">Hard</button>
+      </div>
+      <p class="muted" id="bgCount"></p>
+      <div class="bgdetail" id="bgDetail" hidden aria-live="polite">
+        <div class="bgpic"></div><h4></h4><p class="bgdesc"></p><p class="bgstat"></p><div class="bgbar"><i></i></div>
+      </div>
+      <div id="bgGroups"></div>
+      <p class="muted" style="font-size:14px">A Daily challenge is complete when you name the card. Streaks count days in a row (UTC).</p>
+      <div class="note" id="bgGuest" hidden>
+        <b>Sign in to keep your badges on every device</b>
+        <button class="btn gbtn" type="button" data-signin></button>
+      </div>
+    </section>
   </div>
 </dialog>
 
@@ -1069,7 +1070,7 @@ function openBoosterStats(total, st, hard){
   alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(hard); };
   $('dlgResult').showModal();
 }
-function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgBadges','dlgAcct','dlgSignIn','dlgNew'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
+function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn','dlgNew'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
 
 /* ---------- Badges ---------- */
 /* Hexagonal gold medals. Normal: all gold. Hard: gold frame with red enamel.
@@ -1256,7 +1257,8 @@ function openBadges(hard, focusKey){
   BADGES.tab=!!hard; BADGES.sel=focusKey||null;
   $('bgNormal').setAttribute('aria-selected', !hard); $('bgHard').setAttribute('aria-selected', !!hard);
   $('bgGuest').hidden=!!S.user;
-  if(!$('dlgBadges').open) $('dlgBadges').showModal();
+  if(!$('dlgAcct').open){ closeAll(); fillProfile(); $('dlgAcct').showModal(); $('dlgAcct').scrollTop=0; }
+  if(focusKey) setTimeout(function(){ $('acBadges').scrollIntoView({block:'start'}); },0);
   if(BADGES.data) renderBadges();
   else { $('bgCount').textContent='Loading…'; $('bgGroups').innerHTML=''; $('bgDetail').hidden=true; }
   if(!sb) return;
@@ -1368,7 +1370,7 @@ function setView(v){
   $('dsGoogle').hidden=!pass; $('fmPass').hidden=!(pass && EMAIL_SIGNIN); $('fmForgot').hidden=v!=='forgot';
   $('dsOr').hidden=!EMAIL_SIGNIN;
   $('fmCode').hidden=!code; $('fmNewPw').hidden=v!=='newpw';
-  $('dsLead').hidden=!pass;
+  $('dsLead').hidden=!pass; $('dsBadges').hidden=!pass;
   $('dsTitle').textContent = {signin:'Sign in', signup:'Create an account', forgot:'Forgot password', 'code-signup':'Check your email',
     'code-recovery':'Check your email', newpw:'Choose a new password'}[v];
   if(pass){
@@ -1630,18 +1632,26 @@ $('newYes').addEventListener('click',function(){
   if(pendingAction==='end'){ clearArt(); buildGrid(S.hard); showIntro(); } else startBooster();
 });
 $('btnBoard').addEventListener('click',function(){ openBoard(); });
-$('btnBadges').addEventListener('click',function(){ openBadges(); });
 $('bgNormal').addEventListener('click',function(){ openBadges(false); });
 $('bgHard').addEventListener('click',function(){ openBadges(true); });
 $('lbNormal').addEventListener('click',function(){ openBoard(false); });
 $('lbHard').addEventListener('click',function(){ openBoard(true); });
-$('btnAcct').addEventListener('click',function(){
-  if(!S.user){ signIn(); return; }
+/* the profile window: account details, then the badges. Guests see only their badges. */
+function fillProfile(){
+  var guest=!S.user;
+  $('dlgAcct').classList.toggle('guestview',guest);
+  ['daTitle','daEmail'].forEach(function(id){ $(id).hidden=guest; });
+  document.querySelector('#dlgAcct .row').hidden=guest;
+  $('dlgAcct').setAttribute('aria-labelledby', guest?'bgTitle':'daTitle');
+  $('bgTitle').textContent = guest ? 'Your badges' : 'Badges';
+  if(guest){ $('daAdmin').hidden=true; return; }
   $('daTitle').textContent=(S.profile&&S.profile.username)||'Your account';
   $('daEmail').textContent=S.user.email||'';
   $('daAdmin').hidden=!(S.profile&&S.profile.is_admin);
-  $('dlgAcct').showModal();
-});
+}
+function openProfile(){ if(!S.user){ signIn(); return; } openBadges(); }
+$('btnAcct').addEventListener('click',openProfile);
+$('dsBadges').addEventListener('click',function(){ openBadges(); });
 $('daSignOut').addEventListener('click',signOut);
 $('daRename').addEventListener('click',function(){ $('dlgAcct').close(); askUsername(false); });
 $('nameSignOut').addEventListener('click',signOut);
