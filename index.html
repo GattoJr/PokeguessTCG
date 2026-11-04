@@ -169,6 +169,9 @@ input[type=text]:disabled{opacity:.6}
 .bgbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .bgbar i{display:block;height:100%;background:var(--gold);border-radius:3px}
 .bgdetail.locked .bgpic svg,.bgtile.locked svg{filter:grayscale(1);opacity:.42}
+.badgesbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
+.badgesbtn .bgmini{display:flex}
+.badgesbtn small{font-weight:600;opacity:.8}
 .acbadges{display:flex;flex-direction:column;gap:12px;margin-top:6px;padding-top:14px;border-top:1.5px solid var(--line)}
 .acbadges > h3{margin:0;font:900 22px/1 var(--display);font-stretch:120%}
 #dlgAcct.guestview .acbadges{margin-top:0;padding-top:0;border-top:0}
@@ -223,7 +226,8 @@ dialog::backdrop{background:var(--scrim)}
 .cardpop.win h2{color:var(--good)} .cardpop.lose h2{color:var(--bad)}
 .cardpic{position:relative;width:min(72vw,300px);aspect-ratio:600/825;border-radius:12px;overflow:hidden;background:var(--surface-2);box-shadow:0 14px 34px rgba(8,18,40,.35)}
 .cardpic img{position:absolute;inset:0;width:100%;height:100%;display:block;transition:opacity .25s}
-.cardpic img.hi{opacity:0} .cardpic img.hi.ready{opacity:1}
+.cardpic img.hi,.cardpic img.lo{opacity:0} .cardpic img.hi.ready,.cardpic img.lo.ready{opacity:1}
+.cardpic img.lo{transition:none}
 .cardpop .row{width:100%;flex-direction:column}
 .cardpop .note{width:100%;text-align:left}
 /* with the sign-in box the card gets a little smaller, so everything fits on short phones */
@@ -376,7 +380,7 @@ details p{color:var(--muted);margin:8px 0}
   <div class="dlg cardpop" id="dcBox">
     <button class="x" type="button" data-close aria-label="Close">×</button>
     <h2 id="dcTitle"></h2>
-    <div class="cardpic"><img id="dcLow" alt=""><img id="dcHigh" class="hi" alt=""></div>
+    <div class="cardpic"><img id="dcLow" class="lo" alt=""><img id="dcHigh" class="hi" alt=""></div>
     <p id="dcInfo"></p>
     <div class="slot" id="dcNew" hidden></div>
     <div class="row">
@@ -539,9 +543,10 @@ details p{color:var(--muted);margin:8px 0}
       <button class="btn ghost" type="button" id="daRename">Change username</button>
       <button class="btn ghost" type="button" id="daSignOut">Sign out</button>
     </div>
+    <button class="btn badgesbtn" type="button" id="daBadges" aria-controls="acBadges" aria-expanded="false"><span class="bgmini" aria-hidden="true"></span><span>Badges</span><small id="daBadgesN"></small></button>
     <a class="link" id="daAdmin" href="admin.html" hidden>Admin panel</a>
-    <!-- badges: part of the profile (for guests the window shows only this) -->
-    <section class="acbadges" id="acBadges" aria-labelledby="bgTitle">
+    <!-- badges: opened with the Badges button (guests and the "New badge!" notice open it directly) -->
+    <section class="acbadges" id="acBadges" aria-labelledby="bgTitle" hidden>
       <h3 id="bgTitle">Badges</h3>
       <div class="modes" role="tablist" aria-label="Badges">
         <button type="button" role="tab" id="bgNormal" aria-selected="true">Normal</button>
@@ -790,7 +795,9 @@ function showResult(fresh){
   $('play').hidden=true;
   revealArt(rd);
   var res=$('result'); res.hidden=false; res.className='result '+(rd.won?'win':'lose');
-  $('resImg').src = c.image ? c.image+'/low.webp' : ''; $('resImg').alt = (c.name||'')+' card';
+  var ri=$('resImg'); ri.removeAttribute('src'); ri.style.visibility='hidden';   // never the previous card
+  ri.onload=function(){ ri.style.visibility=''; };
+  if(c.image) ri.src=c.image+'/low.webp'; ri.alt = (c.name||'')+' card';
   $('resImg').onerror=function(){ if(c.image && !/png$/.test(this.src)) this.src=c.image+'/low.png'; };
   $('resTitle').textContent = rd.won ? '+'+fmt(rd.score)+' points' : (rd.wrong>=TRIES ? 'Out of guesses' : 'You gave up');
   $('resInfo').textContent = (rd.won?'Yes, it’s ':'It was ')+c.name+', from '+c.set_name+'.';
@@ -815,10 +822,13 @@ function openCardPopup(){
   $('dcTitle').textContent = rd.won ? '+'+fmt(rd.score)+' points' : (rd.wrong>=TRIES ? 'Out of guesses' : 'You gave up');
   $('dcInfo').textContent = (rd.won?'Yes, it’s ':'It was ')+c.name+', from '+c.set_name+'.';
   var low=$('dcLow'), hi=$('dcHigh');
-  hi.classList.remove('ready'); hi.removeAttribute('src'); low.alt=(c.name||'')+' card'; hi.alt=low.alt;
+  // clear the previous card first: otherwise it stays on screen until the new picture arrives
+  hi.classList.remove('ready'); hi.removeAttribute('src'); low.classList.remove('ready'); low.removeAttribute('src');
+  low.alt=(c.name||'')+' card'; hi.alt=low.alt;
   if(c.image){
+    low.onload=function(){ low.classList.add('ready'); };
     low.onerror=function(){ if(!/png$/.test(low.src)) low.src=c.image+'/low.png'; };
-    low.src=c.image+'/low.webp';   // already loaded for the thumbnail: shows at once
+    low.src=c.image+'/low.webp';   // usually already loaded for the thumbnail: shows at once
     hi.onload=function(){ hi.classList.add('ready'); };
     hi.onerror=function(){ if(!/png$/.test(hi.src)) hi.src=c.image+'/high.png'; };
     hi.src=c.image+'/high.webp';
@@ -1257,8 +1267,11 @@ function openBadges(hard, focusKey){
   BADGES.tab=!!hard; BADGES.sel=focusKey||null;
   $('bgNormal').setAttribute('aria-selected', !hard); $('bgHard').setAttribute('aria-selected', !!hard);
   $('bgGuest').hidden=!!S.user;
-  if(!$('dlgAcct').open){ closeAll(); fillProfile(); $('dlgAcct').showModal(); $('dlgAcct').scrollTop=0; }
-  if(focusKey) setTimeout(function(){ $('acBadges').scrollIntoView({block:'start'}); },0);
+  var opening=!$('dlgAcct').open;
+  if(opening){ closeAll(); fillProfile(); $('dlgAcct').showModal(); $('dlgAcct').scrollTop=0; }
+  var wasHidden=$('acBadges').hidden;
+  showBadgesSection(true);
+  if(S.user && (wasHidden || focusKey)) setTimeout(function(){ $('acBadges').scrollIntoView({block:'start', behavior: opening?'auto':'smooth'}); },0);
   if(BADGES.data) renderBadges();
   else { $('bgCount').textContent='Loading…'; $('bgGroups').innerHTML=''; $('bgDetail').hidden=true; }
   if(!sb) return;
@@ -1649,7 +1662,23 @@ function fillProfile(){
   $('daEmail').textContent=S.user.email||'';
   $('daAdmin').hidden=!(S.profile&&S.profile.is_admin);
 }
-function openProfile(){ if(!S.user){ signIn(); return; } openBadges(); }
+function showBadgesSection(on){
+  $('acBadges').hidden=!on; $('daBadges').hidden=on || !S.user; $('daBadges').setAttribute('aria-expanded', on);
+}
+/* the profile opens with the account only; the Badges button shows the medals */
+function openProfile(){
+  if(!S.user){ signIn(); return; }
+  closeAll(); fillProfile(); showBadgesSection(false);
+  $('daBadgesN').textContent='';
+  $('dlgAcct').showModal();
+  var mini=document.querySelector('#daBadges .bgmini');
+  if(!mini.firstChild) mini.innerHTML=badgeSvg(badgeList(false)[0],26);
+  if(sb) fetchBadges().then(function(d){
+    var n=allBadges(d).filter(function(b){ return b.earned; }).length;
+    $('daBadgesN').textContent = n ? n+' of 32' : '';
+  }).catch(function(){});
+}
+$('daBadges').addEventListener('click',function(){ openBadges(); });
 $('btnAcct').addEventListener('click',openProfile);
 $('dsBadges').addEventListener('click',function(){ openBadges(); });
 $('daSignOut').addEventListener('click',signOut);
