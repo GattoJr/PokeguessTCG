@@ -46,7 +46,7 @@ jobs:
       - name: Image function
         if: ${{ env.PROJECT_ID != '' && env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_DB_PASSWORD != '' }}
         run: |
-          out=$(supabase functions deploy art --project-ref "$PROJECT_ID" --no-verify-jwt 2>&1) && { echo "$out"; exit 0; }
+          out=$(supabase functions deploy art --project-ref "$PROJECT_ID" --no-verify-jwt --yes 2>&1) && { echo "$out"; exit 0; }
           echo "$out"
           echo "::error::functions deploy failed: $(echo "$out" | tail -n 8 | tr '\n' ' ' | cut -c1-900)"
           exit 1
