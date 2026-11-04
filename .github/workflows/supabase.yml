@@ -33,7 +33,12 @@ jobs:
         run: supabase link --project-ref "$PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
       - name: Database
         if: ${{ env.PROJECT_ID != '' && env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_DB_PASSWORD != '' }}
-        run: supabase db push --password "$SUPABASE_DB_PASSWORD" --yes
+        # on failure the last lines also go to the run summary (annotations), readable without the full log
+        run: |
+          out=$(supabase db push --password "$SUPABASE_DB_PASSWORD" --yes 2>&1) && { echo "$out"; exit 0; }
+          echo "$out"
+          echo "::error::db push failed: $(echo "$out" | tail -n 8 | tr '\n' ' ' | cut -c1-900)"
+          exit 1
       - name: Image function
         if: ${{ env.PROJECT_ID != '' && env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_DB_PASSWORD != '' }}
         run: supabase functions deploy art --project-ref "$PROJECT_ID" --no-verify-jwt
