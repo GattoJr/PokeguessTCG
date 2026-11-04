@@ -148,6 +148,35 @@ input[type=text]:disabled{opacity:.6}
 .pw .link{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:13px}
 .auth .pmuser{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;padding:0;border:0}
 #dlgSignIn h2{padding-right:40px}
+/* badges */
+.badge-svg{display:block;flex:none;overflow:visible}
+.newbadge{display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px 8px 8px;border:0;border-radius:14px;cursor:pointer;text-align:left;
+  background:linear-gradient(100deg,rgba(242,194,48,.28),rgba(242,194,48,.10));box-shadow:inset 0 0 0 1.5px var(--gold-deep);animation:nbIn .5s ease-out}
+.newbadge span{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.newbadge small{font:800 13px/1.2 var(--display);font-stretch:110%;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.4px}
+.newbadge b{font-size:16px}
+.newbadge i{font-style:normal;font-size:24px;color:var(--muted)}
+.slot{width:100%}
+@keyframes nbIn{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.newbadge{animation:none}}
+.cardpop.hasnew .cardpic{width:min(60vw,220px)}
+@media (max-height:740px){.cardpop.hasnew .cardpic{width:min(40vw,150px)}}
+.bgdetail{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center;padding:12px;border-radius:14px;background:var(--surface-2)}
+.bgdetail .bgpic{grid-row:span 4}
+.bgdetail h4{margin:0;font:900 20px/1.1 var(--display);font-stretch:112%}
+.bgdetail .bgdesc{margin:0;font-size:15px}
+.bgdetail .bgstat{margin:0;font-size:14px;color:var(--muted)}
+.bgbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bgbar i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.bgdetail.locked .bgpic svg,.bgtile.locked svg{filter:grayscale(1);opacity:.42}
+#bgGroups h3{margin:6px 0 0;font:800 15px/1 var(--display);font-stretch:110%;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.bggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.bgtile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 7px;border:0;border-radius:12px;background:transparent;cursor:pointer;text-align:center;min-width:0}
+.bgtile b{font-size:13px;line-height:1.15;font-weight:700}
+.bgtile small{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bgtile.locked b{color:var(--muted);font-weight:600}
+.bgtile.on{background:var(--surface-2);box-shadow:inset 0 0 0 1.5px var(--gold-deep)}
+.bgtile:not(.locked) small{color:var(--good);font-weight:700}
 .legal{font-size:13px;color:var(--muted)} .legal a{color:inherit;text-underline-offset:2px}
 .authlinks{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .okmsg{margin:0;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:15px}
@@ -315,6 +344,7 @@ details p{color:var(--muted);margin:8px 0}
 
   <div class="links">
     <button class="link" id="btnBoard" type="button">Leaderboard</button>
+    <button class="link" id="btnBadges" type="button">Badges</button>
   </div>
 
   <details id="rules">
@@ -326,6 +356,7 @@ details p{color:var(--muted);margin:8px 0}
     <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. Challenge the other players: can you name it with more points than they did?</p>
     <p><b>Booster</b>: like opening a pack, guess ten random cards in a row. Open as many boosters as you like.</p>
     <p>Both come in Normal and Hard mode. Sign in with Google to save your results on every device and enter the leaderboard.</p>
+    <p><b>Badges</b>: earn medals for Daily challenges, streaks and Booster scores, in Normal and Hard mode. A Daily challenge is complete when you name the card.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
       <i class="mid">15</i><span>Inner frame</span>
@@ -343,6 +374,7 @@ details p{color:var(--muted);margin:8px 0}
     <h2 id="dcTitle"></h2>
     <div class="cardpic"><img id="dcLow" alt=""><img id="dcHigh" class="hi" alt=""></div>
     <p id="dcInfo"></p>
+    <div class="slot" id="dcNew" hidden></div>
     <div class="row">
       <button class="btn" id="dcMain" type="button"></button>
       <button class="btn" id="dcAlt" type="button" hidden></button>
@@ -361,6 +393,7 @@ details p{color:var(--muted);margin:8px 0}
     <h2 id="drTitle"></h2>
     <div class="big" id="drScore"></div>
     <p class="verdict" id="drVerdict"></p>
+    <div class="slot" id="drNew" hidden></div>
     <figure class="chart" id="drChart" role="img">
       <span class="cap ycap">Players</span>
       <div class="yax" id="drY"></div>
@@ -486,6 +519,28 @@ details p{color:var(--muted);margin:8px 0}
     <ol class="board" id="boardList"></ol>
     <div class="note" id="dbGuest" hidden>
       <b>Sign in to enter the leaderboard</b>
+      <button class="btn gbtn" type="button" data-signin></button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Badges -->
+<dialog id="dlgBadges" aria-labelledby="bgTitle">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">×</button>
+    <h2 id="bgTitle">Badges</h2>
+    <div class="modes" role="tablist" aria-label="Badges">
+      <button type="button" role="tab" id="bgNormal" aria-selected="true">Normal</button>
+      <button type="button" role="tab" id="bgHard" class="hardtab" aria-selected="false">Hard</button>
+    </div>
+    <p class="muted" id="bgCount"></p>
+    <div class="bgdetail" id="bgDetail" hidden aria-live="polite">
+      <div class="bgpic"></div><h4></h4><p class="bgdesc"></p><p class="bgstat"></p><div class="bgbar"><i></i></div>
+    </div>
+    <div id="bgGroups"></div>
+    <p class="muted" style="font-size:14px">A Daily challenge is complete when you name the card. Streaks count days in a row (UTC).</p>
+    <div class="note" id="bgGuest" hidden>
+      <b>Sign in to keep your badges on every device</b>
       <button class="btn gbtn" type="button" data-signin></button>
     </div>
   </div>
@@ -750,7 +805,7 @@ function showResult(fresh){
     main.textContent='See your total'; main.onclick=nextCard;
   }
   renderMeter(); renderStatus();
-  if(fresh) openCardPopup(); else setTimeout(function(){ main.focus({preventScroll:true}); },50);
+  if(fresh){ openCardPopup(); if(rd.mode==='daily') checkNewBadges('dcNew'); } else setTimeout(function(){ main.focus({preventScroll:true}); },50);
 }
 /* the whole card, big, right after it is named (or missed) */
 function openCardPopup(){
@@ -768,6 +823,7 @@ function openCardPopup(){
     hi.src=c.image+'/high.webp';
   }
   var main=$('dcMain'), alt=$('dcAlt'); alt.hidden=true;
+  hideNewBadge('dcNew');
   var guest = rd.mode==='daily' && !S.user;   // guests can sign in straight away (also offered in "See how you did")
   $('dcGuest').hidden=!guest; $('dcBox').classList.toggle('guest',guest);
   if(rd.mode==='daily'){
@@ -922,6 +978,7 @@ function nextCard(){
       S.run.finished=true; lsDel(runKey(hard)); lsSet(lastKey(hard), d.total);
       renderStatus();
       openBoosterStats(d.total, d.stats, hard);
+      checkNewBadges('drNew');
       $('btnResMain').textContent='Open another booster'; $('btnResMain').onclick=function(){ closeAll(); startBooster(); };
       return;
     }
@@ -981,6 +1038,7 @@ function guestNote(on){ $('drGuest').hidden=!on || !!S.user; }
 function openDailyStats(){
   var rd=S.round, st=S.lastStats || (S.daily && S.daily.stats);
   if(!rd || rd.mode!=='daily' || !st){ return; }
+  hideNewBadge('drNew');
   $('drTitle').textContent = rd.won ? 'Daily card named!' : 'Daily card missed';
   var w=st.width||(rd.hard?10:50);
   $('drTitle').textContent += rd.hard ? ' (Hard)' : '';
@@ -997,6 +1055,7 @@ function openDailyStats(){
 }
 function openBoosterStats(total, st, hard){
   st = st || {players:1,buckets:[],beaten:0};
+  hideNewBadge('drNew');
   var w=st.width||(hard?100:500), max=pointsFor(hard)*RUN_CARDS;
   $('drTitle').textContent='Booster complete'+(hard?' (Hard)':'');
   $('drScore').innerHTML = fmt(total)+'<small>/ '+fmt(max)+'</small>';
@@ -1010,7 +1069,234 @@ function openBoosterStats(total, st, hard){
   alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(hard); };
   $('dlgResult').showModal();
 }
-function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn','dlgNew'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
+function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgBadges','dlgAcct','dlgSignIn','dlgNew'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
+
+/* ---------- Badges ---------- */
+/* Hexagonal gold medals. Normal: all gold. Hard: gold frame with red enamel.
+   Which badges a player has is worked out here from my_badges(): the days the Daily card was named,
+   and the player's Booster records (Normal and Hard apart). */
+var BOOSTER_TIERS = ['Common','Uncommon','Rare','Holo Rare','Double Rare','Ultra Rare','Illustration Rare','Special Rare','Hyper Rare','Perfect Pull'];
+function badgeList(hard){
+  var H = hard ? ' (Hard)' : '', list = [];
+  list.push({id:'d1',  group:'daily',  kind:'count',  need:1,   name:'First Light',   emblem:'sunrise', desc:'Complete your first Daily'+H+' challenge.'});
+  list.push({id:'d50', group:'daily',  kind:'count',  need:50,  name:'Sun Seeker',    emblem:'sun',     desc:'Complete 50 Daily'+H+' challenges.'});
+  list.push({id:'d100',group:'daily',  kind:'count',  need:100, name:'Century Crown', emblem:'crown',   desc:'Complete 100 Daily'+H+' challenges.'});
+  list.push({id:'s7',  group:'streak', kind:'streak', need:7,   name:'Hot Streak',    emblem:'flame1',  desc:'Complete the Daily'+H+' challenge 7 days in a row.'});
+  list.push({id:'s14', group:'streak', kind:'streak', need:14,  name:'Wildfire',      emblem:'flame2',  desc:'Complete the Daily'+H+' challenge 14 days in a row.'});
+  list.push({id:'s30', group:'streak', kind:'streak', need:30,  name:'Eternal Flame', emblem:'flame3',  desc:'Complete the Daily'+H+' challenge 30 days in a row.'});
+  var step = hard ? 200 : 1000;
+  for(var i=1;i<=10;i++){
+    var pts=i*step;
+    list.push({id:'b'+i, group:'booster', kind:'booster', need:pts, tier:i, name:BOOSTER_TIERS[i-1], emblem:'card',
+      label: pts>=1000 ? (pts/1000)+'K' : String(pts),
+      desc:'Obtain '+fmt(pts)+' points in a Booster'+H+' challenge.'});
+  }
+  list.forEach(function(b){ b.hard=!!hard; b.key=(hard?'h:':'n:')+b.id; });
+  return list;
+}
+function dayNum(s){ return Math.round(Date.UTC(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10))/86400000); }
+/* everything the badges need, from the server's lists */
+function badgeState(data, hard){
+  var m = hard ? 'hard' : 'normal';
+  var days = ((data && data.daily && data.daily[m]) || []).map(dayNum);
+  var recs = (data && data.booster && data.booster[m]) || [];
+  var today = data && data.today ? dayNum(data.today) : Math.floor(Date.now()/86400000);
+  // streaks: when each length was first reached, the best one, and the one still alive (today or yesterday)
+  var reached = {}, best = 0, run = 0, prev = null;
+  days.forEach(function(d, i){
+    run = (prev!==null && d===prev+1) ? run+1 : 1; prev = d;
+    if(run>best){ best=run; }
+    if(!reached[run]) reached[run] = d;
+  });
+  var current = (prev!==null && today-prev<=1) ? run : 0;
+  var bestBooster = recs.length ? recs[recs.length-1][1] : 0;
+  return badgeList(hard).map(function(b){
+    var have=0, when=null;
+    if(b.kind==='count'){ have=days.length; if(days.length>=b.need) when=days[b.need-1]*86400000; }
+    else if(b.kind==='streak'){ have=current; if(reached[b.need]) when=reached[b.need]*86400000; }
+    else { have=bestBooster; for(var i=0;i<recs.length;i++){ if(recs[i][1]>=b.need){ when=Date.parse(recs[i][0]); break; } } }
+    b.earned = when!==null; b.when = when; b.have = Math.min(have, b.need); b.best = best;
+    return b;
+  });
+}
+
+/* ---- drawing ---- */
+var badgeSeq = 0;
+function hexPts(r, cx, cy){
+  var p=[]; for(var k=0;k<6;k++){ var a=Math.PI/180*(60*k-90); p.push((cx+r*Math.cos(a)).toFixed(2)+','+(cy+r*Math.sin(a)).toFixed(2)); } return p.join(' ');
+}
+function star(cx, cy, r, c){
+  var p=[]; for(var k=0;k<10;k++){ var rr = k%2 ? r*0.45 : r, a=Math.PI/180*(36*k-90); p.push((cx+rr*Math.cos(a)).toFixed(2)+','+(cy+rr*Math.sin(a)).toFixed(2)); }
+  return '<polygon points="'+p.join(' ')+'" fill="'+c+'"/>';
+}
+function numText(t, x, y, size, c){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="Anybody, \'Arial Narrow\', sans-serif" font-weight="900" font-size="'+size+'" fill="'+c+'" style="font-stretch:110%">'+t+'</text>';
+}
+/* the emblem in one colour (drawn twice: highlight, then the engraving) */
+function emblem(b, c, bg){
+  var s='';
+  switch(b.emblem){
+    case 'sunrise':
+      s+='<clipPath id="hz'+badgeSeq+'"><rect x="20" y="20" width="60" height="38"/></clipPath>';
+      s+='<circle cx="50" cy="58" r="13" fill="'+c+'" clip-path="url(#hz'+badgeSeq+')"/>';
+      for(var k=0;k<7;k++){ var a=Math.PI/180*(180+30*k), x1=50+18*Math.cos(a), y1=58+18*Math.sin(a), x2=50+25*Math.cos(a), y2=58+25*Math.sin(a);
+        s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+c+'" stroke-width="3.6" stroke-linecap="round"/>'; }
+      s+='<rect x="27" y="61" width="46" height="4" rx="2" fill="'+c+'"/><rect x="34" y="68" width="32" height="3.4" rx="1.7" fill="'+c+'"/>';
+      break;
+    case 'sun':
+      for(var k2=0;k2<12;k2++){ var a2=Math.PI/180*(30*k2), r1=k2%2?17:16, r2=k2%2?21:25;
+        s+='<line x1="'+(50+r1*Math.cos(a2)).toFixed(1)+'" y1="'+(46+r1*Math.sin(a2)).toFixed(1)+'" x2="'+(50+r2*Math.cos(a2)).toFixed(1)+'" y2="'+(46+r2*Math.sin(a2)).toFixed(1)+'" stroke="'+c+'" stroke-width="3.4" stroke-linecap="round"/>'; }
+      s+='<circle cx="50" cy="46" r="13.5" fill="'+c+'"/>'+numText('50',50,51.5,14,bg);
+      break;
+    case 'crown':
+      s+='<path d="M31 50 L33 33 L41.5 42 L50 29 L58.5 42 L67 33 L69 50 Z" fill="'+c+'"/><rect x="31" y="52" width="38" height="5" rx="1.5" fill="'+c+'"/>';
+      s+='<circle cx="33" cy="31" r="2.8" fill="'+c+'"/><circle cx="50" cy="27" r="3" fill="'+c+'"/><circle cx="67" cy="31" r="2.8" fill="'+c+'"/>';
+      s+=numText('100',50,73,15,c);
+      break;
+    case 'flame1': case 'flame2': case 'flame3':
+      var big = b.emblem==='flame3', two = b.emblem!=='flame1';
+      if(two && !big) s+='<path d="M60 58 C67 55 69 47 64 39 C64 45 61 47 59 46 C61 40 58 34 53 31 C55 39 49 43 49 50 C49 55 53 59 60 58 Z" fill="'+c+'" opacity=".75"/>';
+      if(big) s+='<circle cx="50" cy="45" r="20" fill="none" stroke="'+c+'" stroke-width="2.6"/>';
+      s+='<path d="M48 60 C38 59 33 51 36 42 C38 47 41 48 43 47 C40 39 45 31 52 27 C50 35 58 39 59 47 C60 54 55 60 48 60 Z" fill="'+c+'"/>';
+      s+='<path d="M48 57 C44 56 42 52 44 48 C45 50 47 51 48 50 C47 46 49 43 52 41 C52 46 55 48 55 51 C55 55 52 57 48 57 Z" fill="'+bg+'"/>';
+      s+=numText(b.need,50,77,14,c);
+      break;
+    case 'card':
+      s+='<rect x="37" y="25" width="26" height="36" rx="3.2" fill="none" stroke="'+c+'" stroke-width="3.2"/>';
+      var t=b.tier, cx=50, cy=43;
+      if(t===1) s+='<circle cx="50" cy="43" r="5.5" fill="'+c+'"/>';
+      else if(t===2) s+='<polygon points="50,36 57,43 50,50 43,43" fill="'+c+'"/>';
+      else if(t===3) s+=star(cx,cy,8,c);
+      else if(t===4) s+=star(cx,cy+1,7.5,c)+star(57,32,3.4,c);
+      else if(t===5) s+=star(45,43,5.6,c)+star(55,43,5.6,c);
+      else if(t===6) s+=star(50,36.5,5,c)+star(44.5,47,5,c)+star(55.5,47,5,c);
+      else if(t>=7 && t<=9){ s+='<circle cx="50" cy="43" r="10" fill="'+c+'"/>';
+        if(t===7) s+=star(50,43,6.2,bg);
+        if(t===8) s+=star(45.5,43,4.4,bg)+star(54.5,43,4.4,bg);
+        if(t===9) s+=star(50,38.5,3.8,bg)+star(45.5,46,3.8,bg)+star(54.5,46,3.8,bg); }
+      else s+='<path d="M41 49 L42 37 L46.5 42 L50 34 L53.5 42 L58 37 L59 49 Z" fill="'+c+'"/>';
+      s+=numText(b.label,50,77,b.label.length>2?13:15,c);
+      break;
+  }
+  return s;
+}
+function badgeSvg(b, size){
+  var id = 'bg'+(++badgeSeq), hard = b.hard;
+  var engrave = hard ? '#FFE07A' : '#7A4A06', light = hard ? 'rgba(60,0,0,.55)' : 'rgba(255,248,214,.85)';
+  var fieldTop = hard ? '#C93B2E' : '#F3C64A', fieldBot = hard ? '#7E1712' : '#D69A1F';
+  var em = emblem(b, engrave, hard ? '#9E241B' : '#E6AE33');
+  var shadowEm = emblem(b, light, light);
+  return '<svg class="badge-svg" viewBox="0 0 100 100" width="'+size+'" height="'+size+'" aria-hidden="true">'+
+    '<defs>'+
+      '<linearGradient id="'+id+'r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1A8"/><stop offset=".35" stop-color="#F2C230"/><stop offset=".7" stop-color="#C98A12"/><stop offset="1" stop-color="#8A5A08"/></linearGradient>'+
+      '<linearGradient id="'+id+'b" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFE48A"/><stop offset="1" stop-color="#9C650A"/></linearGradient>'+
+      '<linearGradient id="'+id+'f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+fieldTop+'"/><stop offset="1" stop-color="'+fieldBot+'"/></linearGradient>'+
+      '<clipPath id="'+id+'c"><polygon points="'+hexPts(47,50,50)+'"/></clipPath>'+
+    '</defs>'+
+    '<polygon points="'+hexPts(47,50,52)+'" fill="rgba(20,10,0,.28)"/>'+
+    '<polygon points="'+hexPts(47,50,50)+'" fill="url(#'+id+'r)" stroke="#6E4506" stroke-width="1.6" stroke-linejoin="round"/>'+
+    '<polygon points="'+hexPts(39,50,50)+'" fill="url(#'+id+'b)"/>'+
+    '<polygon points="'+hexPts(36,50,50)+'" fill="url(#'+id+'f)" stroke="'+(hard?'#5C0F0B':'#A8700E')+'" stroke-width="1"/>'+
+    '<g transform="translate(0,1)">'+shadowEm+'</g>'+em+
+    '<g clip-path="url(#'+id+'c)"><polygon points="0,0 58,0 18,100 0,100" fill="#fff" opacity=".16"/></g>'+
+    '<polygon points="'+hexPts(46,50,50)+'" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".8"/>'+
+  '</svg>';
+}
+
+/* ---- which badges this player has, and the ones just earned ---- */
+var BADGES = {data:null, tab:false, sel:null};
+function badgeOwner(){ return S.user ? 'u:'+S.user.id : 'g:'+GUEST; }
+function fetchBadges(){
+  return rpc('my_badges',{p_guest:GUEST}).then(function(d){ BADGES.data=d; return d; });
+}
+function allBadges(d){ return badgeState(d,false).concat(badgeState(d,true)); }
+/* the badges already shown to this player in this browser; the first time, everything they have counts as seen */
+function seenBadges(d){
+  var all=lsGet('pg_badges')||{}, k=badgeOwner();
+  if(!all[k]){ all[k]=allBadges(d).filter(function(b){ return b.earned; }).map(function(b){ return b.key; }); lsSet('pg_badges',all); }
+  return all[k];
+}
+function markSeen(keys){
+  var all=lsGet('pg_badges')||{}, k=badgeOwner(), list=all[k]||[];
+  keys.forEach(function(x){ if(list.indexOf(x)<0) list.push(x); });
+  all[k]=list; lsSet('pg_badges',all);
+}
+function primeBadges(){ if(!sb) return; fetchBadges().then(seenBadges).catch(function(){}); }
+/* after a Daily card or a whole Booster: show any new badge inside the dialog that is open (slot = dcNew or drNew) */
+function checkNewBadges(slotId){
+  if(!sb) return;
+  var had = lsGet('pg_badges'), owner=badgeOwner();
+  if(!had || !had[owner]) return primeBadges();
+  fetchBadges().then(function(d){
+    var seen=seenBadges(d);
+    var fresh=allBadges(d).filter(function(b){ return b.earned && seen.indexOf(b.key)<0; });
+    if(!fresh.length) return;
+    markSeen(fresh.map(function(b){ return b.key; }));
+    var slot=$(slotId), b=fresh[fresh.length-1];
+    slot.innerHTML='';
+    var btn=document.createElement('button'); btn.type='button'; btn.className='newbadge';
+    btn.innerHTML=badgeSvg(b,46)+'<span><small>'+(fresh.length>1?fresh.length+' new badges!':'New badge!')+'</small><b></b></span><i aria-hidden="true">›</i>';
+    btn.querySelector('b').textContent=b.name+(b.hard?' (Hard)':'')+(fresh.length>1?' and '+(fresh.length-1)+' more':'');
+    btn.addEventListener('click',function(){ closeAll(); openBadges(b.hard, b.key); });
+    slot.appendChild(btn); slot.hidden=false;
+    var box=slot.closest('.cardpop'); if(box) box.classList.add('hasnew');
+  }).catch(function(){});
+}
+function hideNewBadge(slotId){ var s=$(slotId); s.hidden=true; s.innerHTML=''; var box=s.closest('.cardpop'); if(box) box.classList.remove('hasnew'); }
+
+function fmtDay(ms){ return new Date(ms).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}); }
+function badgeStatus(b){
+  if(b.earned) return 'Earned on '+fmtDay(b.when)+'.';
+  if(b.kind==='count') return fmt(b.have)+' of '+fmt(b.need)+' so far.';
+  if(b.kind==='streak') return 'Current streak: '+b.have+' day'+(b.have===1?'':'s')+'. Best: '+b.best+'.';
+  return b.have ? 'Your best Booster'+(b.hard?' (Hard)':'')+': '+fmt(b.have)+' points.' : 'No Booster'+(b.hard?' (Hard)':'')+' finished yet.';
+}
+function openBadges(hard, focusKey){
+  if(hard===undefined) hard=S.hard;
+  BADGES.tab=!!hard; BADGES.sel=focusKey||null;
+  $('bgNormal').setAttribute('aria-selected', !hard); $('bgHard').setAttribute('aria-selected', !!hard);
+  $('bgGuest').hidden=!!S.user;
+  if(!$('dlgBadges').open) $('dlgBadges').showModal();
+  if(BADGES.data) renderBadges();
+  else { $('bgCount').textContent='Loading…'; $('bgGroups').innerHTML=''; $('bgDetail').hidden=true; }
+  if(!sb) return;
+  fetchBadges().then(function(d){
+    // whatever is on screen now has been seen
+    seenBadges(d); markSeen(allBadges(d).filter(function(b){ return b.earned; }).map(function(b){ return b.key; }));
+    renderBadges();
+  }).catch(function(e){ if(!BADGES.data) $('bgCount').textContent="Couldn't load your badges ("+errText(e)+').'; });
+}
+function renderBadges(){
+  var list=badgeState(BADGES.data, BADGES.tab), got=list.filter(function(b){ return b.earned; }).length;
+  $('bgCount').textContent = got+' of '+list.length+' earned'+(BADGES.tab?' in Hard mode.':'.');
+  var sel = list.filter(function(b){ return b.key===BADGES.sel; })[0]
+         || list.filter(function(b){ return !b.earned; })[0] || list[list.length-1];
+  BADGES.sel=sel.key;
+  var box=$('bgGroups'); box.innerHTML='';
+  [['daily','Daily'],['streak','Streaks'],['booster','Booster']].forEach(function(g){
+    var h=document.createElement('h3'); h.textContent=g[1]+(BADGES.tab?' (Hard)':''); box.appendChild(h);
+    var grid=document.createElement('div'); grid.className='bggrid';
+    list.filter(function(b){ return b.group===g[0]; }).forEach(function(b){
+      var t=document.createElement('button'); t.type='button';
+      t.className='bgtile'+(b.earned?'':' locked')+(b.key===sel.key?' on':'');
+      t.setAttribute('aria-pressed', b.key===sel.key);
+      t.innerHTML=badgeSvg(b,58)+'<b></b><small></small>';
+      t.querySelector('b').textContent=b.name;
+      t.querySelector('small').textContent = b.earned ? 'Earned' : (b.kind==='booster' ? fmt(b.need)+' pts' : b.have+'/'+b.need);
+      t.setAttribute('aria-label', b.name+'. '+b.desc+' '+(b.earned?'Earned.':'Not earned yet.'));
+      t.addEventListener('click',function(){ BADGES.sel=b.key; renderBadges(); });
+      grid.appendChild(t);
+    });
+    box.appendChild(grid);
+  });
+  var d=$('bgDetail'); d.hidden=false; d.className='bgdetail'+(sel.earned?'':' locked');
+  d.querySelector('.bgpic').innerHTML=badgeSvg(sel,84);
+  d.querySelector('h4').textContent=sel.name+(sel.hard?' (Hard)':'');
+  d.querySelector('.bgdesc').textContent=sel.desc;
+  d.querySelector('.bgstat').textContent=badgeStatus(sel);
+  var bar=d.querySelector('.bgbar'); bar.hidden=sel.earned;
+  bar.firstChild.style.width = Math.round(100*Math.min(1, sel.have/sel.need))+'%';
+}
 
 /* ---------- Leaderboard ---------- */
 function openBoard(hard){
@@ -1269,7 +1555,7 @@ function onSignedIn(user){
   // results played as a guest in this browser move to the account (once): the game waits only for this
   var claimed=lsGet('pg_claimed')||{};
   var p = claimed[user.id+GUEST] ? Promise.resolve() : rpc('claim_guest',{p_guest:GUEST}).then(function(){ claimed[user.id+GUEST]=1; lsSet('pg_claimed',claimed); }).catch(function(){});
-  return p.then(function(){ loadProfile().catch(function(){}); });
+  return p.then(function(){ loadProfile().catch(function(){}); BADGES.data=null; primeBadges(); });
 }
 
 /* ---------- Suggestions (open upwards, so the phone keyboard never hides them) ---------- */
@@ -1344,6 +1630,9 @@ $('newYes').addEventListener('click',function(){
   if(pendingAction==='end'){ clearArt(); buildGrid(S.hard); showIntro(); } else startBooster();
 });
 $('btnBoard').addEventListener('click',function(){ openBoard(); });
+$('btnBadges').addEventListener('click',function(){ openBadges(); });
+$('bgNormal').addEventListener('click',function(){ openBadges(false); });
+$('bgHard').addEventListener('click',function(){ openBadges(true); });
 $('lbNormal').addEventListener('click',function(){ openBoard(false); });
 $('lbHard').addEventListener('click',function(){ openBoard(true); });
 $('btnAcct').addEventListener('click',function(){
@@ -1407,6 +1696,7 @@ function boot(){
     renderAccount();
     switchMode('daily', false);   // Daily first: if today's card is done, its final screen shows
     booted=true;
+    primeBadges();
     if(pendingRecovery) openRecovery(); else checkEmailLink(signedIn);
   });
 }
