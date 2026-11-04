@@ -148,6 +148,7 @@ input[type=text]:disabled{opacity:.6}
 .pw .link{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:13px}
 .auth .pmuser{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;padding:0;border:0}
 #dlgSignIn h2{padding-right:40px}
+.legal{font-size:13px;color:var(--muted)} .legal a{color:inherit;text-underline-offset:2px}
 .authlinks{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .okmsg{margin:0;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:15px}
 .sugg{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:20;margin:0;padding:4px;list-style:none;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;box-shadow:0 -10px 30px rgba(8,18,40,.25);max-height:240px;overflow:auto}
@@ -190,6 +191,10 @@ dialog::backdrop{background:var(--scrim)}
 .cardpic img{position:absolute;inset:0;width:100%;height:100%;display:block;transition:opacity .25s}
 .cardpic img.hi{opacity:0} .cardpic img.hi.ready{opacity:1}
 .cardpop .row{width:100%;flex-direction:column}
+.cardpop .note{width:100%;text-align:left}
+/* with the sign-in box the card gets a little smaller, so everything fits on short phones */
+.cardpop.guest .cardpic{width:min(64vw,240px)}
+@media (max-height:740px){.cardpop.guest .cardpic{width:min(46vw,172px)}}
 @media (max-height:640px){.cardpic{width:min(56vw,230px)}}
 .big{font:900 clamp(44px,13vw,60px)/.9 var(--display);font-stretch:120%;font-variant-numeric:tabular-nums}
 .big small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
@@ -320,7 +325,7 @@ details p{color:var(--muted);margin:8px 0}
     <p><b>Hard mode</b>: each card puts 200 points in play. You can only open the outer tiles (5 points each). Each wrong guess costs 30 points.</p>
     <p><b>Daily</b>: one card a day, the same for everyone, with the same free tile. A new card arrives at midnight UTC. Challenge the other players: can you name it with more points than they did?</p>
     <p><b>Booster</b>: like opening a pack, guess ten random cards in a row. Open as many boosters as you like.</p>
-    <p>Both come in Normal and Hard mode. Sign in with Google or with your email to save your results on every device and enter the leaderboard.</p>
+    <p>Both come in Normal and Hard mode. Sign in with Google to save your results on every device and enter the leaderboard.</p>
     <div class="legend">
       <i class="hi">60</i><span>Centre of the artwork</span>
       <i class="mid">15</i><span>Inner frame</span>
@@ -328,7 +333,7 @@ details p{color:var(--muted);margin:8px 0}
     </div>
   </details>
 
-  <p class="foot">Card data: <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>, MIT licence. Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company. Unofficial fan site, not affiliated with them.</p>
+  <p class="foot">Card data: <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>, MIT licence. Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company. Unofficial fan site, not affiliated with them. <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
 </div>
 
 <!-- End of a card: the whole card, big -->
@@ -341,6 +346,10 @@ details p{color:var(--muted);margin:8px 0}
     <div class="row">
       <button class="btn" id="dcMain" type="button"></button>
       <button class="btn" id="dcAlt" type="button" hidden></button>
+    </div>
+    <div class="note" id="dcGuest" hidden>
+      <b>Sign in to save your progress</b>
+      <button class="btn gbtn" type="button" data-signin></button>
     </div>
   </div>
 </dialog>
@@ -362,7 +371,7 @@ details p{color:var(--muted);margin:8px 0}
     <p class="muted" id="drPlayers"></p>
     <div class="note" id="drGuest" hidden>
       <b>Sign in to save your progress</b>
-      <button class="btn ghost" type="button" data-signin>Sign in</button>
+      <button class="btn gbtn" type="button" data-signin></button>
     </div>
     <div class="row">
       <button class="btn" id="drMain" type="button"></button>
@@ -399,7 +408,7 @@ details p{color:var(--muted);margin:8px 0}
       <div id="gsiBtn" style="min-height:44px;display:flex;justify-content:center;max-width:100%;overflow:hidden"></div>
       <button class="btn gbtn" type="button" id="btnOAuth" hidden></button>
       <button class="link" type="button" id="btnOAuthAlt" hidden>Trouble signing in? Try the other way</button>
-      <div class="or">or with your email</div>
+      <div class="or" id="dsOr">or with your email</div>
     </div>
     <!-- sign in / create account with email and password -->
     <form class="auth" id="fmPass" novalidate>
@@ -448,6 +457,7 @@ details p{color:var(--muted);margin:8px 0}
       <button class="btn" type="submit" id="npGo">Save password</button>
     </form>
     <p class="err" id="signErr" aria-live="polite"></p>
+    <p class="legal">By signing in you accept the <a href="terms.html">Terms</a> and the <a href="privacy.html">Privacy Policy</a>.</p>
   </div>
 </dialog>
 
@@ -476,7 +486,7 @@ details p{color:var(--muted);margin:8px 0}
     <ol class="board" id="boardList"></ol>
     <div class="note" id="dbGuest" hidden>
       <b>Sign in to enter the leaderboard</b>
-      <button class="btn ghost" type="button" data-signin>Sign in</button>
+      <button class="btn gbtn" type="button" data-signin></button>
     </div>
   </div>
 </dialog>
@@ -758,6 +768,8 @@ function openCardPopup(){
     hi.src=c.image+'/high.webp';
   }
   var main=$('dcMain'), alt=$('dcAlt'); alt.hidden=true;
+  var guest = rd.mode==='daily' && !S.user;   // guests can sign in straight away (also offered in "See how you did")
+  $('dcGuest').hidden=!guest; $('dcBox').classList.toggle('guest',guest);
   if(rd.mode==='daily'){
     main.textContent='See how you did'; main.onclick=function(){ $('dlgCard').close(); openDailyStats(); };
     alt.hidden=false; alt.textContent='Play Booster'+(rd.hard?' (Hard)':''); alt.onclick=function(){ $('dlgCard').close(); switchMode('booster', rd.hard); };
@@ -1039,6 +1051,10 @@ function sha256hex(t){ return crypto.subtle.digest('SHA-256', new TextEncoder().
 /* the sign-in window has a few views: 'signin' and 'signup' (email + password, with Google above),
    'forgot' (email for the reset code), 'code-signup' / 'code-recovery' (code from the email), 'newpw' (after the reset link) */
 var AUTH={view:'signin', email:'', busy:false};
+/* Email + password sign-in is built and working, but hidden for now: only Google is shown.
+   Set to true to show "or with your email" (create account / sign in / forgot password) again.
+   Links from emails (confirm, reset password) keep working either way. */
+var EMAIL_SIGNIN = false;
 var PW_MIN=8;
 function emailOk(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
 function backUrl(){ return location.origin+location.pathname; }
@@ -1063,7 +1079,8 @@ function setBusy(btn,on){ AUTH.busy=on; btn.disabled=on; }
 function setView(v){
   AUTH.view=v; authErr('');
   var pass=(v==='signin'||v==='signup'), code=(v==='code-signup'||v==='code-recovery');
-  $('dsGoogle').hidden=!pass; $('fmPass').hidden=!pass; $('fmForgot').hidden=v!=='forgot';
+  $('dsGoogle').hidden=!pass; $('fmPass').hidden=!(pass && EMAIL_SIGNIN); $('fmForgot').hidden=v!=='forgot';
+  $('dsOr').hidden=!EMAIL_SIGNIN;
   $('fmCode').hidden=!code; $('fmNewPw').hidden=v!=='newpw';
   $('dsLead').hidden=!pass;
   $('dsTitle').textContent = {signin:'Sign in', signup:'Create an account', forgot:'Forgot password', 'code-signup':'Check your email',
@@ -1351,7 +1368,11 @@ $('nameForm').addEventListener('submit',function(e){
   .then(function(){ $('nameSave').disabled=false; });
 });
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',function(){ b.closest('dialog').close(); }); });
-document.querySelectorAll('[data-signin]').forEach(function(b){ b.addEventListener('click',function(){ signIn(); }); });
+document.querySelectorAll('[data-signin]').forEach(function(b){
+  b.innerHTML = EMAIL_SIGNIN ? 'Sign in' : GOOGLE_G+'<span>Sign in with Google</span>';
+  if(EMAIL_SIGNIN){ b.classList.remove('gbtn'); b.classList.add('ghost'); }
+  b.addEventListener('click',function(){ signIn(); });
+});
 $('fmPass').addEventListener('submit',submitPass);
 $('fmForgot').addEventListener('submit',submitForgot);
 $('fmCode').addEventListener('submit',submitCode);
