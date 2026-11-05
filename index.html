@@ -1475,7 +1475,7 @@ function badgeSvg(b, size){
 var BADGES = {data:null, tab:false, sel:null};
 function badgeOwner(){ return S.user ? 'u:'+S.user.id : 'g:'+GUEST; }
 function fetchBadges(){
-  return rpc('my_badges',{p_guest:GUEST}).then(function(d){ BADGES.data=d; renderStreak(); return d; });
+  return rpc('my_badges',{p_guest:GUEST}).then(function(d){ BADGES.data=d; renderStreak(); renderProfileStats(d); return d; });
 }
 function allBadges(d){ return badgeState(d,false).concat(badgeState(d,true)); }
 /* the badges already shown to this player in this browser; the first time, everything they have counts as seen */
@@ -1527,7 +1527,7 @@ function openBadges(hard, focusKey){
   $('bgNormal').setAttribute('aria-selected', !hard); $('bgHard').setAttribute('aria-selected', !!hard);
   $('bgGuest').hidden=!!S.user;
   var opening=!$('dlgAcct').open;
-  if(opening){ closeAll(); fillProfile(); $('dlgAcct').showModal(); $('dlgAcct').scrollTop=0; }
+  if(opening){ closeAll(); fillProfile(); renderProfileStats(BADGES.data); $('dlgAcct').showModal(); $('dlgAcct').scrollTop=0; }
   var wasHidden=$('acBadges').hidden;
   showBadgesSection(true);
   if(S.user && (wasHidden || focusKey)) setTimeout(function(){ $('acBadges').scrollIntoView({block:'start', behavior: opening?'auto':'smooth'}); },0);
@@ -1607,7 +1607,11 @@ function renderStreak(){
   $('streak').setAttribute('aria-label', n+' day'+(n===1?'':'s')+' in a row');
   $('cdStreak').hidden = n<1; $('cdStreakN').textContent=n;
 }
+/* the profile numbers and the badge count: refreshed whenever the badge data arrives, whichever way the window was opened */
 function renderProfileStats(d){
+  if(!d) return;
+  var got=allBadges(d).filter(function(b){ return b.earned; }).length;
+  $('daBadgesN').textContent = got ? got+' of 32' : '';
   var named=((d.daily&&d.daily.normal)||[]).length+((d.daily&&d.daily.hard)||[]).length;
   var rec=(d.booster&&d.booster.normal)||[];
   $('stStreak').textContent=dailyStreak(d); $('stNamed').textContent=fmt(named);
@@ -2081,16 +2085,11 @@ function showBadgesSection(on){
 function openProfile(){
   if(!S.user){ signIn(); return; }
   closeAll(); fillProfile(); showBadgesSection(false);
-  $('daBadgesN').textContent='';
   $('dlgAcct').showModal();
   var mini=document.querySelector('#daBadges .bgmini');
   if(!mini.firstChild) mini.innerHTML=badgeSvg(badgeList(false)[0],26);
-  if(BADGES.data) renderProfileStats(BADGES.data);
-  if(sb) fetchBadges().then(function(d){
-    var n=allBadges(d).filter(function(b){ return b.earned; }).length;
-    $('daBadgesN').textContent = n ? n+' of 32' : '';
-    renderProfileStats(d);
-  }).catch(function(){});
+  renderProfileStats(BADGES.data);
+  if(sb) fetchBadges().catch(function(){});
 }
 $('daBadges').addEventListener('click',function(){ openBadges(); });
 $('btnAcct').addEventListener('click',openProfile);
