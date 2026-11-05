@@ -792,7 +792,6 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
       <button class="btn ghost" type="button" id="daRename">Change username</button>
       <button class="btn ghost" type="button" id="daSignOut">Sign out</button>
     </div>
-    <a class="link" id="daAdmin" href="admin.html" hidden>Admin panel</a>
     <!-- badges: opened with the Badges button (guests and the "New badge!" notice open it directly) -->
     <section class="acbadges" id="acBadges" aria-labelledby="bgTitle" hidden>
       <h3 id="bgTitle">Badges</h3>
@@ -2066,11 +2065,10 @@ function fillProfile(){
   renderTheme();
   $('dlgAcct').setAttribute('aria-labelledby', guest?'bgTitle':'daTitle');
   $('bgTitle').textContent = guest ? 'Your badges' : 'Badges';
-  if(guest){ $('daAdmin').hidden=true; return; }
+  if(guest) return;
   var uname=(S.profile&&S.profile.username)||'Your account';
   $('daTitle').textContent=uname; $('daAv').textContent=uname.charAt(0).toUpperCase();
   $('daEmail').textContent=S.user.email||'';
-  $('daAdmin').hidden=!(S.profile&&S.profile.is_admin);
 }
 function showBadgesSection(on){
   $('acBadges').hidden=!on; $('daBadges').hidden=on || !S.user; $('daBadges').setAttribute('aria-expanded', on);
@@ -2102,6 +2100,13 @@ $('nameForm').addEventListener('submit',function(e){
   .catch(function(err){ $('nameErr').textContent = /taken/.test(errText(err)) ? 'That username is taken. Try another one.' : "Couldn't save it ("+errText(err)+')'; })
   .then(function(){ $('nameSave').disabled=false; });
 });
+['dlgAcct','dlgBoard','dlgSignIn'].forEach(function(id){
+  var d=$(id), downOut=false;
+  // only a press that starts and ends outside the window counts (not a text selection dragged out of it)
+  d.addEventListener('pointerdown',function(e){ downOut = e.target===d && outside(d,e); });
+  d.addEventListener('click',function(e){ if(downOut && e.target===d && outside(d,e)) d.close(); downOut=false; });
+});
+function outside(d,e){ var r=d.getBoundingClientRect(); return e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom; }
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',function(){ b.closest('dialog').close(); }); });
 document.querySelectorAll('[data-signin]').forEach(function(b){
   b.innerHTML = EMAIL_SIGNIN ? 'Sign in' : GOOGLE_G+'<span>Sign in with Google</span>';
