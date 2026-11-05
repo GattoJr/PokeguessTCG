@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0F1A31">
 <title>PokeguessTCG</title>
+<meta name="description" content="Name the Pokémon card from its artwork. Open tiles, spend points, guess the card. A new Daily card every day.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PokeguessTCG">
+<meta property="og:title" content="PokeguessTCG: name the card from its artwork">
+<meta property="og:description" content="Open tiles, spend points, guess the Pokémon card. A new Daily card every day.">
+<meta property="og:url" content="https://gattojr.github.io/PokeguessTCG/">
+<meta property="og:image" content="https://gattojr.github.io/PokeguessTCG/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gattojr.github.io/PokeguessTCG/og.png">
+<script>/* theme chosen in the profile: Auto (follows the device), Light or Dark */
+try{ var t=localStorage.getItem('pg_theme'); if(t==='light'||t==='dark') document.documentElement.setAttribute('data-theme',t); }catch(e){}</script>
 <link rel="preconnect" href="https://uyqcrpixzmfjcvqsgctk.supabase.co" crossorigin>
 <link rel="preconnect" href="https://uyqcrpixzmfjcvqsgctk.supabase.co">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -280,16 +295,194 @@ details p{color:var(--muted);margin:8px 0}
 .foot{font-size:13px;color:var(--muted);margin:0}
 .foot a{color:inherit;text-decoration-color:var(--gold-deep);text-underline-offset:2px}
 @media (prefers-reduced-motion:reduce){.blk,.spin{transition:none;animation:none}}
+
+/* ================= Redesign (Nov 2026) ================= */
+/* header: logo, sections (wide screens), streak, account */
+.top{gap:10px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;color:inherit;text-decoration:none}
+.brand .logo{width:34px;height:34px;flex:none}
+.top h1{font-stretch:118%;letter-spacing:-.01em}
+.top h1 span{color:var(--gold-deep)}
+:root[data-theme="dark"] .top h1 span{color:var(--gold)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .top h1 span{color:var(--gold)}}
+@media (max-width:520px){
+  .top{gap:8px}
+  .brand{gap:7px}
+  .top h1{font-size:clamp(16px,4.85vw,24px);font-stretch:104%}
+  .brand .logo{width:28px;height:28px}
+  .streak{height:32px;padding:0 9px;font-size:14px}
+  .acct{padding:6px 12px}
+}
+@media (max-width:360px){.top h1{font-size:15px;font-stretch:94%} .acct{padding:6px 10px;font-size:13px} .streak{padding:0 7px}}
+.streak{flex:none;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 11px;border-radius:18px;background:var(--surface);border:1.5px solid var(--line);font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+.streak svg{width:17px;height:17px}
+.acct{display:inline-flex;align-items:center;gap:8px;max-width:48%}
+.acct .av{width:26px;height:26px;margin:-4px 0 -4px -8px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--tile-1);color:#fff;font:900 13px/1 var(--display);box-shadow:0 0 0 2px var(--gold) inset}
+.acct #acctName{overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.acct.in{padding:4px;border-radius:50%} .acct.in .av{width:28px;height:28px;margin:0} .acct.in #acctName{display:none}}
+.topnav{display:none}
+.ndot{position:absolute;top:-2px;right:-4px;width:9px;height:9px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
+
+/* mode tabs: four, a little more compact */
+.modes button{padding:9px 6px}
+@media (max-width:520px){.modes button{padding:8px 4px;font-size:14.5px}}
+@media (max-width:360px){.modes button{font-size:13px;font-stretch:96%;padding:8px 2px}}
+
+/* layout: one column on phones (meter, artwork, key, play, result), two on wide screens */
+.layout{display:flex;flex-direction:column;gap:12px}
+.colA,.colB{display:contents}
+#board{order:1} #sleeve{order:2} #tileKey{order:3} #msg{order:4} #play{order:5} #result{order:6} #resShared{order:7}
+
+/* tiles: three tones (5 / 15 / 60) with a light foil sheen; the value shows on hover */
+.blk{
+  background-color:#3D5D92;
+  background-image:linear-gradient(118deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.05) 26%,rgba(255,255,255,.16) 38%,rgba(255,255,255,.05) 47%,rgba(255,255,255,0) 63%,rgba(255,255,255,.06) 82%,rgba(255,255,255,0) 100%);
+  color:transparent;position:relative;
+  transition:opacity .45s ease,transform .45s ease,filter .15s;
+}
+.blk.mid{background-color:#2B4677;color:transparent}
+.blk.hi{background-color:#1A2A4C;color:transparent}
+.blk.mid::after{content:'';width:.8cqw;height:.8cqw;border-radius:50%;background:#DCE6F7;opacity:.35}
+.blk.hi::after{content:'';width:1cqw;height:1cqw;transform:rotate(45deg);border-radius:.15cqw;background:var(--gold);opacity:.6}
+.blk::after{position:absolute}
+@media (hover:hover){
+  .blk:not(.lock):hover{filter:brightness(1.25);color:var(--tile-ink);box-shadow:inset 0 0 0 2px var(--gold);z-index:2}
+  .blk.mid:not(.lock):hover{color:#DCE6F7} .blk.hi:not(.lock):hover{color:var(--gold)}
+  .blk:not(.lock):hover::after{display:none}
+}
+.blk:focus-visible{color:var(--tile-ink)}
+.blk:focus-visible::after{display:none}
+.blk.open{opacity:0;transform:perspective(500px) rotateY(88deg) scale(.92);pointer-events:none}
+.stage.done .blk{opacity:0;transform:perspective(500px) rotateY(88deg) scale(.92)}
+.blk.lock::after{display:none}
+.tilekey{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin-top:-2px}
+.tilekey span{display:flex;align-items:center;gap:6px}
+.tilekey i{width:14px;height:14px;border-radius:3px;display:grid;place-items:center}
+.tilekey .k0{background:#3D5D92} .tilekey .k1{background:#2B4677} .tilekey .k2{background:#1A2A4C}
+.tilekey .k2::after{content:'';width:4px;height:4px;transform:rotate(45deg);background:var(--gold)}
+.tilekey em{font-style:normal;width:100%;text-align:center;color:var(--bad);font-weight:600}
+.tilekey.hard span{opacity:.45} .tilekey.hard span:first-child{opacity:1}
+@media (prefers-reduced-motion:reduce){.blk{transition:opacity .2s}.blk.open,.stage.done .blk{transform:none}}
+
+/* wrong guess: the field shakes and a −50 badge pops */
+.play{position:relative}
+.toast{position:absolute;left:50%;top:-16px;z-index:6;transform:translate(-50%,-100%);padding:7px 14px;border-radius:20px;background:var(--bad);color:#fff;font:800 15px/1 var(--display);font-stretch:110%;white-space:nowrap;box-shadow:0 8px 20px rgba(191,59,43,.4);pointer-events:none;animation:toast 2.2s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-60%) scale(.8)}10%{opacity:1;transform:translate(-50%,-100%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-120%)}}
+.shake{animation:shake .42s}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.shake input{border-color:var(--bad)}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}.toast{animation:none}}
+
+/* suggestions: the typed part in bold, Enter takes the first one */
+.sugg li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sugg li b{font-weight:800}
+.sugg li kbd{font:600 11px/1 var(--body);color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:3px 5px;flex:none}
+.sugg .more{cursor:default;color:var(--muted);font-size:13px;padding:6px 10px}
+.sugg .more:hover{background:transparent}
+
+/* end of a card: countdown, streak, share */
+.result{grid-template-columns:auto 1fr}
+.countdown{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:var(--tile-1);color:#fff}
+.countdown span{display:block;font-size:13px;opacity:.8}
+.countdown b{display:flex;align-items:center;gap:4px;font:900 26px/1.05 var(--display);font-stretch:112%;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.countdown b svg{width:22px;height:22px}
+.cdstreak{text-align:right} .cdstreak b{justify-content:flex-end}
+.sharebtn{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px}
+.sharebtn svg,.row .btn svg{width:18px;height:18px;flex:none}
+.row .btn.share{display:flex;align-items:center;justify-content:center;gap:8px}
+.hint.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.shared{margin:-4px 0 0;text-align:center;color:var(--good);font-weight:700;font-size:14px}
+
+/* the whole card, with a holo shine that follows the finger or the mouse */
+.cardpic{transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out;will-change:transform}
+.cardpic.holo::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:color-dodge;opacity:.5;
+  background:linear-gradient(115deg,transparent 15%,rgba(255,80,160,.5) 30%,rgba(255,220,90,.55) 40%,rgba(90,240,200,.55) 50%,rgba(90,140,255,.5) 60%,transparent 75%);
+  background-size:250% 250%;background-position:var(--hx,50%) var(--hy,50%);transition:background-position .25s ease-out}
+.cardpic.holo::before{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--hx,50%) var(--hy,30%),rgba(255,255,255,.55),transparent 35%);mix-blend-mode:overlay}
+.cardpic.holo.idle{animation:tilt 4s ease-in-out infinite}
+@keyframes tilt{0%,100%{--rx:4deg;--ry:-9deg;--hx:30%;--hy:30%}50%{--rx:-3deg;--ry:9deg;--hx:70%;--hy:60%}}
+@property --rx{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --ry{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --hx{syntax:'<percentage>';inherits:false;initial-value:50%}
+@property --hy{syntax:'<percentage>';inherits:false;initial-value:50%}
+@media (prefers-reduced-motion:reduce){.cardpic{transform:none}.cardpic.holo.idle{animation:none}}
+
+/* profile: avatar, numbers, theme */
+.prof{display:flex;align-items:center;gap:12px;padding-right:40px}
+.prof .av{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--tile-1);color:#fff;font:900 24px/1 var(--display);box-shadow:0 0 0 3px var(--gold) inset}
+.prof h2{overflow-wrap:anywhere}
+.pstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pstats div{background:var(--surface-2);border-radius:12px;padding:10px 6px;text-align:center}
+.pstats b{display:flex;justify-content:center;align-items:center;gap:3px;font:900 21px/1.1 var(--display);font-stretch:112%;font-variant-numeric:tabular-nums}
+.pstats b svg{width:17px;height:17px}
+.pstats span{font-size:12px;color:var(--muted)}
+.optrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.optrow>span{font-weight:700}
+.seg3{display:grid;grid-template-columns:repeat(3,auto);gap:3px;padding:3px;border-radius:11px;background:var(--surface-2);border:1px solid var(--line)}
+.seg3 button{border:0;background:transparent;padding:7px 12px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg3 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+
+/* first visit coach marks */
+.coach{position:fixed;inset:0;z-index:60}
+.coach .spot{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(8,16,34,.72);outline:3px solid var(--gold);transition:all .3s ease;pointer-events:none}
+.coachcard{position:fixed;left:14px;right:14px;max-width:420px;margin:0 auto;background:var(--surface);border-radius:18px;padding:16px;box-shadow:0 20px 50px rgba(0,0,0,.45);transition:top .3s ease}
+.coachcard h3{margin:8px 0 6px;font:900 22px/1.05 var(--display);font-stretch:116%}
+.coachcard p{margin:0 0 12px;color:var(--muted);font-size:15px}
+.steps{display:flex;gap:6px}.steps i{width:22px;height:5px;border-radius:3px;background:var(--line)}.steps i.on{background:var(--gold)}
+.coachbar{display:flex;align-items:center;justify-content:space-between}
+
+/* phones: sections at the bottom */
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);
+  padding:6px 6px max(10px, env(safe-area-inset-bottom, 0px));background:color-mix(in srgb,var(--surface) 92%,transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.bnav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.bnav svg{width:24px;height:24px;display:block}
+.bnav .ic{position:relative}
+.bnav button.on{color:var(--ink)} .bnav button.on svg{color:var(--gold-deep)}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
+.foot{text-align:center;font-size:12px}
+
+/* wide screens: two columns, sections in the header */
+@media (min-width:1000px){
+  body{padding-bottom:28px}
+  .bnav{display:none}
+  .app{max-width:1240px}
+  .top{gap:16px}
+  .topnav{display:flex;gap:4px;margin-left:auto}
+  .tn{position:relative;display:flex;align-items:center;gap:7px;padding:8px 12px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:15px;cursor:pointer}
+  .tn svg{width:19px;height:19px}
+  .tn.on{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+  .tn:hover{color:var(--ink)}
+  .tn .ndot{top:4px;right:4px}
+  .brand{flex:0 0 auto}
+  .modes{max-width:640px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
+  .colA{display:flex;flex-direction:column;gap:10px}
+  .colB{display:flex;flex-direction:column;gap:12px;background:var(--surface);border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(8,18,40,.12);position:sticky;top:16px}
+  .colB .result{border:0;padding:0;background:transparent;grid-template-columns:1fr;justify-items:center;text-align:center}
+  .colB .result > img{width:150px}
+  .colB .result .acts,.colB .countdown,.colB .sharebtn{width:100%;justify-self:stretch;text-align:left}
+  .colB .sharebtn{justify-content:center}
+  .colB .hint{text-align:left}
+  .tilekey{justify-content:flex-start}
+  .foot{text-align:left}
+}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
-    <div>
-      <h1>PokeguessTCG</h1>
-      <p>Name the Pokémon card from its artwork.</p>
-    </div>
-    <button class="acct" id="btnAcct" type="button">Sign in</button>
+    <a class="brand" href="./" aria-label="PokeguessTCG home">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><use href="#logoMark"/></svg>
+      <h1>Pokeguess<span>TCG</span></h1>
+    </a>
+    <nav class="topnav" aria-label="Sections">
+      <button type="button" class="tn on" data-nav="play"><svg aria-hidden="true"><use href="#icPlay"/></svg>Play</button>
+      <button type="button" class="tn" data-nav="board"><svg aria-hidden="true"><use href="#icRank"/></svg>Leaderboard</button>
+      <button type="button" class="tn" data-nav="badges"><svg aria-hidden="true"><use href="#icBadge"/></svg>Badges<i class="ndot" hidden></i></button>
+    </nav>
+    <span class="streak" id="streak" hidden title="Days in a row with the Daily card named"><svg aria-hidden="true"><use href="#icFlame"/></svg><b id="streakN"></b></span>
+    <button class="acct" id="btnAcct" type="button"><span class="av" id="acctAv" hidden></span><span id="acctName">Sign in</span></button>
   </header>
 
   <div class="modes" role="tablist" aria-label="Game mode">
@@ -301,12 +494,9 @@ details p{color:var(--muted);margin:8px 0}
   <div class="status" id="status"><span id="statusL"></span><span class="sr"><span id="statusR"></span><span class="runbtns" id="runBtns" hidden><button class="mini" id="btnNew" type="button">New game</button><button class="mini" id="btnEnd" type="button">End booster</button></span></span></div>
 
 
-  <div id="board">
-    <div class="meter">
-      <div class="pts"><b id="ptsNow">–</b><span id="ptsLabel">points in play</span></div>
-      <div class="tries"><span>Guesses</span><span class="dots" id="dots" aria-label="Guesses left"></span></div>
-    </div>
-    <div class="sleeve" style="margin-top:14px">
+  <div class="layout">
+  <div class="colA">
+    <div class="sleeve" id="sleeve">
       <div class="stage" id="stage">
         <img id="art" alt="Pokémon card artwork covered by tiles" draggable="false">
         <img id="artTop" class="arttop" alt="" draggable="false">
@@ -320,6 +510,14 @@ details p{color:var(--muted);margin:8px 0}
         </div>
         <div class="loading" id="loading"><div><div class="spin"></div><div id="loadingText">Loading…</div></div></div>
       </div>
+    </div>
+    <div class="tilekey" id="tileKey" aria-hidden="true"><span><i class="k0"></i>5</span><span><i class="k1"></i>15</span><span><i class="k2"></i>60 points</span><em id="tileKeyHard" hidden>Hard: only the outer tiles open</em></div>
+  </div>
+  <div class="colB">
+  <div id="board">
+    <div class="meter">
+      <div class="pts"><b id="ptsNow">–</b><span id="ptsLabel">points in play</span></div>
+      <div class="tries"><span>Guesses</span><span class="dots" id="dots" aria-label="Guesses left"></span></div>
     </div>
   </div>
   <p class="hint" id="msg" aria-live="polite"></p>
@@ -349,14 +547,19 @@ details p{color:var(--muted);margin:8px 0}
       </div>
       <p class="small" id="resSmall" hidden></p>
     </div>
+    <div class="countdown" id="countdown" hidden>
+      <div><span>Next Daily card in</span><b id="cdTime">--:--:--</b></div>
+      <div class="cdstreak" id="cdStreak" hidden><span>Your streak</span><b><svg aria-hidden="true"><use href="#icFlame"/></svg><i id="cdStreakN"></i></b></div>
+    </div>
+    <button class="btn ghost sharebtn" id="resShare" type="button" hidden><svg aria-hidden="true"><use href="#icShare"/></svg><span>Share result</span></button>
   </section>
-
-  <div class="links">
-    <button class="link" id="btnBoard" type="button">Leaderboard</button>
+  <p class="shared" id="resShared" aria-live="polite" hidden></p>
+  </div>
   </div>
 
   <details id="rules">
     <summary>How to play</summary>
+    <p><button class="link" type="button" id="btnTour" style="padding:0">Take the quick tour</button></p>
     <p>Guess the Pokémon card from its artwork. Tap the tiles to reveal what's underneath, but be careful: every tile you open costs points!</p>
     <p>When you're ready, type the card's exact name, including prefixes like "Team Rocket's" (e.g. Team Rocket's Raticate), and pick it from the suggestions. You have 2 guesses per card.</p>
     <p><b>Normal mode</b>: each card puts 1,000 points in play. Every tile you open costs the points printed on it, and the first tile is free. Each wrong guess costs 50 points. A right answer scores the points still in play.</p>
@@ -372,8 +575,46 @@ details p{color:var(--muted);margin:8px 0}
     </div>
   </details>
 
-  <p class="foot">Card data: <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>, MIT licence. Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company. Unofficial fan site, not affiliated with them. <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
+  <p class="foot">Card data <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a> (MIT) · Card images and names © Nintendo, Creatures, GAME FREAK, The Pokémon Company · Unofficial fan site · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
 </div>
+
+<!-- phones: sections at the bottom of the screen -->
+<nav class="bnav" aria-label="Sections">
+  <button type="button" class="on" data-nav="play"><svg aria-hidden="true"><use href="#icPlay"/></svg>Play</button>
+  <button type="button" data-nav="board"><svg aria-hidden="true"><use href="#icRank"/></svg>Leaderboard</button>
+  <button type="button" data-nav="badges"><span class="ic"><svg aria-hidden="true"><use href="#icBadge"/></svg><i class="ndot" hidden></i></span>Badges</button>
+  <button type="button" data-nav="profile"><svg aria-hidden="true"><use href="#icUser"/></svg>Profile</button>
+</nav>
+
+<!-- first visit: three short steps -->
+<div class="coach" id="coach" hidden>
+  <div class="spot" id="coachSpot"></div>
+  <div class="coachcard" id="coachCard" role="dialog" aria-modal="true" aria-labelledby="coachTitle">
+    <div class="steps" id="coachSteps"><i></i><i></i><i></i></div>
+    <h3 id="coachTitle"></h3>
+    <p id="coachText"></p>
+    <div class="coachbar"><button class="link" type="button" id="coachSkip">Skip</button><button class="btn" type="button" id="coachNext">Next</button></div>
+  </div>
+</div>
+
+<!-- shared icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="logoClip"><polygon points="16.0,1.0 29.0,8.5 29.0,23.5 16.0,31.0 3.0,23.5 3.0,8.5"/></clipPath>
+    <symbol id="logoMark" viewBox="0 0 32 32"><g clip-path="url(#logoClip)"><rect width="32" height="32" fill="#1D2F55"/>
+      <rect x="0.6" y="0.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="8.6" y="0.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="16.6" y="0.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="24.6" y="0.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/>
+      <rect x="0.6" y="8.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="8.6" y="8.6" width="6.8" height="6.8" rx="1.2" fill="#2B4677"/><rect x="16.6" y="8.6" width="6.8" height="6.8" rx="1.2" fill="#F2C230"/><rect x="24.6" y="8.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/>
+      <rect x="0.6" y="16.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="8.6" y="16.6" width="6.8" height="6.8" rx="1.2" fill="#2B4677"/><rect x="16.6" y="16.6" width="6.8" height="6.8" rx="1.2" fill="#2B4677"/><rect x="24.6" y="16.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/>
+      <rect x="0.6" y="24.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="8.6" y="24.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="16.6" y="24.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/><rect x="24.6" y="24.6" width="6.8" height="6.8" rx="1.2" fill="#3D5D92"/></g>
+      <polygon points="16.0,1.0 29.0,8.5 29.0,23.5 16.0,31.0 3.0,23.5 3.0,8.5" fill="none" stroke="#F2C230" stroke-width="2"/></symbol>
+    <symbol id="icPlay" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M9 5v14M15 5v14" stroke-width="1.5"/></g></symbol>
+    <symbol id="icRank" viewBox="0 0 24 24"><path d="M4 20V13h4v7M10 20V8h4v12M16 20v-9h4v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="icBadge" viewBox="0 0 24 24"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 8l1.4 2.8 3 .4-2.2 2.1.5 3L12 14.9l-2.7 1.4.5-3-2.2-2.1 3-.4z" fill="currentColor"/></symbol>
+    <symbol id="icUser" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.2-6.5 8-6.5s7 2 8 6.5"/></g></symbol>
+    <symbol id="icShare" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></g></symbol>
+    <symbol id="icFlame" viewBox="0 0 24 24"><path fill="#E8622C" d="M11.5 23C6.8 22.7 4 19.4 4.6 15c.4-2.7 2.3-4.4 3.2-6 .4 1.6 1.2 2.6 2.2 2.9-.8-3.5 1.1-6.8 4.3-8.9-.5 3.6 4.9 5.6 5.1 10.7.2 5.4-3.3 9.6-7.9 9.3z"/><path fill="#F2C230" d="M11.8 21c-2.2-.1-3.6-1.7-3.3-3.8.2-1.3 1.1-2.1 1.6-2.9.2.8.6 1.3 1.1 1.4-.4-1.7.5-3.3 2.1-4.3-.2 1.8 2.4 2.7 2.5 5.2.1 2.6-1.6 4.5-4 4.4z"/></symbol>
+  </defs>
+</svg>
 
 <!-- End of a card: the whole card, big -->
 <dialog id="dlgCard" aria-labelledby="dcTitle">
@@ -384,6 +625,7 @@ details p{color:var(--muted);margin:8px 0}
     <p id="dcInfo"></p>
     <div class="slot" id="dcNew" hidden></div>
     <div class="row">
+      <button class="btn ghost share" id="dcShare" type="button" hidden><svg aria-hidden="true"><use href="#icShare"/></svg><span>Share</span></button>
       <button class="btn" id="dcMain" type="button"></button>
       <button class="btn" id="dcAlt" type="button" hidden></button>
     </div>
@@ -416,6 +658,7 @@ details p{color:var(--muted);margin:8px 0}
     </div>
     <div class="row">
       <button class="btn" id="drMain" type="button"></button>
+      <button class="btn ghost share" id="drShare" type="button"><svg aria-hidden="true"><use href="#icShare"/></svg><span>Share</span></button>
       <button class="btn ghost" id="drAlt" type="button" hidden></button>
     </div>
   </div>
@@ -537,13 +780,18 @@ details p{color:var(--muted);margin:8px 0}
 <dialog id="dlgAcct" aria-labelledby="daTitle">
   <div class="dlg">
     <button class="x" type="button" data-close aria-label="Close">×</button>
-    <h2 id="daTitle"></h2>
-    <p class="muted" id="daEmail"></p>
-    <div class="row">
+    <div class="prof" id="daProf"><span class="av" id="daAv" aria-hidden="true"></span><div><h2 id="daTitle"></h2><p class="muted" id="daEmail"></p></div></div>
+    <div class="pstats" id="daStats">
+      <div><b><svg aria-hidden="true"><use href="#icFlame"/></svg><i id="stStreak">0</i></b><span>Day streak</span></div>
+      <div><b id="stNamed">0</b><span>Dailies named</span></div>
+      <div><b id="stBest">–</b><span>Best Booster</span></div>
+    </div>
+    <button class="btn badgesbtn" type="button" id="daBadges" aria-controls="acBadges" aria-expanded="false"><span class="bgmini" aria-hidden="true"></span><span>Badges</span><small id="daBadgesN"></small></button>
+    <div class="optrow" id="daTheme"><span>Theme</span><div class="seg3" role="group" aria-label="Theme"><button type="button" data-theme-set="auto">Auto</button><button type="button" data-theme-set="light">Light</button><button type="button" data-theme-set="dark">Dark</button></div></div>
+    <div class="row" id="daRow">
       <button class="btn ghost" type="button" id="daRename">Change username</button>
       <button class="btn ghost" type="button" id="daSignOut">Sign out</button>
     </div>
-    <button class="btn badgesbtn" type="button" id="daBadges" aria-controls="acBadges" aria-expanded="false"><span class="bgmini" aria-hidden="true"></span><span>Badges</span><small id="daBadgesN"></small></button>
     <a class="link" id="daAdmin" href="admin.html" hidden>Admin panel</a>
     <!-- badges: opened with the Badges button (guests and the "New badge!" notice open it directly) -->
     <section class="acbadges" id="acBadges" aria-labelledby="bgTitle" hidden>
@@ -677,6 +925,7 @@ fetch('names.json').then(function(r){ return r.ok ? r.json() : []; }).then(funct
 function buildGrid(hard){
   if(hard===undefined) hard=S.hard;
   var g=$('grid'); g.innerHTML='';
+  $('tileKey').classList.toggle('hard',!!hard); $('tileKeyHard').hidden=!hard;
   for(var i=0;i<TOTAL;i++){
     var c=i%COLS, r=Math.floor(i/COLS), v=tileValue(i), ok=tileOk(i,hard);
     var b=document.createElement('div'); b.className='blk'+(v>=40?' hi':(v>=15?' mid':''))+(ok?'':' lock');
@@ -707,7 +956,7 @@ function showError(msg,retry){
   if(retry){ var b=document.createElement('button'); b.className='btn'; b.style.marginTop='14px'; b.textContent='Try again'; b.onclick=retry; t.appendChild(b); }
 }
 function setControls(on){ ['guess','btnGuess','btnGiveUp'].forEach(function(id){ $(id).disabled=!on; }); }
-function say(t){ $('msg').textContent=t||''; }
+function say(t){ $('msg').classList.remove('vh'); $('msg').textContent=t||''; }
 
 function renderMeter(){
   var rd=S.round;
@@ -802,11 +1051,13 @@ function showResult(fresh){
   $('resTitle').textContent = rd.won ? '+'+fmt(rd.score)+' points' : (rd.wrong>=TRIES ? 'Out of guesses' : 'You gave up');
   $('resInfo').textContent = (rd.won?'Yes, it’s ':'It was ')+c.name+', from '+c.set_name+'.';
   var main=$('btnResMain'), alt=$('btnResAlt'), small=$('resSmall');
-  alt.hidden=true; small.hidden=true;
+  alt.hidden=true; small.hidden=true; stopCountdown(); $('resShared').hidden=true;
+  $('resShare').hidden = rd.mode!=='daily';
+  $('resShare').onclick=function(){ shareResult(dailyShareText(rd), $('resShare')); };
   if(rd.mode==='daily'){
     main.textContent='Play Booster'+(rd.hard?' (Hard)':''); main.onclick=function(){ switchMode('booster', rd.hard); };
     alt.hidden=false; alt.textContent='See how you did'; alt.onclick=function(){ openDailyStats(); };
-    if(S.daily && S.daily.next_reset){ small.hidden=false; small.textContent='Next daily card in '+untilText(S.daily.next_reset)+'.'; }
+    startCountdown(S.daily && S.daily.next_reset);
   } else if(rd.idx < RUN_CARDS-1){
     main.textContent='Next card ('+(rd.idx+2)+'/'+RUN_CARDS+')'; main.onclick=nextCard;
   } else {
@@ -835,11 +1086,13 @@ function openCardPopup(){
   }
   var main=$('dcMain'), alt=$('dcAlt'); alt.hidden=true;
   hideNewBadge('dcNew');
+  setHolo(low.parentNode, !!rd.won);
+  var sh=$('dcShare'); sh.hidden = rd.mode!=='daily'; resetShareBtn(sh);
+  sh.onclick=function(){ shareResult(dailyShareText(rd), sh); };
   var guest = rd.mode==='daily' && !S.user;   // guests can sign in straight away (also offered in "See how you did")
   $('dcGuest').hidden=!guest; $('dcBox').classList.toggle('guest',guest);
   if(rd.mode==='daily'){
     main.textContent='See how you did'; main.onclick=function(){ $('dlgCard').close(); openDailyStats(); };
-    alt.hidden=false; alt.textContent='Play Booster'+(rd.hard?' (Hard)':''); alt.onclick=function(){ $('dlgCard').close(); switchMode('booster', rd.hard); };
   } else if(rd.idx < RUN_CARDS-1){
     main.textContent='Next card ('+(rd.idx+2)+'/'+RUN_CARDS+')'; main.onclick=function(){ $('dlgCard').close(); nextCard(); };
   } else {
@@ -859,7 +1112,7 @@ function pickBlock(i){
   var rd=S.round;
   if(!rd||rd.over||rd.opened.indexOf(i)>=0) return;
   if(!tileOk(i,rd.hard)){ say('In Hard mode only the outer tiles can be opened.'); return; }
-  rd.opened.push(i); markOpen(i); saveTiles(rd.id, rd.opened);
+  rd.opened.push(i); markOpen(i); saveTiles(rd.id, rd.opened); buzz(8);
   renderMeter();
   say(potential()===0 ? 'No points left for this card, but you can still open tiles and guess.' : '');
 }
@@ -872,6 +1125,7 @@ function afterServer(data){
   if(S.run && rd.mode==='booster' && rd.over) S.run.total += (rd.score||0);
   say('');
   if(rd.over){
+    if(rd.won) buzz([30,50,90]);
     if(rd.mode==='daily'){ S.daily = Object.assign({}, S.daily||{}, data); S.lastStats=data.stats; }
     showResult(true);
     return;
@@ -880,6 +1134,7 @@ function afterServer(data){
     $('wrongList').innerHTML=''; rd.guesses.forEach(addChip);
     var left=TRIES-rd.wrong;
     say('Not this one: −'+rd.penalty+' points. '+(left===1?'1 guess left.':left+' guesses left.'));
+    wrongFx('−'+rd.penalty+' · not '+(rd.guesses[rd.guesses.length-1]||'it'));
   }
   $('guess').value=''; setControls(true); renderMeter(); $('guess').focus();
 }
@@ -1062,6 +1317,7 @@ function openDailyStats(){
   var main=$('drMain'), alt=$('drAlt');
   main.textContent='Play Booster'+(rd.hard?' (Hard)':''); main.onclick=function(){ closeAll(); switchMode('booster', rd.hard); };
   alt.hidden=true;
+  var sh=$('drShare'); resetShareBtn(sh); sh.onclick=function(){ shareResult(dailyShareText(rd), sh); };
   $('dlgResult').showModal();
 }
 function openBoosterStats(total, st, hard){
@@ -1078,6 +1334,7 @@ function openBoosterStats(total, st, hard){
   var main=$('drMain'), alt=$('drAlt');
   main.textContent='Play again'; main.onclick=function(){ closeAll(); startBooster(); };
   alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(hard); };
+  var sh=$('drShare'); resetShareBtn(sh); sh.onclick=function(){ shareResult(boosterShareText(total, hard), sh); };
   $('dlgResult').showModal();
 }
 function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn','dlgNew'].forEach(function(id){ var d=$(id); if(d.open) d.close(); }); }
@@ -1218,7 +1475,7 @@ function badgeSvg(b, size){
 var BADGES = {data:null, tab:false, sel:null};
 function badgeOwner(){ return S.user ? 'u:'+S.user.id : 'g:'+GUEST; }
 function fetchBadges(){
-  return rpc('my_badges',{p_guest:GUEST}).then(function(d){ BADGES.data=d; return d; });
+  return rpc('my_badges',{p_guest:GUEST}).then(function(d){ BADGES.data=d; renderStreak(); return d; });
 }
 function allBadges(d){ return badgeState(d,false).concat(badgeState(d,true)); }
 /* the badges already shown to this player in this browser; the first time, everything they have counts as seen */
@@ -1250,6 +1507,7 @@ function checkNewBadges(slotId){
     btn.querySelector('b').textContent=b.name+(b.hard?' (Hard)':'')+(fresh.length>1?' and '+(fresh.length-1)+' more':'');
     btn.addEventListener('click',function(){ closeAll(); openBadges(b.hard, b.key); });
     slot.appendChild(btn); slot.hidden=false;
+    lsSet('pg_bdot',1); renderBadgeDot();
     var box=slot.closest('.cardpop'); if(box) box.classList.add('hasnew');
   }).catch(function(){});
 }
@@ -1265,6 +1523,7 @@ function badgeStatus(b){
 function openBadges(hard, focusKey){
   if(hard===undefined) hard=S.hard;
   BADGES.tab=!!hard; BADGES.sel=focusKey||null;
+  lsDel('pg_bdot'); renderBadgeDot(); setNavOn('badges');
   $('bgNormal').setAttribute('aria-selected', !hard); $('bgHard').setAttribute('aria-selected', !!hard);
   $('bgGuest').hidden=!!S.user;
   var opening=!$('dlgAcct').open;
@@ -1311,6 +1570,139 @@ function renderBadges(){
   d.querySelector('.bgstat').textContent=badgeStatus(sel);
   var bar=d.querySelector('.bgbar'); bar.hidden=sel.earned;
   bar.firstChild.style.width = Math.round(100*Math.min(1, sel.have/sel.need))+'%';
+}
+
+
+/* ---------- Redesign helpers ---------- */
+function buzz(p){ try{ if(navigator.vibrate && matchMedia('(pointer:coarse)').matches) navigator.vibrate(p); }catch(e){} }
+function wrongFx(text){
+  var f=$('guessForm'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
+  var old=document.querySelector('#play .toast'); if(old) old.remove();
+  var t=document.createElement('div'); t.className='toast'; t.setAttribute('aria-hidden','true'); t.textContent=text;
+  $('play').appendChild(t); $('msg').classList.add('vh');
+  setTimeout(function(){ t.remove(); $('msg').classList.remove('vh'); },2300);
+  buzz([60,40,60]);
+}
+/* sections: Play, Leaderboard, Badges, Profile (bottom bar on phones, header on wide screens) */
+function setNavOn(w){ document.querySelectorAll('[data-nav]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-nav')===w); }); }
+function navTo(w){
+  if(w==='play'){ closeAll(); window.scrollTo({top:0,behavior:'smooth'}); setNavOn('play'); return; }
+  if(w==='board'){ closeAll(); openBoard(); }
+  else if(w==='badges'){ openBadges(); }
+  else if(w==='profile'){ openProfile(); if(!S.user){ setNavOn('profile'); return; } }
+  setNavOn(w);
+}
+function renderBadgeDot(){ var on=!!lsGet('pg_bdot'); document.querySelectorAll('.ndot').forEach(function(d){ d.hidden=!on; }); }
+/* streak: days in a row with the Daily card named (Normal or Hard), still alive today or yesterday */
+function dailyStreak(d){
+  if(!d || !d.daily) return 0;
+  var all=(d.daily.normal||[]).concat(d.daily.hard||[]).map(dayNum).sort(function(a,b){ return a-b; });
+  var today=d.today?dayNum(d.today):Math.floor(Date.now()/86400000), run=0, prev=null;
+  all.forEach(function(x){ if(x===prev) return; run=(prev!==null && x===prev+1)?run+1:1; prev=x; });
+  return (prev!==null && today-prev<=1) ? run : 0;
+}
+function renderStreak(){
+  var n=dailyStreak(BADGES.data);
+  $('streak').hidden = n<1; $('streakN').textContent=n;
+  $('streak').setAttribute('aria-label', n+' day'+(n===1?'':'s')+' in a row');
+  $('cdStreak').hidden = n<1; $('cdStreakN').textContent=n;
+}
+function renderProfileStats(d){
+  var named=((d.daily&&d.daily.normal)||[]).length+((d.daily&&d.daily.hard)||[]).length;
+  var rec=(d.booster&&d.booster.normal)||[];
+  $('stStreak').textContent=dailyStreak(d); $('stNamed').textContent=fmt(named);
+  $('stBest').textContent = rec.length ? fmt(rec[rec.length-1][1]) : '–';
+}
+/* countdown to the next Daily card */
+var CD={until:0};
+function startCountdown(iso){ CD.until = iso ? Date.parse(iso) : 0; $('countdown').hidden=!CD.until; tickCountdown(); }
+function stopCountdown(){ CD.until=0; $('countdown').hidden=true; }
+function tickCountdown(){
+  if(!CD.until) return;
+  var ms=CD.until-Date.now();
+  if(ms<=0){ $('cdTime').textContent='Ready!'; return; }
+  var h=Math.floor(ms/3600000), m=Math.floor(ms/60000)%60, s=Math.floor(ms/1000)%60;
+  $('cdTime').textContent=(h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+}
+/* sharing: an emoji picture of the tiles opened, never the card */
+var SITE_URL='https://gattojr.github.io/PokeguessTCG/';
+function dailyNumber(day){ return Math.round((Date.parse(day+'T00:00:00Z')-Date.parse('2026-10-24T00:00:00Z'))/86400000)+1; }
+function dailyShareText(rd){
+  var lines=['PokeguessTCG Daily'+(rd.hard?' (Hard)':'')+(rd.day?' #'+dailyNumber(rd.day):'')];
+  var n=dailyStreak(BADGES.data);
+  lines.push((rd.won ? fmt(rd.score)+'/'+fmt(rd.points)+' · named on the '+(rd.wrong?'2nd':'1st')+' guess' : 'Missed it · 0/'+fmt(rd.points))+(n>1?' 🔥'+n:''));
+  for(var r=0;r<ROWS;r++){ var line=''; for(var c=0;c<COLS;c++){ line += rd.opened.indexOf(r*COLS+c)>=0 ? '🟨' : '⬛'; } lines.push(line); }
+  lines.push(SITE_URL);
+  return lines.join('\n');
+}
+function boosterShareText(total, hard){
+  return 'PokeguessTCG Booster'+(hard?' (Hard)':'')+'\n'+fmt(total)+'/'+fmt(pointsFor(hard)*RUN_CARDS)+' points in 10 cards. Can you beat it?\n'+SITE_URL;
+}
+function resetShareBtn(btn){ var sp=btn.querySelector('span'); if(sp) sp.textContent = btn.id==='resShare' ? 'Share result' : 'Share'; }
+function shareResult(text, btn){
+  function done(msg){ var sp=btn.querySelector('span'); if(sp){ sp.textContent=msg; setTimeout(function(){ resetShareBtn(btn); },2500); } }
+  function copy(){
+    if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(function(){ done('Copied!'); }, fallback);
+    fallback();
+  }
+  function fallback(){
+    var ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); var ok=false; try{ ok=document.execCommand('copy'); }catch(e){} ta.remove();
+    done(ok?'Copied!':'Copy failed');
+  }
+  if(navigator.share && matchMedia('(pointer:coarse)').matches){
+    navigator.share({text:text}).catch(function(e){ if(!e || e.name!=='AbortError') copy(); });
+    return;
+  }
+  copy();
+}
+/* the holo shine: follows the pointer, gently sways on its own otherwise */
+function setHolo(pic, on){
+  pic.classList.toggle('holo', on); pic.classList.toggle('idle', on);
+  pic.style.removeProperty('--rx'); pic.style.removeProperty('--ry'); pic.style.removeProperty('--hx'); pic.style.removeProperty('--hy');
+  if(pic._holo) return; pic._holo=true;
+  pic.addEventListener('pointermove',function(e){
+    if(!pic.classList.contains('holo')) return;
+    var r=pic.getBoundingClientRect(), x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+    pic.classList.remove('idle');
+    pic.style.setProperty('--ry',((x-.5)*22).toFixed(1)+'deg'); pic.style.setProperty('--rx',((.5-y)*18).toFixed(1)+'deg');
+    pic.style.setProperty('--hx',(x*100).toFixed(0)+'%'); pic.style.setProperty('--hy',(y*100).toFixed(0)+'%');
+  });
+  pic.addEventListener('pointerleave',function(){ if(pic.classList.contains('holo')){ pic.classList.add('idle'); } });
+}
+/* theme: Auto follows the device */
+function getTheme(){ try{ return localStorage.getItem('pg_theme')||'auto'; }catch(e){ return 'auto'; } }
+function setTheme(t){
+  try{ if(t==='auto') localStorage.removeItem('pg_theme'); else localStorage.setItem('pg_theme',t); }catch(e){}
+  if(t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t);
+  renderTheme();
+}
+function renderTheme(){ var t=getTheme(); document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme-set')===t); }); }
+/* first visit: a three-step tour */
+var COACH=[
+  {el:function(){ return $('sleeve'); }, t:'Open tiles to see the artwork', p:'Every tile costs points: the centre (gold mark) 60, the inner ring 15, the edge 5. The first tile is free.'},
+  {el:function(){ return $('play').hidden ? $('result') : $('play'); }, t:'Name the card', p:'Type the card’s English name and pick it from the suggestions. You have 2 guesses: a wrong one costs points.'},
+  {el:function(){ return document.querySelector('.modes'); }, t:'Four ways to play', p:'Daily: one card a day, the same for everyone. Booster: 10 cards in a row. Hard: only the outer tiles open. Collect badges as you go!'}
+];
+var COACH_I=0;
+function startCoach(){ closeAll(); $('coach').hidden=false; coachStep(0); }
+function endCoach(){ $('coach').hidden=true; lsSet('pg_coach',1); }
+function coachStep(i){
+  if(i>=COACH.length){ endCoach(); return; }
+  COACH_I=i;
+  $('coachTitle').textContent=COACH[i].t; $('coachText').textContent=COACH[i].p;
+  $('coachNext').textContent = i===COACH.length-1 ? 'Let’s play' : 'Next';
+  Array.prototype.forEach.call($('coachSteps').children,function(d,k){ d.classList.toggle('on',k===i); });
+  var el=COACH[i].el(); if(el && el.scrollIntoView) el.scrollIntoView({block:'center'});
+  setTimeout(placeCoach,30);
+  setTimeout(function(){ $('coachNext').focus({preventScroll:true}); },60);
+}
+function placeCoach(){
+  var el=COACH[COACH_I].el(); if(!el) return;
+  var r=el.getBoundingClientRect(), pad=6, sp=$('coachSpot'), card=$('coachCard');
+  sp.style.left=(r.left-pad)+'px'; sp.style.top=(r.top-pad)+'px'; sp.style.width=(r.width+2*pad)+'px'; sp.style.height=(r.height+2*pad)+'px';
+  var ch=card.offsetHeight||190, below=r.bottom+pad+14;
+  card.style.top = (below+ch < innerHeight-8 ? below : Math.max(8, r.top-pad-14-ch))+'px';
 }
 
 /* ---------- Leaderboard ---------- */
@@ -1544,9 +1936,11 @@ function signOut(){
   sb.auth.signOut().then(function(){ location.reload(); });
 }
 function renderAccount(){
-  var b=$('btnAcct');
-  if(!S.user){ b.textContent='Sign in'; return; }
-  b.textContent = (S.profile && S.profile.username) || 'Account';
+  var b=$('btnAcct'), av=$('acctAv'), nm=$('acctName');
+  if(!S.user){ b.classList.remove('in'); av.hidden=true; nm.textContent='Sign in'; b.removeAttribute('aria-label'); return; }
+  var u=(S.profile && S.profile.username) || 'Account';
+  b.classList.add('in'); av.hidden=false; av.textContent=u.charAt(0).toUpperCase(); nm.textContent=u;
+  b.setAttribute('aria-label','Your profile: '+u);
 }
 function askUsername(required){
   $('nameErr').textContent=''; $('nameInput').value=(S.profile&&S.profile.username)||'';
@@ -1587,8 +1981,14 @@ function showSugg(){
   var list=starts.concat(inner).slice(0,6);
   var ul=$('sugg'); ul.innerHTML=''; suggIdx=-1;
   if(!list.length){ ul.hidden=true; return; }
-  list.forEach(function(name){
-    var li=document.createElement('li'); li.setAttribute('role','option'); li.textContent=name;
+  var typed=$('guess').value.trim().toLowerCase();
+  list.forEach(function(name,k){
+    var li=document.createElement('li'); li.setAttribute('role','option'); li.dataset.name=name;
+    var at=typed ? name.toLowerCase().indexOf(typed) : -1, label=document.createElement('span');
+    if(at>=0){ label.appendChild(document.createTextNode(name.slice(0,at))); var bb=document.createElement('b'); bb.textContent=name.slice(at,at+typed.length); label.appendChild(bb); label.appendChild(document.createTextNode(name.slice(at+typed.length))); }
+    else label.textContent=name;
+    li.appendChild(label);
+    if(k===0 && matchMedia('(hover:hover)').matches){ var kb=document.createElement('kbd'); kb.textContent='Enter ↵'; li.appendChild(kb); }
     li.onmousedown=function(e){ e.preventDefault(); $('guess').value=name; hideSugg(); $('guess').focus(); };
     ul.appendChild(li);
   });
@@ -1606,7 +2006,7 @@ function moveSugg(d){
 $('guessForm').addEventListener('submit',function(e){
   e.preventDefault();
   var items=$('sugg').children;
-  if(suggIdx>=0 && items[suggIdx]){ $('guess').value=items[suggIdx].textContent; hideSugg(); }
+  if(suggIdx>=0 && items[suggIdx]){ $('guess').value=items[suggIdx].dataset.name; hideSugg(); }
   submitGuess($('guess').value);
 });
 $('guess').addEventListener('input',showSugg);
@@ -1614,9 +2014,11 @@ $('guess').addEventListener('keydown',function(e){
   if(e.key==='ArrowDown'){ e.preventDefault(); if($('sugg').hidden) showSugg(); moveSugg(1); }
   else if(e.key==='ArrowUp'){ e.preventDefault(); moveSugg(-1); }
   else if(e.key==='Escape'){ hideSugg(); }
-  else if(e.key==='Enter' && suggIdx>=0){
-    e.preventDefault();
-    var items=$('sugg').children; $('guess').value=items[suggIdx].textContent; hideSugg();
+  else if((e.key==='Enter' || e.key==='Tab') && !$('sugg').hidden && $('sugg').children.length){
+    // Enter or Tab take the highlighted suggestion, or the first one (a second Enter sends the guess)
+    var items=$('sugg').children, pick=items[suggIdx>=0?suggIdx:0];
+    if(suggIdx<0 && e.key==='Enter' && knownName($('guess').value)===$('guess').value.trim()) return;
+    e.preventDefault(); $('guess').value=pick.dataset.name; hideSugg();
   }
 });
 $('guess').addEventListener('blur',function(){ setTimeout(hideSugg,120); });
@@ -1644,7 +2046,16 @@ $('newYes').addEventListener('click',function(){
   $('dlgNew').close(); lsDel(runKey(S.hard)); S.run=null; closeAll();
   if(pendingAction==='end'){ clearArt(); buildGrid(S.hard); showIntro(); } else startBooster();
 });
-$('btnBoard').addEventListener('click',function(){ openBoard(); });
+document.querySelectorAll('[data-nav]').forEach(function(b){ b.addEventListener('click',function(){ navTo(b.getAttribute('data-nav')); }); });
+['dlgBoard','dlgAcct','dlgSignIn'].forEach(function(id){ $(id).addEventListener('close',function(){ setTimeout(function(){ if(!document.querySelector('dialog[open]')) setNavOn('play'); },0); }); });
+document.querySelectorAll('[data-theme-set]').forEach(function(b){ b.addEventListener('click',function(){ setTheme(b.getAttribute('data-theme-set')); }); });
+$('btnTour').addEventListener('click',function(){ startCoach(); });
+$('coachNext').addEventListener('click',function(){ coachStep(COACH_I+1); });
+$('coachSkip').addEventListener('click',endCoach);
+window.addEventListener('resize',function(){ if(!$('coach').hidden) placeCoach(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !$('coach').hidden) endCoach(); });
+setInterval(tickCountdown,1000);
+renderBadgeDot();
 $('bgNormal').addEventListener('click',function(){ openBadges(false); });
 $('bgHard').addEventListener('click',function(){ openBadges(true); });
 $('lbNormal').addEventListener('click',function(){ openBoard(false); });
@@ -1653,12 +2064,13 @@ $('lbHard').addEventListener('click',function(){ openBoard(true); });
 function fillProfile(){
   var guest=!S.user;
   $('dlgAcct').classList.toggle('guestview',guest);
-  ['daTitle','daEmail'].forEach(function(id){ $(id).hidden=guest; });
-  document.querySelector('#dlgAcct .row').hidden=guest;
+  ['daProf','daStats','daRow'].forEach(function(id){ $(id).hidden=guest; });
+  renderTheme();
   $('dlgAcct').setAttribute('aria-labelledby', guest?'bgTitle':'daTitle');
   $('bgTitle').textContent = guest ? 'Your badges' : 'Badges';
   if(guest){ $('daAdmin').hidden=true; return; }
-  $('daTitle').textContent=(S.profile&&S.profile.username)||'Your account';
+  var uname=(S.profile&&S.profile.username)||'Your account';
+  $('daTitle').textContent=uname; $('daAv').textContent=uname.charAt(0).toUpperCase();
   $('daEmail').textContent=S.user.email||'';
   $('daAdmin').hidden=!(S.profile&&S.profile.is_admin);
 }
@@ -1673,9 +2085,11 @@ function openProfile(){
   $('dlgAcct').showModal();
   var mini=document.querySelector('#daBadges .bgmini');
   if(!mini.firstChild) mini.innerHTML=badgeSvg(badgeList(false)[0],26);
+  if(BADGES.data) renderProfileStats(BADGES.data);
   if(sb) fetchBadges().then(function(d){
     var n=allBadges(d).filter(function(b){ return b.earned; }).length;
     $('daBadgesN').textContent = n ? n+' of 32' : '';
+    renderProfileStats(d);
   }).catch(function(){});
 }
 $('daBadges').addEventListener('click',function(){ openBadges(); });
@@ -1736,6 +2150,7 @@ function boot(){
     switchMode('daily', false);   // Daily first: if today's card is done, its final screen shows
     booted=true;
     primeBadges();
+    if(!lsGet('pg_coach') && !pendingRecovery && !(URL_AUTH.code||URL_AUTH.error)) setTimeout(function(){ if(!document.querySelector('dialog[open]')) startCoach(); else lsSet('pg_coach',1); },900);
     if(pendingRecovery) openRecovery(); else checkEmailLink(signedIn);
   });
 }
