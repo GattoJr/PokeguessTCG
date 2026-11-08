@@ -1350,46 +1350,78 @@ function closeAll(){ ['dlgCard','dlgResult','dlgBoard','dlgAcct','dlgSignIn','dl
    Which badges a player has is worked out here from my_badges(): the days the Daily card was named,
    and the player's Booster records (Normal and Hard apart). */
 var BOOSTER_TIERS = ['Common','Uncommon','Rare','Holo Rare','Double Rare','Ultra Rare','Illustration Rare','Special Rare','Hyper Rare','Perfect Pull'];
+/* 32 badges per mode (Normal, Hard). tier: 1 bronze, 2 silver, 3 gold (holo).
+   group decides the section in the Badges window; kind decides how it is worked out. */
+var BADGE_GROUPS = [['daily','Daily'],['streak','Streaks'],['booster','Booster scores'],['packs','Booster habits'],['skill','Skill']];
 function badgeList(hard){
   var H = hard ? ' (Hard)' : '', list = [];
-  list.push({id:'d1',  group:'daily',  kind:'count',  need:1,   name:'First Light',   emblem:'sunrise', desc:'Complete your first Daily'+H+' challenge.'});
-  list.push({id:'d50', group:'daily',  kind:'count',  need:50,  name:'Sun Seeker',    emblem:'sun',     desc:'Complete 50 Daily'+H+' challenges.'});
-  list.push({id:'d100',group:'daily',  kind:'count',  need:100, name:'Century Crown', emblem:'crown',   desc:'Complete 100 Daily'+H+' challenges.'});
-  list.push({id:'s7',  group:'streak', kind:'streak', need:7,   name:'Hot Streak',    emblem:'flame1',  desc:'Complete the Daily'+H+' challenge 7 days in a row.'});
-  list.push({id:'s14', group:'streak', kind:'streak', need:14,  name:'Wildfire',      emblem:'flame2',  desc:'Complete the Daily'+H+' challenge 14 days in a row.'});
-  list.push({id:'s30', group:'streak', kind:'streak', need:30,  name:'Eternal Flame', emblem:'flame3',  desc:'Complete the Daily'+H+' challenge 30 days in a row.'});
+  function add(o){ list.push(o); }
+  add({id:'d1',  group:'daily', kind:'count', need:1,   tier:1, name:'First Light',   emblem:'sunrise', desc:'Complete your first Daily'+H+' challenge.'});
+  add({id:'d50', group:'daily', kind:'count', need:50,  tier:2, name:'Sun Seeker',    emblem:'sun',     desc:'Complete 50 Daily'+H+' challenges.'});
+  add({id:'d100',group:'daily', kind:'count', need:100, tier:2, name:'Century Crown', emblem:'crown',   desc:'Complete 100 Daily'+H+' challenges.'});
+  add({id:'d250',group:'daily', kind:'count', need:250, tier:3, name:'High Noon',     emblem:'sun',     desc:'Complete 250 Daily'+H+' challenges.'});
+  add({id:'d365',group:'daily', kind:'count', need:365, tier:3, name:'Full Orbit',    emblem:'orbit',   desc:'Complete 365 Daily'+H+' challenges: a whole year of cards.'});
+  add({id:'s7',  group:'streak', kind:'streak', need:7,   tier:1, name:'Hot Streak',    emblem:'flame1', desc:'Complete the Daily'+H+' challenge 7 days in a row.'});
+  add({id:'s14', group:'streak', kind:'streak', need:14,  tier:2, name:'Wildfire',      emblem:'flame2', desc:'Complete the Daily'+H+' challenge 14 days in a row.'});
+  add({id:'s30', group:'streak', kind:'streak', need:30,  tier:2, name:'Eternal Flame', emblem:'flame3', desc:'Complete the Daily'+H+' challenge 30 days in a row.'});
+  add({id:'s60', group:'streak', kind:'streak', need:60,  tier:3, name:'Inferno',       emblem:'flame2', desc:'Complete the Daily'+H+' challenge 60 days in a row.'});
+  add({id:'s100',group:'streak', kind:'streak', need:100, tier:3, name:'Phoenix',       emblem:'phoenix',desc:'Complete the Daily'+H+' challenge 100 days in a row.'});
   var step = hard ? 200 : 1000;
   for(var i=1;i<=10;i++){
     var pts=i*step;
-    list.push({id:'b'+i, group:'booster', kind:'booster', need:pts, tier:i, name:BOOSTER_TIERS[i-1], emblem:'card',
-      label: pts>=1000 ? (pts/1000)+'K' : String(pts),
-      desc:'Obtain '+fmt(pts)+' points in a Booster'+H+' challenge.'});
+    add({id:'b'+i, group:'booster', kind:'booster', need:pts, tier:i<=4?1:(i<=7?2:3), name:BOOSTER_TIERS[i-1], emblem:'card', bt:i,
+      label: pts>=1000 ? (pts/1000)+'K' : String(pts), desc:'Obtain '+fmt(pts)+' points in a Booster'+H+' challenge.'});
   }
+  add({id:'bs3', group:'packs', kind:'bstreak', need:3,   tier:1, name:'Rip Streak',      emblem:'pack',  desc:'Finish a Booster'+H+' 3 days in a row.'});
+  add({id:'bs7', group:'packs', kind:'bstreak', need:7,   tier:2, name:'Rip Week',        emblem:'pack',  desc:'Finish a Booster'+H+' 7 days in a row.'});
+  add({id:'bs14',group:'packs', kind:'bstreak', need:14,  tier:3, name:'Rip Marathon',    emblem:'pack',  desc:'Finish a Booster'+H+' 14 days in a row.'});
+  add({id:'bc10',group:'packs', kind:'bdone',   need:10,  tier:1, name:'Pack Opener',     emblem:'packs', desc:'Finish 10 Booster'+H+' challenges.'});
+  add({id:'bc50',group:'packs', kind:'bdone',   need:50,  tier:2, name:'Binder Builder',  emblem:'packs', desc:'Finish 50 Booster'+H+' challenges.'});
+  add({id:'bc100',group:'packs',kind:'bdone',   need:100, tier:3, name:'Master Collector',emblem:'packs', desc:'Finish 100 Booster'+H+' challenges.'});
+  add({id:'k_glance',  group:'skill', kind:'skill', skill:'glance',   need:1, tier:3, name:'First Glance',     emblem:'eye1',  desc:'Name a card'+H+' with only the free tile open.'});
+  add({id:'k_keen',    group:'skill', kind:'skill', skill:'keen',     need:1, tier:2, name:'Keen Eye',         emblem:'eye',   desc:'Name a card'+H+' with no more than '+(hard?5:3)+' tiles open.'});
+  add({id:'k_quick',   group:'skill', kind:'skill', skill:'quick',    need:1, tier:2, name:'Quick Draw',       emblem:'bolt',  desc:'Name the Daily'+H+' card within 15 seconds.'});
+  add({id:'k_wire',    group:'skill', kind:'skill', skill:'wire',     need:1, tier:1, name:'Down to the Wire', emblem:'hourglass', desc:'Name a card'+H+' on your second guess with fewer than '+(hard?10:50)+' points left.'});
+  add({id:'k_complete',group:'skill', kind:'skill', skill:'complete', need:1, tier:2, name:'Complete Set',     emblem:'set',   desc:'Name all 10 cards of a Booster'+H+'.'});
+  add({id:'k_flawless',group:'skill', kind:'skill', skill:'flawless', need:1, tier:3, name:'Flawless',         emblem:'check', desc:'Name all 10 cards of a Booster'+H+', each on the first guess.'});
   list.forEach(function(b){ b.hard=!!hard; b.key=(hard?'h:':'n:')+b.id; });
   return list;
 }
+var BADGE_TOTAL = 64;
 function dayNum(s){ return Math.round(Date.UTC(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10))/86400000); }
+/* runs of consecutive days: when each length was first reached, the best run, and the run still alive (today or yesterday) */
+function runsOf(days, today){
+  var reached = {}, best = 0, run = 0, prev = null;
+  days.forEach(function(d){
+    if(d===prev) return;
+    run = (prev!==null && d===prev+1) ? run+1 : 1; prev = d;
+    if(run>best) best=run;
+    if(!reached[run]) reached[run] = d;
+  });
+  return {reached:reached, best:best, current:(prev!==null && today-prev<=1) ? run : 0};
+}
 /* everything the badges need, from the server's lists */
 function badgeState(data, hard){
   var m = hard ? 'hard' : 'normal';
-  var days = ((data && data.daily && data.daily[m]) || []).map(dayNum);
-  var recs = (data && data.booster && data.booster[m]) || [];
-  var today = data && data.today ? dayNum(data.today) : Math.floor(Date.now()/86400000);
-  // streaks: when each length was first reached, the best one, and the one still alive (today or yesterday)
-  var reached = {}, best = 0, run = 0, prev = null;
-  days.forEach(function(d, i){
-    run = (prev!==null && d===prev+1) ? run+1 : 1; prev = d;
-    if(run>best){ best=run; }
-    if(!reached[run]) reached[run] = d;
-  });
-  var current = (prev!==null && today-prev<=1) ? run : 0;
+  var d = data || {};
+  var days = ((d.daily && d.daily[m]) || []).map(dayNum);
+  var recs = (d.booster && d.booster[m]) || [];
+  var bdays = ((d.booster_days && d.booster_days[m]) || []).map(dayNum).sort(function(a,b){ return a-b; });
+  var done = (d.booster_done && d.booster_done[m]) || {n:0, at:{}};
+  var skills = (d.skills && d.skills[m]) || {};
+  var today = d.today ? dayNum(d.today) : Math.floor(Date.now()/86400000);
+  var st = runsOf(days, today), bst = runsOf(bdays, today);
   var bestBooster = recs.length ? recs[recs.length-1][1] : 0;
   return badgeList(hard).map(function(b){
-    var have=0, when=null;
+    var have=0, when=null, best=0;
     if(b.kind==='count'){ have=days.length; if(days.length>=b.need) when=days[b.need-1]*86400000; }
-    else if(b.kind==='streak'){ have=current; if(reached[b.need]) when=reached[b.need]*86400000; }
-    else { have=bestBooster; for(var i=0;i<recs.length;i++){ if(recs[i][1]>=b.need){ when=Date.parse(recs[i][0]); break; } } }
-    b.earned = when!==null; b.when = when; b.have = Math.min(have, b.need); b.best = best;
+    else if(b.kind==='streak'){ have=st.current; best=st.best; if(st.reached[b.need]) when=st.reached[b.need]*86400000; }
+    else if(b.kind==='booster'){ have=bestBooster; for(var i=0;i<recs.length;i++){ if(recs[i][1]>=b.need){ when=Date.parse(recs[i][0]); break; } } }
+    else if(b.kind==='bstreak'){ have=bst.current; best=bst.best; if(bst.reached[b.need]) when=bst.reached[b.need]*86400000; }
+    else if(b.kind==='bdone'){ have=done.n||0; var at=done.at && done.at[String(b.need)]; if(at) when=Date.parse(at); }
+    else if(b.kind==='skill'){ var t=skills[b.skill]; if(t){ when=Date.parse(t); have=1; } }
+    b.earned = when!==null && !isNaN(when); if(!b.earned) when=null;
+    b.when = when; b.have = Math.min(have, b.need); b.best = best;
     return b;
   });
 }
@@ -1406,6 +1438,11 @@ function star(cx, cy, r, c){
 function numText(t, x, y, size, c){
   return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="Anybody, \'Arial Narrow\', sans-serif" font-weight="900" font-size="'+size+'" fill="'+c+'" style="font-stretch:110%">'+t+'</text>';
 }
+function flamePath(c, bg, dx, dy, s){
+  var t='translate('+dx+','+dy+') scale('+s+')';
+  return '<g transform="'+t+'"><path d="M48 60 C38 59 33 51 36 42 C38 47 41 48 43 47 C40 39 45 31 52 27 C50 35 58 39 59 47 C60 54 55 60 48 60 Z" fill="'+c+'"/>'+
+    '<path d="M48 57 C44 56 42 52 44 48 C45 50 47 51 48 50 C47 46 49 43 52 41 C52 46 55 48 55 51 C55 55 52 57 48 57 Z" fill="'+bg+'"/></g>';
+}
 /* the emblem in one colour (drawn twice: highlight, then the engraving) */
 function emblem(b, c, bg){
   var s='';
@@ -1420,7 +1457,12 @@ function emblem(b, c, bg){
     case 'sun':
       for(var k2=0;k2<12;k2++){ var a2=Math.PI/180*(30*k2), r1=k2%2?17:16, r2=k2%2?21:25;
         s+='<line x1="'+(50+r1*Math.cos(a2)).toFixed(1)+'" y1="'+(46+r1*Math.sin(a2)).toFixed(1)+'" x2="'+(50+r2*Math.cos(a2)).toFixed(1)+'" y2="'+(46+r2*Math.sin(a2)).toFixed(1)+'" stroke="'+c+'" stroke-width="3.4" stroke-linecap="round"/>'; }
-      s+='<circle cx="50" cy="46" r="13.5" fill="'+c+'"/>'+numText('50',50,51.5,14,bg);
+      s+='<circle cx="50" cy="46" r="13.5" fill="'+c+'"/>'+numText(b.need,50,51.5,b.need>=100?11:14,bg);
+      break;
+    case 'orbit':
+      s+='<ellipse cx="50" cy="45" rx="23" ry="9" fill="none" stroke="'+c+'" stroke-width="2.8" transform="rotate(-18 50 45)"/>';
+      s+='<circle cx="50" cy="45" r="9" fill="'+c+'"/><circle cx="70" cy="37" r="3.4" fill="'+c+'"/>';
+      s+=numText('365',50,75,14,c);
       break;
     case 'crown':
       s+='<path d="M31 50 L33 33 L41.5 42 L50 29 L58.5 42 L67 33 L69 50 Z" fill="'+c+'"/><rect x="31" y="52" width="38" height="5" rx="1.5" fill="'+c+'"/>';
@@ -1431,13 +1473,51 @@ function emblem(b, c, bg){
       var big = b.emblem==='flame3', two = b.emblem!=='flame1';
       if(two && !big) s+='<path d="M60 58 C67 55 69 47 64 39 C64 45 61 47 59 46 C61 40 58 34 53 31 C55 39 49 43 49 50 C49 55 53 59 60 58 Z" fill="'+c+'" opacity=".75"/>';
       if(big) s+='<circle cx="50" cy="45" r="20" fill="none" stroke="'+c+'" stroke-width="2.6"/>';
-      s+='<path d="M48 60 C38 59 33 51 36 42 C38 47 41 48 43 47 C40 39 45 31 52 27 C50 35 58 39 59 47 C60 54 55 60 48 60 Z" fill="'+c+'"/>';
-      s+='<path d="M48 57 C44 56 42 52 44 48 C45 50 47 51 48 50 C47 46 49 43 52 41 C52 46 55 48 55 51 C55 55 52 57 48 57 Z" fill="'+bg+'"/>';
+      s+=flamePath(c,bg,0,0,1);
       s+=numText(b.need,50,77,14,c);
+      break;
+    case 'phoenix':
+      s+='<path d="M50 30 C44 38 30 36 24 30 C27 42 36 47 44 47 Z" fill="'+c+'"/><path d="M50 30 C56 38 70 36 76 30 C73 42 64 47 56 47 Z" fill="'+c+'"/>';
+      s+=flamePath(c,bg,9,10,0.82);
+      s+=numText('100',50,77,13,c);
+      break;
+    case 'pack':
+      s+='<path d="M38 26 l3 -3 3 3 3 -3 3 3 3 -3 3 3 3 -3 3 3 V60 l-3 3 -3 -3 -3 3 -3 -3 -3 3 -3 -3 -3 3 -3 -3 Z" fill="none" stroke="'+c+'" stroke-width="2.6" stroke-linejoin="round"/>';
+      s+=flamePath(c,bg,12.5,15,0.75);
+      s+=numText(b.need+(b.need===1?' day':' days'),50,77,10.5,c);
+      break;
+    case 'packs':
+      s+='<rect x="30" y="31" width="22" height="30" rx="2.5" fill="none" stroke="'+c+'" stroke-width="2.4" transform="rotate(-12 41 46)"/>';
+      s+='<rect x="48" y="31" width="22" height="30" rx="2.5" fill="none" stroke="'+c+'" stroke-width="2.4" transform="rotate(12 59 46)"/>';
+      s+='<rect x="39" y="27" width="22" height="31" rx="2.5" fill="'+c+'"/>'+star(50,42.5,6,bg);
+      s+=numText(b.need,50,77,14,c);
+      break;
+    case 'eye': case 'eye1':
+      s+='<path d="M24 45 C32 33 41 29 50 29 C59 29 68 33 76 45 C68 57 59 61 50 61 C41 61 32 57 24 45 Z" fill="none" stroke="'+c+'" stroke-width="3"/>';
+      s+='<circle cx="50" cy="45" r="9.5" fill="'+c+'"/>';
+      if(b.emblem==='eye1') s+='<rect x="46" y="41" width="8" height="8" rx="1.2" fill="'+bg+'"/>'; else s+='<circle cx="53" cy="42" r="3" fill="'+bg+'"/>';
+      s+= b.emblem==='eye1' ? numText('1 tile',50,77,11,c) : numText(b.hard?'5 tiles':'3 tiles',50,77,11,c);
+      break;
+    case 'bolt':
+      s+='<path d="M54 24 L36 49 H48 L44 67 L64 40 H52 Z" fill="'+c+'"/>'+numText('15s',50,79,11,c);
+      break;
+    case 'hourglass':
+      s+='<path d="M37 26 H63 M37 66 H63" stroke="'+c+'" stroke-width="3.2" stroke-linecap="round"/>';
+      s+='<path d="M40 28 C40 40 48 42 48 46 C48 50 40 52 40 64 H60 C60 52 52 50 52 46 C52 42 60 40 60 28 Z" fill="none" stroke="'+c+'" stroke-width="2.6"/>';
+      s+='<path d="M43 62 C45 56 50 54 50 54 C50 54 55 56 57 62 Z" fill="'+c+'"/><circle cx="50" cy="47" r="1.6" fill="'+c+'"/>';
+      break;
+    case 'set':
+      for(var r=0;r<2;r++) for(var q=0;q<5;q++) s+='<rect x="'+(28+q*9.2)+'" y="'+(31+r*14.5)+'" width="7.4" height="11" rx="1.3" fill="'+c+'"/>';
+      s+=numText('10/10',50,76,12,c);
+      break;
+    case 'check':
+      s+='<rect x="37" y="25" width="26" height="36" rx="3.2" fill="none" stroke="'+c+'" stroke-width="3.2"/>';
+      s+='<path d="M43 43 L48.5 49 L58 37" fill="none" stroke="'+c+'" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+      s+=numText('10/10',50,77,12,c);
       break;
     case 'card':
       s+='<rect x="37" y="25" width="26" height="36" rx="3.2" fill="none" stroke="'+c+'" stroke-width="3.2"/>';
-      var t=b.tier, cx=50, cy=43;
+      var t=b.bt, cx=50, cy=43;
       if(t===1) s+='<circle cx="50" cy="43" r="5.5" fill="'+c+'"/>';
       else if(t===2) s+='<polygon points="50,36 57,43 50,50 43,43" fill="'+c+'"/>';
       else if(t===3) s+=star(cx,cy,8,c);
@@ -1454,24 +1534,35 @@ function emblem(b, c, bg){
   }
   return s;
 }
+/* metals: 1 bronze, 2 silver, 3 gold with a holo shine. Hard keeps red enamel inside the frame. */
+var METALS = {
+  1:{rim:['#FBE1C2','#D99A62','#A7653A','#6E3C1A'], stroke:'#5A2F12', bevel:['#F3C99E','#8C4E24'], field:['#E7AC74','#B8743E'], fieldStroke:'#8C4E24', engrave:'#5A2F12', light:'rgba(255,236,214,.85)', bg:'#C98550'},
+  2:{rim:['#FFFFFF','#DCE1EA','#A9B2C2','#6C7588'], stroke:'#4D5466', bevel:['#F4F6FA','#7D8698'], field:['#EDF0F5','#B8C0CE'], fieldStroke:'#8790A3', engrave:'#3E4555', light:'rgba(255,255,255,.9)', bg:'#C9D0DC'},
+  3:{rim:['#FFF1A8','#F2C230','#C98A12','#8A5A08'], stroke:'#6E4506', bevel:['#FFE48A','#9C650A'], field:['#F3C64A','#D69A1F'], fieldStroke:'#A8700E', engrave:'#7A4A06', light:'rgba(255,248,214,.85)', bg:'#E6AE33'}
+};
 function badgeSvg(b, size){
-  var id = 'bg'+(++badgeSeq), hard = b.hard;
-  var engrave = hard ? '#FFE07A' : '#7A4A06', light = hard ? 'rgba(60,0,0,.55)' : 'rgba(255,248,214,.85)';
-  var fieldTop = hard ? '#C93B2E' : '#F3C64A', fieldBot = hard ? '#7E1712' : '#D69A1F';
-  var em = emblem(b, engrave, hard ? '#9E241B' : '#E6AE33');
+  var id = 'bg'+(++badgeSeq), hard = b.hard, M = METALS[b.tier||3];
+  var engrave = hard ? '#FFE07A' : M.engrave, light = hard ? 'rgba(60,0,0,.55)' : M.light;
+  var fieldTop = hard ? '#C93B2E' : M.field[0], fieldBot = hard ? '#7E1712' : M.field[1];
+  if(hard && b.tier===1) engrave='#FFD3A8';
+  if(hard && b.tier===2) engrave='#F2F4F8';
+  var em = emblem(b, engrave, hard ? '#9E241B' : M.bg);
   var shadowEm = emblem(b, light, light);
+  // gold: a holo sheen on the frame and on the field, under the emblem so it stays readable
+  var holo = b.tier===3 ? '<g clip-path="url(#'+id+'c)" opacity=".42"><rect x="-20" y="-20" width="140" height="140" fill="url(#'+id+'h)"/></g>' : '';
   return '<svg class="badge-svg" viewBox="0 0 100 100" width="'+size+'" height="'+size+'" aria-hidden="true">'+
     '<defs>'+
-      '<linearGradient id="'+id+'r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1A8"/><stop offset=".35" stop-color="#F2C230"/><stop offset=".7" stop-color="#C98A12"/><stop offset="1" stop-color="#8A5A08"/></linearGradient>'+
-      '<linearGradient id="'+id+'b" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFE48A"/><stop offset="1" stop-color="#9C650A"/></linearGradient>'+
+      '<linearGradient id="'+id+'r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+M.rim[0]+'"/><stop offset=".35" stop-color="'+M.rim[1]+'"/><stop offset=".7" stop-color="'+M.rim[2]+'"/><stop offset="1" stop-color="'+M.rim[3]+'"/></linearGradient>'+
+      '<linearGradient id="'+id+'b" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="'+M.bevel[0]+'"/><stop offset="1" stop-color="'+M.bevel[1]+'"/></linearGradient>'+
       '<linearGradient id="'+id+'f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+fieldTop+'"/><stop offset="1" stop-color="'+fieldBot+'"/></linearGradient>'+
+      (b.tier===3 ? '<linearGradient id="'+id+'h" x1="0" y1="0" x2="1" y2="1"><stop offset=".22" stop-color="#000" stop-opacity="0"/><stop offset=".34" stop-color="#FF7AD9"/><stop offset=".44" stop-color="#FFE27A"/><stop offset=".54" stop-color="#7CF5D3"/><stop offset=".64" stop-color="#7AA8FF"/><stop offset=".76" stop-color="#000" stop-opacity="0"/></linearGradient>' : '')+
       '<clipPath id="'+id+'c"><polygon points="'+hexPts(47,50,50)+'"/></clipPath>'+
     '</defs>'+
     '<polygon points="'+hexPts(47,50,52)+'" fill="rgba(20,10,0,.28)"/>'+
-    '<polygon points="'+hexPts(47,50,50)+'" fill="url(#'+id+'r)" stroke="#6E4506" stroke-width="1.6" stroke-linejoin="round"/>'+
+    '<polygon points="'+hexPts(47,50,50)+'" fill="url(#'+id+'r)" stroke="'+M.stroke+'" stroke-width="1.6" stroke-linejoin="round"/>'+
     '<polygon points="'+hexPts(39,50,50)+'" fill="url(#'+id+'b)"/>'+
-    '<polygon points="'+hexPts(36,50,50)+'" fill="url(#'+id+'f)" stroke="'+(hard?'#5C0F0B':'#A8700E')+'" stroke-width="1"/>'+
-    '<g transform="translate(0,1)">'+shadowEm+'</g>'+em+
+    '<polygon points="'+hexPts(36,50,50)+'" fill="url(#'+id+'f)" stroke="'+(hard?'#5C0F0B':M.fieldStroke)+'" stroke-width="1"/>'+
+    holo+'<g transform="translate(0,1)">'+shadowEm+'</g>'+em+
     '<g clip-path="url(#'+id+'c)"><polygon points="0,0 58,0 18,100 0,100" fill="#fff" opacity=".16"/></g>'+
     '<polygon points="'+hexPts(46,50,50)+'" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".8"/>'+
   '</svg>';
@@ -1523,7 +1614,9 @@ function fmtDay(ms){ return new Date(ms).toLocaleDateString('en-GB',{day:'numeri
 function badgeStatus(b){
   if(b.earned) return 'Earned on '+fmtDay(b.when)+'.';
   if(b.kind==='count') return fmt(b.have)+' of '+fmt(b.need)+' so far.';
-  if(b.kind==='streak') return 'Current streak: '+b.have+' day'+(b.have===1?'':'s')+'. Best: '+b.best+'.';
+  if(b.kind==='streak' || b.kind==='bstreak') return 'Current streak: '+b.have+' day'+(b.have===1?'':'s')+'. Best: '+b.best+'.';
+  if(b.kind==='bdone') return fmt(b.have)+' of '+fmt(b.need)+' Boosters finished so far.';
+  if(b.kind==='skill') return 'Not earned yet.';
   return b.have ? 'Your best Booster'+(b.hard?' (Hard)':'')+': '+fmt(b.have)+' points.' : 'No Booster'+(b.hard?' (Hard)':'')+' finished yet.';
 }
 function openBadges(hard, focusKey){
@@ -1553,7 +1646,7 @@ function renderBadges(){
          || list.filter(function(b){ return !b.earned; })[0] || list[list.length-1];
   BADGES.sel=sel.key;
   var box=$('bgGroups'); box.innerHTML='';
-  [['daily','Daily'],['streak','Streaks'],['booster','Booster']].forEach(function(g){
+  BADGE_GROUPS.forEach(function(g){
     var h=document.createElement('h3'); h.textContent=g[1]+(BADGES.tab?' (Hard)':''); box.appendChild(h);
     var grid=document.createElement('div'); grid.className='bggrid';
     list.filter(function(b){ return b.group===g[0]; }).forEach(function(b){
@@ -1562,7 +1655,7 @@ function renderBadges(){
       t.setAttribute('aria-pressed', b.key===sel.key);
       t.innerHTML=badgeSvg(b,58)+'<b></b><small></small>';
       t.querySelector('b').textContent=b.name;
-      t.querySelector('small').textContent = b.earned ? 'Earned' : (b.kind==='booster' ? fmt(b.need)+' pts' : b.have+'/'+b.need);
+      t.querySelector('small').textContent = b.earned ? 'Earned' : (b.kind==='booster' ? fmt(b.need)+' pts' : (b.kind==='skill' ? 'Not yet' : b.have+'/'+b.need));
       t.setAttribute('aria-label', b.name+'. '+b.desc+' '+(b.earned?'Earned.':'Not earned yet.'));
       t.addEventListener('click',function(){ BADGES.sel=b.key; renderBadges(); });
       grid.appendChild(t);
@@ -1575,6 +1668,7 @@ function renderBadges(){
   d.querySelector('.bgdesc').textContent=sel.desc;
   d.querySelector('.bgstat').textContent=badgeStatus(sel);
   var bar=d.querySelector('.bgbar'); bar.hidden=sel.earned;
+  bar.hidden = sel.earned || sel.kind==='skill';
   bar.firstChild.style.width = Math.round(100*Math.min(1, sel.have/sel.need))+'%';
 }
 
@@ -1617,7 +1711,7 @@ function renderStreak(){
 function renderProfileStats(d){
   if(!d) return;
   var got=allBadges(d).filter(function(b){ return b.earned; }).length;
-  $('daBadgesN').textContent = got ? got+' of 32' : '';
+  $('daBadgesN').textContent = got ? got+' of '+BADGE_TOTAL : '';
   var named=((d.daily&&d.daily.normal)||[]).length+((d.daily&&d.daily.hard)||[]).length;
   var rec=(d.booster&&d.booster.normal)||[];
   $('stStreak').textContent=dailyStreak(d); $('stNamed').textContent=fmt(named);
