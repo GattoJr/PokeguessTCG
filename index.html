@@ -210,6 +210,18 @@ input[type=text]:disabled{opacity:.6}
 .btn:active{transform:translateY(1px)}
 .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
 .btn.ghost{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.delacct{display:flex;flex-direction:column;align-items:center;gap:10px}
+.delacct[hidden]{display:none}
+.linkbtn{background:none;border:0;padding:6px 4px;font:600 14px/1.2 var(--body,inherit);text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--muted)}
+.linkbtn.danger:hover,.linkbtn.danger:focus-visible{color:var(--bad)}
+.delbox{width:100%;box-sizing:border-box;border:1.5px solid var(--bad);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.delbox[hidden]{display:none}
+.delbox h3{margin:0;font-size:17px;color:var(--bad)}
+.delbox p{margin:0;font-size:14px;line-height:1.45}
+.delbox .row{display:flex;gap:10px;flex-wrap:wrap}
+.delbox .row .btn{flex:1}
+.btn.dangerbtn{background:var(--bad);color:#fff;box-shadow:none}
+.delmsg:empty{display:none}
 .below{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{font-size:14px;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--bad);text-decoration:line-through}
@@ -799,6 +811,18 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
       <button class="btn ghost" type="button" id="daRename">Change username</button>
       <button class="btn ghost" type="button" id="daSignOut">Sign out</button>
     </div>
+    <div class="delacct" id="daDel">
+      <button class="linkbtn danger" type="button" id="daDelOpen" aria-expanded="false" aria-controls="daDelBox">Delete account</button>
+      <div class="delbox" id="daDelBox" role="alertdialog" aria-labelledby="daDelT" aria-describedby="daDelD" hidden>
+        <h3 id="daDelT">Delete your account?</h3>
+        <p id="daDelD">Your username, all your scores, your badges and your place on the leaderboard will be deleted for good. This can't be undone.</p>
+        <div class="row">
+          <button class="btn ghost" type="button" id="daDelNo">Cancel</button>
+          <button class="btn dangerbtn" type="button" id="daDelYes">Delete</button>
+        </div>
+        <p class="delmsg" id="daDelMsg" role="status" aria-live="polite"></p>
+      </div>
+    </div>
     <!-- badges: opened with the Badges button (guests and the "New badge!" notice open it directly) -->
     <section class="acbadges" id="acBadges" aria-labelledby="bgTitle" hidden>
       <h3 id="bgTitle">Badges</h3>
@@ -1379,15 +1403,13 @@ function badgeList(hard){
   add({id:'bc50',group:'packs', kind:'bdone',   need:50,  tier:2, name:'Binder Builder',  emblem:'packs', desc:'Finish 50 Booster'+H+' challenges.'});
   add({id:'bc100',group:'packs',kind:'bdone',   need:100, tier:3, name:'Master Collector',emblem:'packs', desc:'Finish 100 Booster'+H+' challenges.'});
   add({id:'k_glance',  group:'skill', kind:'skill', skill:'glance',   need:1, tier:3, name:'First Glance',     emblem:'eye1',  desc:'Name a card'+H+' with only the free tile open.'});
-  add({id:'k_keen',    group:'skill', kind:'skill', skill:'keen',     need:1, tier:2, name:'Keen Eye',         emblem:'eye',   desc:'Name a card'+H+' with no more than '+(hard?5:3)+' tiles open.'});
   add({id:'k_quick',   group:'skill', kind:'skill', skill:'quick',    need:1, tier:2, name:'Quick Draw',       emblem:'bolt',  desc:'Name the Daily'+H+' card within 15 seconds.'});
-  add({id:'k_wire',    group:'skill', kind:'skill', skill:'wire',     need:1, tier:1, name:'Down to the Wire', emblem:'hourglass', desc:'Name a card'+H+' on your second guess with fewer than '+(hard?10:50)+' points left.'});
   add({id:'k_complete',group:'skill', kind:'skill', skill:'complete', need:1, tier:2, name:'Complete Set',     emblem:'set',   desc:'Name all 10 cards of a Booster'+H+'.'});
   add({id:'k_flawless',group:'skill', kind:'skill', skill:'flawless', need:1, tier:3, name:'Flawless',         emblem:'check', desc:'Name all 10 cards of a Booster'+H+', each on the first guess.'});
   list.forEach(function(b){ b.hard=!!hard; b.key=(hard?'h:':'n:')+b.id; });
   return list;
 }
-var BADGE_TOTAL = 64;
+var BADGE_TOTAL = 60;
 function dayNum(s){ return Math.round(Date.UTC(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10))/86400000); }
 /* runs of consecutive days: when each length was first reached, the best run, and the run still alive (today or yesterday) */
 function runsOf(days, today){
@@ -2029,6 +2051,26 @@ function checkEmailLink(signedIn){
   }
   signIn('signin','That link only works in the browser where you asked for it. If you were confirming a new account, your email is now confirmed: sign in with your password. To reset your password, ask for a new code here.');
 }
+/* delete account: an inline confirmation, then the server removes the account and everything linked to it */
+function showDelete(on){
+  $('daDelBox').hidden=!on; $('daDelOpen').hidden=on; $('daDelOpen').setAttribute('aria-expanded',on);
+  $('daDelMsg').textContent=''; $('daDelYes').disabled=false; $('daDelNo').disabled=false;
+  if(on) $('daDelNo').focus();
+}
+function deleteAccount(){
+  var yes=$('daDelYes'), msg=$('daDelMsg');
+  yes.disabled=true; $('daDelNo').disabled=true; msg.textContent='Deleting…';
+  rpc('delete_my_account').then(function(){
+    /* forget this browser's game data too; keep only the theme and the tour flag */
+    try{ Object.keys(localStorage).forEach(function(k){ if(/^pg_/.test(k) && k!=='pg_theme' && k!=='pg_coach') localStorage.removeItem(k); }); }catch(e){}
+    msg.textContent='Your account has been deleted.';
+    return sb.auth.signOut({scope:'local'}).catch(function(){});
+  }).then(function(){ setTimeout(function(){ location.reload(); },1500); })
+  .catch(function(e){
+    msg.textContent = /admin/i.test((e&&e.message)||'') ? 'Admin accounts can\'t be deleted here.' : 'Couldn\'t delete the account. Please try again.';
+    yes.disabled=false; $('daDelNo').disabled=false;
+  });
+}
 function signOut(){
   closeAll(); if($('dlgName').open) $('dlgName').close();
   sb.auth.signOut().then(function(){ location.reload(); });
@@ -2162,7 +2204,8 @@ $('lbHard').addEventListener('click',function(){ openBoard(true); });
 function fillProfile(){
   var guest=!S.user;
   $('dlgAcct').classList.toggle('guestview',guest);
-  ['daProf','daStats','daRow'].forEach(function(id){ $(id).hidden=guest; });
+  ['daProf','daStats','daRow','daDel'].forEach(function(id){ $(id).hidden=guest; });
+  showDelete(false);
   renderTheme();
   $('dlgAcct').setAttribute('aria-labelledby', guest?'bgTitle':'daTitle');
   $('bgTitle').textContent = guest ? 'Your badges' : 'Badges';
@@ -2188,6 +2231,9 @@ $('daBadges').addEventListener('click',function(){ openBadges(); });
 $('btnAcct').addEventListener('click',openProfile);
 $('dsBadges').addEventListener('click',function(){ openBadges(); });
 $('daSignOut').addEventListener('click',signOut);
+$('daDelOpen').addEventListener('click',function(){ showDelete(true); });
+$('daDelNo').addEventListener('click',function(){ showDelete(false); $('daDelOpen').focus(); });
+$('daDelYes').addEventListener('click',deleteAccount);
 $('daRename').addEventListener('click',function(){ $('dlgAcct').close(); askUsername(false); });
 $('nameSignOut').addEventListener('click',signOut);
 $('nameLater').addEventListener('click',function(){ $('dlgName').close(); });

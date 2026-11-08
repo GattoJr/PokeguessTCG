@@ -109,7 +109,7 @@ page("how-to-play.html", "How to play · PokeguessTCG",
     <h2>Streaks, badges and the leaderboard</h2>
     <ul>
       <li><b>Streak</b>: the days in a row on which you named the Daily card, in Normal or Hard. Miss a whole day and it starts again.</li>
-      <li><b>Badges</b>: 32 for each mode, in bronze, silver and holo gold: Daily cards named, streaks, Booster scores, Booster habits and skill badges such as naming a card with only the free tile open.</li>
+      <li><b>Badges</b>: 30 for each mode, in bronze, silver and holo gold: Daily cards named, streaks, Booster scores, Booster habits and skill badges such as naming a card with only the free tile open.</li>
       <li><b>Leaderboard</b>: the best Booster of every player with an account, in Normal and Hard.</li>
     </ul>
 
@@ -124,10 +124,9 @@ FAQ = [
     ("How does the streak work?", "It counts the days in a row on which you named the Daily card, in Normal or Hard. A missed or abandoned Daily doesn’t count, and the Booster doesn’t either."),
     ("What is Hard mode?", "Only the 34 tiles on the edge can be opened, so you see much less of the artwork. Each card is worth 200 points and a wrong guess costs 30."),
     ("Do I need an account?", "No. Guests can play every mode and earn badges in their browser. Signing in with Google keeps your results on every device and puts your best Booster on the leaderboard."),
-    ("Which cards are in the game?", "Regular cards from the Scarlet & Violet, Sword & Shield and Mega Evolution series. Full-art cards and V, VMAX, VSTAR and ex cards are left out."),
-    ("Where can I see past Daily cards?", "In the Daily archive, with how all players did and your own score. Today’s card stays hidden until the next day."),
+    ("Where can I see past Daily cards?", "In the Daily archive, with how all players did and your own score."),
     ("Is this an official Pokémon game?", "No. PokeguessTCG is an unofficial fan site, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company."),
-    ("How do I delete my account?", "Write to pokeguesstcg@gmail.com from the email address of your account. Your data is deleted within 30 days."),
+    ("How do I delete my account?", "Open your profile (your name at the top), choose Delete account at the bottom and confirm. Your username, scores, badges and leaderboard place are deleted straight away and for good. If you can't sign in any more, write to pokeguesstcg@gmail.com from the email address of your account."),
 ]
 page("faq.html", "FAQ · PokeguessTCG", "Answers about PokeguessTCG: the Daily card, scoring, Hard mode, streaks, accounts and the cards in the game.",
      """    <h1>Frequently asked questions</h1>
