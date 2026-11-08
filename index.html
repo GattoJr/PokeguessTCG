@@ -189,8 +189,15 @@ input[type=text]:disabled{opacity:.6}
 .badgesbtn .bgmini{display:flex}
 .badgesbtn small{font-weight:600;opacity:.8}
 .acbadges{display:flex;flex-direction:column;gap:12px;margin-top:6px;padding-top:14px;border-top:1.5px solid var(--line)}
-.acbadges > h3{margin:0;font:900 22px/1 var(--display);font-stretch:120%}
-#dlgAcct.guestview .acbadges{margin-top:0;padding-top:0;border-top:0}
+.acbadges > h3,.bghead h3{margin:0;font:900 22px/1 var(--display);font-stretch:120%}
+#dlgAcct.guestview .acbadges,#dlgAcct.badgesview .acbadges{margin-top:0;padding-top:0;border-top:0}
+/* badges open on their own: the profile details stay in the profile */
+#dlgAcct.badgesview #daProf,#dlgAcct.badgesview #daStats,#dlgAcct.badgesview #daBadges,#dlgAcct.badgesview #daTheme,#dlgAcct.badgesview #daRow,#dlgAcct.badgesview #daDel{display:none}
+#dlgAcct.badgesview .bghead h3,#dlgAcct.guestview .bghead h3{margin:0;font-size:26px;padding-right:40px}
+.bghead{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.bghead .linkbtn{padding:2px 0;font-size:14px}
+/* the chosen badge stays in view while the list scrolls */
+.bgdetail{position:sticky;top:0;z-index:2;box-shadow:0 0 0 6px var(--surface),0 10px 16px -8px rgba(8,18,40,.25)}
 #dlgAcct.guestview .acbadges > h3{font-size:26px;padding-right:40px}
 #dsBadges{align-self:center}
 #bgGroups h3{margin:6px 0 0;font:800 15px/1 var(--display);font-stretch:110%;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
@@ -838,7 +845,7 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
     </div>
     <!-- badges: opened with the Badges button (guests and the "New badge!" notice open it directly) -->
     <section class="acbadges" id="acBadges" aria-labelledby="bgTitle" hidden>
-      <h3 id="bgTitle">Badges</h3>
+      <div class="bghead"><button class="linkbtn" type="button" id="bgBack" hidden>‹ Profile</button><h3 id="bgTitle">Badges</h3></div>
       <div class="modes" role="tablist" aria-label="Badges">
         <button type="button" role="tab" id="bgNormal" aria-selected="true">Normal</button>
         <button type="button" role="tab" id="bgHard" class="hardtab" aria-selected="false">Hard</button>
@@ -1667,7 +1674,7 @@ function openBadges(hard, focusKey){
   if(opening){ closeAll(); fillProfile(); renderProfileStats(BADGES.data); $('dlgAcct').showModal(); $('dlgAcct').scrollTop=0; }
   var wasHidden=$('acBadges').hidden;
   showBadgesSection(true);
-  if(S.user && (wasHidden || focusKey)) setTimeout(function(){ $('acBadges').scrollIntoView({block:'start', behavior: opening?'auto':'smooth'}); },0);
+  if(wasHidden) $('dlgAcct').scrollTop=0;
   if(BADGES.data) renderBadges();
   else { $('bgCount').textContent='Loading…'; $('bgGroups').innerHTML=''; $('bgDetail').hidden=true; }
   if(!sb) return;
@@ -2232,6 +2239,7 @@ function fillProfile(){
 }
 function showBadgesSection(on){
   $('acBadges').hidden=!on; $('daBadges').hidden=on || !S.user; $('daBadges').setAttribute('aria-expanded', on);
+  $('dlgAcct').classList.toggle('badgesview', on && !!S.user); $('bgBack').hidden=!(on && S.user);
 }
 /* the profile opens with the account only; the Badges button shows the medals */
 function openProfile(){
@@ -2244,6 +2252,7 @@ function openProfile(){
   if(sb) fetchBadges().catch(function(){});
 }
 $('daBadges').addEventListener('click',function(){ openBadges(); });
+$('bgBack').addEventListener('click',function(){ showBadgesSection(false); setNavOn('profile'); $('dlgAcct').scrollTop=0; $('daBadges').focus(); });
 $('btnAcct').addEventListener('click',openProfile);
 $('dsBadges').addEventListener('click',function(){ openBadges(); });
 $('daSignOut').addEventListener('click',signOut);
