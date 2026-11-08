@@ -49,7 +49,26 @@ a{color:inherit;text-decoration-color:var(--gold-deep);text-underline-offset:2px
 .page .back{display:none}
 .sitefoot{max-width:720px;margin:20px auto 0;text-align:center;font-size:12.5px;color:var(--muted)}
 .sitefoot nav{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;margin-bottom:8px}
-.sitefoot nav a{font-weight:700;font-size:14px;color:var(--ink);text-decoration:none}
+.sitefoot nav a,.sitefoot nav .pgchoices{font-weight:700;font-size:14px;color:var(--ink);text-decoration:none}
+.page > .adslot{margin-top:20px}
+/* cookie table */
+.ctable{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 12px}
+.ctable th,.ctable td{text-align:left;vertical-align:top;padding:8px 10px;border-top:1px solid var(--line)}
+.ctable th{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-top:0}
+.ctable code{font-size:13px;overflow-wrap:anywhere}
+@media (max-width:560px){.ctable thead{display:none}.ctable tr{display:block;padding:8px 0;border-top:1px solid var(--line)}.ctable td{display:block;border:0;padding:2px 0}.ctable td:first-child{font-weight:700}}
+/* one Daily day */
+.dday{display:grid;gap:16px}
+.dcard{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:start;background:var(--surface-2);border-radius:14px;padding:14px}
+.dcard img{width:120px;height:auto;border-radius:6px;display:block}
+.dcard h2{margin:0 0 6px;padding:0;border:0;font-size:18px}
+.dcard p{margin:0 0 6px;font-size:15px}
+.dnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}
+.dnav a{font-weight:700}
+.months h2{font-size:18px}
+.months ul{columns:2;column-gap:24px;list-style:none;padding:0}
+.months li{break-inside:avoid}
+@media (max-width:420px){.dcard{grid-template-columns:84px 1fr}.dcard img{width:84px}.months ul{columns:1}}
 .sitefoot nav a:hover,.sitefoot nav a[aria-current="page"]{text-decoration:underline;text-decoration-color:var(--gold-deep);text-underline-offset:3px}
 .foot{display:none}
 h3{margin:18px 0 6px;font:800 17px/1.2 var(--display);font-stretch:110%}

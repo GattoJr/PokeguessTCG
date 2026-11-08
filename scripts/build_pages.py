@@ -1,71 +1,16 @@
-"""Builds the site pages (How to play, FAQ, Daily archive, About, 404) from one template,
-and puts the same header and footer on privacy.html and terms.html.
+"""Builds the site pages (How to play, FAQ, Daily archive, About, 404, Privacy, Cookies, Terms) from one
+template (sitekit.py). The legal texts are in legal_pages.py. The pages of each past Daily are built by
+build_archive.py, which needs the game server.
 
 Run from the repository root:  python3 scripts/build_pages.py
 Edit the texts here, not in the generated .html files (they are overwritten).
 The pages are reached only from the links at the bottom of every page.
 """
+import sys
 import pathlib
-import re
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
-LOGO = (ROOT / "favicon.svg").read_text().replace('<svg xmlns="http://www.w3.org/2000/svg"', '<svg aria-hidden="true"').replace('id="h"', 'id="lgclip"').replace('url(#h)', 'url(#lgclip)')
-
-LINKS = [("how-to-play.html", "How to play"), ("faq.html", "FAQ"), ("archive.html", "Daily archive"),
-         ("about.html", "About"), ("privacy.html", "Privacy"), ("terms.html", "Terms")]
-
-
-def head(title, desc, base=""):
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-{base}<meta name="theme-color" content="#0F1A31">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<title>{title}</title>
-<meta name="description" content="{desc}">
-<meta property="og:title" content="{title}">
-<meta property="og:description" content="{desc}">
-<meta property="og:image" content="https://gattojr.github.io/PokeguessTCG/og.png">
-<script>try{{var t=localStorage.getItem('pg_theme'); if(t==='light'||t==='dark') document.documentElement.setAttribute('data-theme',t);}}catch(e){{}}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,700..900&family=Instrument+Sans:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="legal.css">
-</head>"""
-
-
-def top():
-    return f"""<header class="pagetop">
-    <a class="brand" href="./">{LOGO}<b>Pokeguess<span>TCG</span></b></a>
-    <a class="play" href="./">Play</a>
-  </header>"""
-
-
-def foot(current):
-    cur = ' aria-current="page"'
-    links = "".join('<a href="%s"%s>%s</a>' % (h, cur if h == current else "", t) for h, t in LINKS)
-    return f"""<footer class="sitefoot">
-    <nav aria-label="Site pages">{links}</nav>
-    Unofficial fan site. Card data from <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>. Pokémon and card images are © Nintendo, Creatures, GAME FREAK and The Pokémon Company.
-  </footer>"""
-
-
-def page(name, title, desc, body, base="", scripts=""):
-    html = f"""{head(title, desc, base)}
-<body>
-<div class="page">
-  {top()}
-  <main class="doc">
-{body}
-  </main>
-  {foot(name)}
-</div>
-{scripts}</body>
-</html>
-"""
-    (ROOT / name).write_text(html)
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from sitekit import page  # noqa: E402
 
 
 def mini(hard=False, free=(30,)):
@@ -125,12 +70,15 @@ FAQ = [
     ("What is Hard mode?", "Only the 34 tiles on the edge can be opened, so you see much less of the artwork. Each card is worth 200 points and a wrong guess costs 30."),
     ("Do I need an account?", "No. Guests can play every mode and earn badges in their browser. Signing in with Google keeps your results on every device and puts your best Booster on the leaderboard."),
     ("Where can I see past Daily cards?", "In the Daily archive, with how all players did and your own score."),
+    ("Why are there ads?", "Ads pay for the servers and keep the game free for everyone. They never cover the card, the tiles or the guess box, and a few spaces on the page are all there is."),
+    ("How do I change my cookie choices?", "Choose Privacy choices at the bottom of any page. You can accept or refuse personalised ads at any time; if you refuse, you still see ads, just not based on your interests. The <a href=\"cookies.html\">Cookie Policy</a> lists everything the site stores."),
+    ("Can I play with an ad blocker?", "Yes, the game works the same. If you enjoy it, allowing ads on PokeguessTCG is the simplest way to support it."),
     ("Is this an official Pokémon game?", "No. PokeguessTCG is an unofficial fan site, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company."),
     ("How do I delete my account?", "Open your profile (your name at the top), choose Delete account at the bottom and confirm. Your username, scores, badges and leaderboard place are deleted straight away and for good. If you can't sign in any more, write to pokeguesstcg@gmail.com from the email address of your account."),
 ]
-page("faq.html", "FAQ · PokeguessTCG", "Answers about PokeguessTCG: the Daily card, scoring, Hard mode, streaks, accounts and the cards in the game.",
+page("faq.html", "FAQ · PokeguessTCG", "Answers about PokeguessTCG: the Daily card, scoring, Hard mode, streaks, accounts, ads and cookies.",
      """    <h1>Frequently asked questions</h1>
-    <p class="lead">Short answers about the Daily card, scoring, accounts and the cards in the game.</p>
+    <p class="lead">Short answers about the Daily card, scoring, accounts, ads and cookies.</p>
     <div class="faq">
 """ + "\n".join(f"      <details{' open' if i == 0 else ''}><summary>{q}</summary><p>{a}</p></details>" for i, (q, a) in enumerate(FAQ)) + """
     </div>
@@ -145,14 +93,14 @@ page("about.html", "About · PokeguessTCG", "What PokeguessTCG is, who makes it 
     <p>Collectors know cards by their artwork long before they read the name. PokeguessTCG turns that into a daily puzzle: a new card every day, the same for everyone, plus Booster runs of ten cards and a Hard mode for the experts.</p>
 
     <h2>Who makes it</h2>
-    <p>PokeguessTCG is made by a single fan in Italy, in their free time. It has no publisher and no sponsor.</p>
+    <p>PokeguessTCG is made by a single fan in Italy, in their free time. It has no publisher: ads on the page pay for the servers, so the game stays free.</p>
 
     <h2>The cards</h2>
     <p>Card names, sets and images come from <a href="https://tcgdex.dev" target="_blank" rel="noopener">TCGdex</a>, an open database of Pokémon TCG cards (MIT licence). The game uses regular cards from the Scarlet &amp; Violet, Sword &amp; Shield and Mega Evolution series.</p>
     <div class="box">PokeguessTCG is an unofficial fan site. It is not affiliated with, sponsored or endorsed by Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon, card names and card images are trademarks and copyright of their owners. If you own rights to any content here and want it removed, write to the address below.</div>
 
     <h2>How it works</h2>
-    <p>The game runs in your browser. Scores, the Daily schedule and accounts are kept on servers in the European Union. Signing in is optional and uses Google. Read the <a href="privacy.html">Privacy Policy</a> for the details.</p>
+    <p>The game runs in your browser. Scores, the Daily schedule and accounts are kept on servers in the European Union. Signing in is optional and uses Google. Ads are served by Google AdSense, and you choose whether they can be personalised. Read the <a href="privacy.html">Privacy Policy</a> and the <a href="cookies.html">Cookie Policy</a> for the details.</p>
 
     <h2>Contact</h2>
     <p>Ideas, bugs or questions: <a href="mailto:pokeguesstcg@gmail.com">pokeguesstcg@gmail.com</a>.</p>""")
@@ -228,7 +176,8 @@ page("archive.html", "Daily archive · PokeguessTCG", "Every past Daily card of 
     <div class="seg" role="tablist" aria-label="Mode"><button type="button" role="tab" data-hard="0" aria-selected="true">Daily</button><button type="button" role="tab" data-hard="1" aria-selected="false">Daily <i>(Hard)</i></button></div>
     <ul class="arch" id="arch" aria-live="polite"></ul>
     <p class="status" id="status"></p>
-    <button class="morebtn" id="more" type="button" hidden>Show older cards</button>""", scripts=ARCHIVE_JS)
+    <button class="morebtn" id="more" type="button" hidden>Show older cards</button>
+    <p style="margin-top:16px"><a href="daily/">Browse every Daily card by date</a></p>""", scripts=ARCHIVE_JS)
 
 # ---------------- 404 ----------------
 page("404.html", "Page not found · PokeguessTCG", "This page doesn’t exist.",
@@ -237,16 +186,7 @@ page("404.html", "Page not found · PokeguessTCG", "This page doesn’t exist.",
     <h1>This page is still face down</h1>
     <p class="lead">The address doesn’t match any page. Today’s card is waiting on the home page.</p>
     <p><a class="play" href="./" style="display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:12px;background:var(--gold);color:#2E2300;font-weight:700;text-decoration:none;box-shadow:inset 0 -3px 0 var(--gold-deep)">Play today’s card</a></p>
-    </div>""", base='<base href="/PokeguessTCG/">\n')
+    </div>""", base='<base href="/PokeguessTCG/">\n', ads=False)
 
-# ---------------- Privacy and Terms: same header and footer ----------------
-for name in ("privacy.html", "terms.html"):
-    p = ROOT / name
-    s = p.read_text()
-    s = re.sub(r'  <a class="back" href="\./">‹ Back to the game</a>\n|  <header class="pagetop">.*?</header>\n', "  " + top() + "\n", s, flags=re.S)
-    s = re.sub(r'  <p class="foot">.*?</p>\n|  <footer class="sitefoot">.*?</footer>\n', "  " + foot(name) + "\n", s, flags=re.S)
-    if "pg_theme" not in s:
-        s = s.replace('<link rel="preconnect" href="https://fonts.googleapis.com">',
-                      "<script>try{var t=localStorage.getItem('pg_theme'); if(t==='light'||t==='dark') document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">", 1)
-    p.write_text(s)
+import legal_pages  # noqa: E402,F401  (writes privacy.html, cookies.html, terms.html)
 print("pages built")

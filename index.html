@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0F1A31">
 <title>PokeguessTCG</title>
 <meta name="description" content="Name the Pokémon card from its artwork. Open tiles, spend points, guess the card. A new Daily card every day.">
+<link rel="canonical" href="https://gattojr.github.io/PokeguessTCG/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
@@ -342,7 +343,11 @@ details p{color:var(--muted);margin:8px 0}
 
 /* layout: one column on phones (meter, artwork, key, play, result), two on wide screens */
 .layout{display:flex;flex-direction:column;gap:12px}
-.colA,.colB{display:contents}
+.colA,.colB,.colBw{display:contents}
+.app{position:relative}
+:root{--pgc-bottom:calc(76px + 12px)}
+.adslot[data-ad="rail"]{position:absolute;top:0;left:100%;margin-left:24px}
+.adslot[data-ad="phone"]{width:100%}
 #board{order:1} #sleeve{order:2} #tileKey{order:3} #msg{order:4} #play{order:5} #result{order:6} #resShared{order:7}
 
 /* tiles: three tones (5 / 15 / 60) with a light foil sheen; the value shows on hover */
@@ -454,7 +459,7 @@ details p{color:var(--muted);margin:8px 0}
 body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
 .foot{text-align:center;font-size:12px}
 .footlinks{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;margin-bottom:6px}
-.footlinks a{font-weight:700;font-size:14px;color:var(--ink);text-decoration:none}
+.footlinks a,.footlinks .pgchoices{font-weight:700;font-size:14px;color:var(--ink);text-decoration:none}
 .footlinks a:hover{text-decoration:underline;text-decoration-color:var(--gold-deep);text-underline-offset:3px}
 @media (min-width:1000px){.footlinks{justify-content:flex-start}}
 
@@ -474,7 +479,9 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
   .modes{max-width:640px}
   .layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
   .colA{display:flex;flex-direction:column;gap:10px}
-  .colB{display:flex;flex-direction:column;gap:12px;background:var(--surface);border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(8,18,40,.12);position:sticky;top:16px}
+  :root{--pgc-bottom:16px}
+  .colBw{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .colB{display:flex;flex-direction:column;gap:12px;background:var(--surface);border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(8,18,40,.12)}
   .colB .result{border:0;padding:0;background:transparent;grid-template-columns:1fr;justify-items:center;text-align:center}
   .colB .result > img{width:150px}
   .colB .result .acts,.colB .countdown,.colB .sharebtn{width:100%;justify-self:stretch;text-align:left}
@@ -487,6 +494,7 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
 </head>
 <body>
 <div class="app">
+  <aside class="adslot" data-ad="rail" aria-label="Advertisement" hidden><span class="adlabel">Advertisement</span><div class="adbox"></div></aside>
   <header class="top">
     <a class="brand" href="./" aria-label="PokeguessTCG home">
       <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><use href="#logoMark"/></svg>
@@ -529,6 +537,7 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
     </div>
     <div class="tilekey" id="tileKey" aria-hidden="true"><span><i class="k0"></i>5</span><span><i class="k1"></i>15</span><span><i class="k2"></i>60 points</span><em id="tileKeyHard" hidden>Hard: only the outer tiles open</em></div>
   </div>
+  <div class="colBw">
   <div class="colB">
   <div id="board">
     <div class="meter">
@@ -571,6 +580,8 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
   </section>
   <p class="shared" id="resShared" aria-live="polite" hidden></p>
   </div>
+  <aside class="adslot" data-ad="side" aria-label="Advertisement" hidden><span class="adlabel">Advertisement</span><div class="adbox"></div></aside>
+  </div>
   </div>
 
   <details id="rules">
@@ -591,8 +602,10 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
     </div>
   </details>
 
+  <aside class="adslot" data-ad="phone" aria-label="Advertisement" hidden><span class="adlabel">Advertisement</span><div class="adbox"></div></aside>
+  <aside class="adslot" data-ad="foot" aria-label="Advertisement" hidden><span class="adlabel">Advertisement</span><div class="adbox"></div></aside>
   <footer class="foot">
-    <nav class="footlinks" aria-label="Site pages"><a href="how-to-play.html">How to play</a><a href="faq.html">FAQ</a><a href="archive.html">Daily archive</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
+    <nav class="footlinks" aria-label="Site pages"><a href="how-to-play.html">How to play</a><a href="faq.html">FAQ</a><a href="archive.html">Daily archive</a><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="cookies.html">Cookies</a><a href="terms.html">Terms</a><button type="button" class="pgchoices" data-privacy-choices>Privacy choices</button></nav>
     Unofficial fan site. Card data from <a href="https://github.com/tcgdex/cards-database" target="_blank" rel="noopener">TCGdex</a>. Pokémon and card images are © Nintendo, Creatures, GAME FREAK and The Pokémon Company.
   </footer>
 </div>
@@ -846,7 +859,8 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
-<script src="config.js?v=5"></script>
+<script src="config.js?v=6"></script>
+<script src="consent.js?v=2"></script>
 <script>
 (function(){
 'use strict';
@@ -1251,6 +1265,8 @@ function showIntro(lastTotal, resume){
   }
   renderMeter(); renderStatus();
 }
+/* a new Booster after a finished one: the moment for a full-screen ad, when H5 Games Ads is on */
+function boosterAgain(){ if(window.PG_ADS) PG_ADS.adBreak('booster-again', startBooster); else startBooster(); }
 function startBooster(){
   if(S.busy) return; S.busy=true;
   var hard=S.hard;
@@ -1275,7 +1291,7 @@ function nextCard(){
       renderStatus();
       openBoosterStats(d.total, d.stats, hard);
       checkNewBadges('drNew');
-      $('btnResMain').textContent='Open another booster'; $('btnResMain').onclick=function(){ closeAll(); startBooster(); };
+      $('btnResMain').textContent='Open another booster'; $('btnResMain').onclick=function(){ closeAll(); boosterAgain(); };
       return;
     }
     $('play').hidden=false; showRound(d.round);
@@ -1362,7 +1378,7 @@ function openBoosterStats(total, st, hard){
   $('drPlayers').textContent = 'Compared with the best booster of '+fmt(st.players)+' player'+(st.players===1?'':'s')+'.';
   guestNote(true);
   var main=$('drMain'), alt=$('drAlt');
-  main.textContent='Play again'; main.onclick=function(){ closeAll(); startBooster(); };
+  main.textContent='Play again'; main.onclick=function(){ closeAll(); boosterAgain(); };
   alt.hidden=false; alt.textContent='Leaderboard'; alt.onclick=function(){ closeAll(); openBoard(hard); };
   var sh=$('drShare'); resetShareBtn(sh); sh.onclick=function(){ shareResult(boosterShareText(total, hard), sh); };
   $('dlgResult').showModal();
@@ -2295,7 +2311,7 @@ function boot(){
     switchMode('daily', false);   // Daily first: if today's card is done, its final screen shows
     booted=true;
     primeBadges();
-    if(!lsGet('pg_coach') && !pendingRecovery && !(URL_AUTH.code||URL_AUTH.error)) setTimeout(function(){ if(!document.querySelector('dialog[open]')) startCoach(); else lsSet('pg_coach',1); },900);
+    if(!lsGet('pg_coach') && !pendingRecovery && !(URL_AUTH.code||URL_AUTH.error)) (window.PG_ADS ? PG_ADS.whenDecided : function(f){ f(); })(function(){ setTimeout(function(){ if(!document.querySelector('dialog[open]')) startCoach(); else lsSet('pg_coach',1); },900); });
     if(pendingRecovery) openRecovery(); else checkEmailLink(signedIn);
   });
 }

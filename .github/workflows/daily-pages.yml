@@ -1,0 +1,35 @@
+# Builds one page for each past Daily card (daily/), the list of all days and sitemap.xml,
+# every day a few minutes after the Daily card changes (midnight UTC), and whenever the page scripts change.
+# Uses only the public key in config.js: no secrets needed.
+name: Daily pages
+on:
+  schedule:
+    - cron: '7 0 * * *'
+  push:
+    branches: [main]
+    paths: ['scripts/build_archive.py', 'scripts/sitekit.py', '.github/workflows/daily-pages.yml']
+  workflow_dispatch:
+concurrency: daily-pages
+permissions:
+  contents: write
+  pages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the pages
+        run: python3 scripts/build_archive.py
+      - name: Publish them
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add -A daily sitemap.xml
+          if git diff --cached --quiet; then echo "Nothing changed"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Daily pages: $(date -u +%F)"
+          git pull -q --rebase origin main
+          git push -q origin HEAD:main
+          # a push made by this workflow may not start the site build by itself: ask for one
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" >/dev/null || echo "::notice::Site build request skipped"

@@ -1,0 +1,4 @@
+# Authorised sellers of the ads on this site (IAB ads.txt). AdSense checks it at the ROOT of the domain
+# (https://your-domain/ads.txt), so it works only once the site has its own domain.
+# When AdSense is approved, replace the line below with the one shown in AdSense > Sites (remove the leading #):
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
