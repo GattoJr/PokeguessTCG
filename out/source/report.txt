@@ -1,0 +1,57 @@
+no LICENSE file
+pokemontcg.io sets: 177, newest: me4 Chaos Rising (2026/05/22), me5 Pitch Black (2026/07/17), me55 30th Celebration (2026/09/16), me55c 30th Celebration: Classic Collection (2026/09/16), me6 Delta Reign (2026/11/06)
+
+COVERAGE: 4318 of 4351 playable cards found (99.2%)
+Sets not found by name: 2
+  - fut2020 Pokémon Futsal 2020 (2020-09-11, 5 cards)
+  - mfb My First Battle (2023-09-29, 28 cards)
+
+Per set (ours -> pokemontcg.io, cards found / playable):
+  swsh1      -> swsh1       132/ 132  Sword & Shield
+  swsh2      -> swsh2       130/ 130  Rebel Clash
+  swsh3      -> swsh3       135/ 135  Darkness Ablaze
+  swsh3.5    -> swsh35       35/  35  Champion's Path
+  swsh4      -> swsh4       128/ 128  Vivid Voltage
+  swsh4.5    -> swsh45       42/  42  Shining Fates
+  swsh5      -> swsh5       102/ 102  Battle Styles
+  swsh6      -> swsh6       105/ 105  Chilling Reign
+  swsh7      -> swsh7       107/ 107  Evolving Skies
+  cel25      -> cel25        16/  16  Celebrations
+  swsh8      -> swsh8       196/ 196  Fusion Strike
+  swsh9      -> swsh9       101/ 101  Brilliant Stars
+  swsh10     -> swsh10      106/ 106  Astral Radiance
+  swsh10.5   -> pgo          54/  54  Pokémon GO
+  swsh11     -> swsh11      132/ 132  Lost Origin
+  swsh12     -> swsh12      128/ 128  Silver Tempest
+  swsh12.5   -> swsh12pt5    92/  92  Crown Zenith
+  sv01       -> sv1         153/ 153  Scarlet & Violet
+  sv02       -> sv2         153/ 153  Paldea Evolved
+  sv03       -> sv3         164/ 164  Obsidian Flames
+  sv03.5     -> sv3pt5      139/ 139  151
+  sv04       -> sv4         138/ 138  Paradox Rift
+  sv04.5     -> sv4pt5      185/ 185  Paldean Fates
+  sv05       -> sv5         124/ 124  Temporal Forces
+  sv06       -> sv6         127/ 127  Twilight Masquerade
+  sv06.5     -> sv6pt5       47/  47  Shrouded Fable
+  sv07       -> sv7         114/ 114  Stellar Crown
+  sv08       -> sv8         143/ 143  Surging Sparks
+  sv08.5     -> sv8pt5       67/  67  Prismatic Evolutions
+  sv09       -> sv9         125/ 125  Journey Together
+  sv10       -> sv10        143/ 143  Destined Rivals
+  sv10.5b    -> zsv10pt5     72/  72  Black Bolt
+  sv10.5w    -> rsv10pt5     72/  72  White Flare
+  me01       -> me1         102/ 102  Mega Evolution
+  me02       -> me2          74/  74  Phantasmal Flames
+  me02.5     -> me2pt5      140/ 140  Ascended Heroes
+  me03       -> me3          58/  58  Perfect Order
+  me04       -> me4          63/  63  Chaos Rising
+  me05       -> me5          61/  61  Pitch Black
+  30th       -> me55        113/ 113  30th Celebration
+
+PICTURES
+Fuecoco: TCGdex 600x825, artwork 502x297
+   pokemontcg.io 734x1024 (https://images.pokemontcg.io/sv1/36_hires.png), artwork 615x364 = 1.225x, match 0.920, window as fractions [0.0858, 0.1084, 0.8379, 0.3555]
+   sharpness at 1004px (higher = more detail): TCGdex 187, pokemontcg.io 478
+Pawmo: TCGdex 600x825, artwork 502x297
+   pokemontcg.io 734x1024 (https://images.pokemontcg.io/sv1/75_hires.png), artwork 617x365 = 1.230x, match 0.905, window as fractions [0.0845, 0.1074, 0.8406, 0.3564]
+   sharpness at 1004px (higher = more detail): TCGdex 74, pokemontcg.io 172
