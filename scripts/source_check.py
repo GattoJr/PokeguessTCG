@@ -20,7 +20,13 @@ def say(s=""): print(s); log.append(s)
 def norm(s): return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower())
 def num(n): return n.lstrip("0") or "0"
 def get(url):
-    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "pokeguesstcg-check"}), timeout=60).read()
+    import time
+    for i in range(6):
+        try:
+            return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (pokeguesstcg-check)"}), timeout=60).read()
+        except Exception as e:
+            print(f"   retry {i + 1} {url}: {e}"); err = e; time.sleep(5 * (i + 1))
+    raise RuntimeError(f"{url}: {err}")
 
 # ---- 1. coverage
 say("LICENSE of PokemonTCG/pokemon-tcg-data: " + (DATA / "LICENSE").read_text().splitlines()[0] if (DATA / "LICENSE").exists() else "no LICENSE file")
@@ -57,6 +63,7 @@ for r in rows: say("  " + r)
 font = ImageFont.load_default(size=28)
 def sharp(img):  # variance of the Laplacian, same size for both
     return cv2.Laplacian(cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2GRAY), cv2.CV_64F).var()
+(OUT / "report.txt").write_text("\n".join(log) + "\n")
 say(""); say("PICTURES")
 for tnum, pnum, name in [("036", "36", "Fuecoco"), ("075", "75", "Pawmo")]:
     t = Image.open(io.BytesIO(get(f"https://assets.tcgdex.net/en/sv/sv01/{tnum}/high.png"))).convert("RGB")
@@ -76,7 +83,7 @@ for tnum, pnum, name in [("036", "36", "Fuecoco"), ("075", "75", "Pawmo")]:
     v, s, (px, py), pw, ph = best
     PW, PH = p.size
     part = p.crop((px, py, px + pw, py + ph))
-    say(f"{name}: TCGdex {W}x{H} ({len(get(f'https://assets.tcgdex.net/en/sv/sv01/{tnum}/high.png')) // 1024} KB png), artwork {w}x{h}")
+    say(f"{name}: TCGdex {W}x{H}, artwork {w}x{h}")
     say(f"   pokemontcg.io {PW}x{PH} ({url}), artwork {pw}x{ph} = {s:.3f}x, match {v:.3f}, "
         f"window as fractions [{px / PW:.4f}, {py / PH:.4f}, {pw / PW:.4f}, {ph / PH:.4f}]")
     D = (1004, round(1004 * h / w))
