@@ -3,7 +3,9 @@ through the Supabase Management API. Run by the GitHub Action "Configure Supabas
 
 Needs SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID in the environment (the same repository secrets
 as the deploy action). It changes only the fields listed here: the email sending service (SMTP),
-the Google provider and the allowed redirect addresses are left as they are in the Supabase dashboard.
+the Google provider are left as they are in the Supabase dashboard. The allowed redirect addresses
+are only added to: "redirect_urls_add" in settings.json lists addresses that must be allowed, and the ones
+already set in the dashboard are kept.
 """
 import json
 import os
@@ -42,7 +44,12 @@ def main():
     body = json.loads((ROOT / "settings.json").read_text())
     # On the free plan Supabase accepts custom email templates only once a custom SMTP service is set:
     # until then the players get Supabase's standard emails (a link, no code). Run this again after setting SMTP.
-    smtp_before = bool(call("GET").get("smtp_host"))
+    current = call("GET")
+    smtp_before = bool(current.get("smtp_host"))
+    add = body.pop("redirect_urls_add", [])
+    if add:
+        have = [u.strip() for u in (current.get("uri_allow_list") or "").split(",") if u.strip()]
+        body["uri_allow_list"] = ",".join(have + [u for u in add if u not in have])
     if smtp_before:
         body["mailer_templates_confirmation_content"] = (ROOT / "confirmation.html").read_text()
         body["mailer_templates_recovery_content"] = (ROOT / "recovery.html").read_text()

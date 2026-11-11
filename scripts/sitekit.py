@@ -4,7 +4,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 # Public address of the site. Change it here when the site moves to its own domain.
-SITE = "https://gattojr.github.io/PokeguessTCG/"
+SITE = "https://pokeguesstcg.tototips.workers.dev/"
 LOGO = (ROOT / "favicon.svg").read_text().replace('<svg xmlns="http://www.w3.org/2000/svg"', '<svg aria-hidden="true"').replace('id="h"', 'id="lgclip"').replace('url(#h)', 'url(#lgclip)')
 
 LINKS = [("how-to-play.html", "How to play"), ("faq.html", "FAQ"), ("archive.html", "Daily archive"),

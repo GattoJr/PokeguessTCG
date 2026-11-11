@@ -6,19 +6,19 @@
 <meta name="theme-color" content="#0F1A31">
 <title>PokeguessTCG</title>
 <meta name="description" content="Name the Pokémon card from its artwork. Open tiles, spend points, guess the card. A new Daily card every day.">
-<link rel="canonical" href="https://gattojr.github.io/PokeguessTCG/">
+<link rel="canonical" href="https://pokeguesstcg.tototips.workers.dev/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PokeguessTCG">
 <meta property="og:title" content="PokeguessTCG: name the card from its artwork">
 <meta property="og:description" content="Open tiles, spend points, guess the Pokémon card. A new Daily card every day.">
-<meta property="og:url" content="https://gattojr.github.io/PokeguessTCG/">
-<meta property="og:image" content="https://gattojr.github.io/PokeguessTCG/og.png">
+<meta property="og:url" content="https://pokeguesstcg.tototips.workers.dev/">
+<meta property="og:image" content="https://pokeguesstcg.tototips.workers.dev/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://gattojr.github.io/PokeguessTCG/og.png">
+<meta name="twitter:image" content="https://pokeguesstcg.tototips.workers.dev/og.png">
 <script>/* theme chosen in the profile: Auto (follows the device), Light or Dark */
 try{ var t=localStorage.getItem('pg_theme'); if(t==='light'||t==='dark') document.documentElement.setAttribute('data-theme',t); }catch(e){}</script>
 <link rel="preconnect" href="https://uyqcrpixzmfjcvqsgctk.supabase.co" crossorigin>
@@ -1781,7 +1781,7 @@ function tickCountdown(){
   $('cdTime').textContent=(h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
 }
 /* sharing: an emoji picture of the tiles opened, never the card */
-var SITE_URL='https://gattojr.github.io/PokeguessTCG/';
+var SITE_URL='https://pokeguesstcg.tototips.workers.dev/';
 function dailyShareText(rd){
   return 'I scored '+fmt(rd.won ? rd.score : 0)+'/'+fmt(rd.points)+' on the PokeguessTCG Daily'+(rd.hard?' (Hard)':'')+' challenge - '+SITE_URL;
 }

@@ -186,7 +186,7 @@ page("404.html", "Page not found · PokeguessTCG", "This page doesn’t exist.",
     <h1>This page is still face down</h1>
     <p class="lead">The address doesn’t match any page. Today’s card is waiting on the home page.</p>
     <p><a class="play" href="./" style="display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:12px;background:var(--gold);color:#2E2300;font-weight:700;text-decoration:none;box-shadow:inset 0 -3px 0 var(--gold-deep)">Play today’s card</a></p>
-    </div>""", base='<base href="/PokeguessTCG/">\n', ads=False)
+    </div>""", base='<base href="/">\n', ads=False)
 
 import legal_pages  # noqa: E402,F401  (writes privacy.html, cookies.html, terms.html)
 print("pages built")
