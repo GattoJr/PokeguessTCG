@@ -1,0 +1,9 @@
+/home/runner/work/PokeguessTCG/PokeguessTCG/scripts/render_art.py:30: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:208.)
+  t = torch.from_numpy(np.asarray(img)).permute(2, 0, 1).unsqueeze(0).float() / 255
+/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/PIL/Image.py:1134: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+sv10-088 Team Rocket's Dottler censored 153 KB, full 156 KB, (1200, 711)
+me05-041 Annihilape censored 199 KB, full 204 KB, (1200, 711)
+swsh1-76 Boltund censored 118 KB, full 122 KB, (1200, 716)
+sv06.5-024 Toxicroak censored 162 KB, full 165 KB, (1200, 710)
+30th-061 Morpeko censored 105 KB, full 105 KB, (1200, 709)
