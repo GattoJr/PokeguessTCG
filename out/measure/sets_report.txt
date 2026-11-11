@@ -1,0 +1,124 @@
+PICTURE SIZES PER SET
+  swsh1      734x1024 pokemontcg.io: 132
+  swsh2      734x1024 pokemontcg.io: 130
+  swsh3      734x1024 pokemontcg.io: 135
+  fut2020    600x825 tcgdex: 5
+  swsh3.5    734x1024 pokemontcg.io: 35
+  swsh4      734x1024 pokemontcg.io: 128
+  swsh4.5    734x1024 pokemontcg.io: 42
+  swsh5      734x1024 pokemontcg.io: 102
+  swsh6      734x1024 pokemontcg.io: 105
+  swsh7      734x1024 pokemontcg.io: 107
+  cel25      734x1024 pokemontcg.io: 16
+  swsh8      734x1024 pokemontcg.io: 196
+  swsh9      734x1024 pokemontcg.io: 101
+  swsh10     734x1024 pokemontcg.io: 106
+  swsh10.5   734x1024 pokemontcg.io: 54
+  swsh11     734x1024 pokemontcg.io: 132
+  swsh12     734x1024 pokemontcg.io: 128
+  swsh12.5   734x1024 pokemontcg.io: 92
+  sv01       734x1024 pokemontcg.io: 153
+  sv02       734x1021 pokemontcg.io: 153
+  sv03       733x1024 pokemontcg.io: 164
+  sv03.5     733x1024 pokemontcg.io: 139
+  mfb        None None: 28
+  sv04       733x1024 pokemontcg.io: 138
+  sv04.5     733x1024 pokemontcg.io: 185
+  sv05       733x1024 pokemontcg.io: 124
+  sv06       733x1024 pokemontcg.io: 127
+  sv06.5     658x918 pokemontcg.io: 47
+  sv07       1423x1984 pokemontcg.io: 114
+  sv08       733x1024 pokemontcg.io: 143
+  sv08.5     733x1024 pokemontcg.io: 67
+  sv09       733x1024 pokemontcg.io: 125
+  sv10       733x1024 pokemontcg.io: 143
+  sv10.5b    733x1024 pokemontcg.io: 71, 600x825 tcgdex: 1
+  sv10.5w    733x1024 pokemontcg.io: 72
+  me01       733x1024 pokemontcg.io: 102
+  me02       733x1024 pokemontcg.io: 74
+  me02.5     733x1024 pokemontcg.io: 140
+  me03       733x1024 pokemontcg.io: 58
+  me04       733x1024 pokemontcg.io: 63
+  me05       733x1024 pokemontcg.io: 61
+  30th       652x914 pokemontcg.io: 113
+
+ARTWORK WINDOW PER SET (pokemontcg.io fractions)
+  30th       me    30th-001       652x914 match 0.890 crop [0.0767, 0.1039, 0.8505, 0.3590]
+  me02.5     me    me02.5-001     733x1024 match 0.948 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me02.5     me    me02.5-002     733x1024 match 0.923 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me04       me    me04-001       733x1024 match 0.960 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me04       me    me04-002       733x1024 match 0.907 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me01       me    me01-001       733x1024 match 0.965 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me01       me    me01-002       733x1024 match 0.882 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me03       me    me03-001       733x1024 match 0.840 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me03       me    me03-002       733x1024 match 0.949 crop [0.0846, 0.1064, 0.8408, 0.3561]
+  me02       me    me02-001       733x1024 match 0.924 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me02       me    me02-002       733x1024 match 0.931 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  me05       me    me05-001       733x1024 match 0.915 crop [0.0859, 0.1074, 0.8394, 0.3555]
+  me05       me    me05-006       733x1024 match 0.927 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv03.5     sv    sv03.5-001     733x1024 match 0.961 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv03.5     sv    sv03.5-002     733x1024 match 0.958 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv10.5b    sv    sv10.5b-001    733x1024 match 0.935 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv10.5b    sv    sv10.5b-002    733x1024 match 0.939 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv10       sv    sv10-001       733x1024 match 0.922 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv10       sv    sv10-006       733x1024 match 0.928 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv09       sv    sv09-001       733x1024 match 0.903 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv09       sv    sv09-002       733x1024 match 0.928 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv03       sv    sv03-001       733x1024 match 0.944 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv03       sv    sv03-002       733x1024 match 0.746 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv02       sv    sv02-001       734x1021 match 0.863 crop [0.0872, 0.1077, 0.8353, 0.3553]
+  sv02       sv    sv02-002       734x1021 match 0.907 crop [0.0872, 0.1068, 0.8353, 0.3553]
+  sv04.5     sv    sv04.5-001     733x1024 match 0.966 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv04.5     sv    sv04.5-008     733x1024 match 0.956 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv04       sv    sv04-001       733x1024 match 0.925 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv04       sv    sv04-002       733x1024 match 0.947 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv08.5     sv    sv08.5-001     733x1024 match 0.932 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv08.5     sv    sv08.5-002     733x1024 match 0.825 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv01       sv    sv01-001       734x1024 match 0.884 crop [0.0845, 0.1074, 0.8394, 0.3560]
+  sv01       sv    sv01-004       734x1024 match 0.925 crop [0.0845, 0.1074, 0.8394, 0.3560]
+  sv06.5     sv    sv06.5-001     658x918 match 0.981 crop [0.0897, 0.1089, 0.8336, 0.3535]
+  sv06.5     sv    sv06.5-002     658x918 match 0.946 crop [0.0881, 0.1078, 0.8367, 0.3548]
+  sv07       sv    sv07-002       1423x1984 match 0.946 crop [0.0822, 0.1048, 0.8451, 0.3586]
+  sv07       sv    sv07-003       1423x1984 match 0.933 crop [0.0829, 0.1048, 0.8444, 0.3583]
+  sv08       sv    sv08-001       733x1024 match 0.900 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv08       sv    sv08-003       733x1024 match 0.960 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv05       sv    sv05-001       733x1024 match 0.893 crop [0.0846, 0.1064, 0.8408, 0.3561]
+  sv05       sv    sv05-004       733x1024 match 0.942 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv06       sv    sv06-001       733x1024 match 0.943 crop [0.0846, 0.1064, 0.8408, 0.3561]
+  sv06       sv    sv06-002       733x1024 match 0.930 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv10.5w    sv    sv10.5w-001    733x1024 match 0.957 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  sv10.5w    sv    sv10.5w-002    733x1024 match 0.927 crop [0.0846, 0.1074, 0.8408, 0.3561]
+  swsh10     swsh  swsh10-002     734x1024 match 0.958 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh10     swsh  swsh10-003     734x1024 match 0.929 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh5      swsh  swsh5-1        734x1024 match 0.898 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh5      swsh  swsh5-2        734x1024 match 0.918 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh9      swsh  swsh9-001      734x1024 match 0.946 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh9      swsh  swsh9-002      734x1024 match 0.946 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  cel25      swsh  cel25-1        734x1024 match 0.931 crop [0.0817, 0.1064, 0.8408, 0.3590]
+  cel25      swsh  cel25-14       734x1024 match 0.934 crop [0.0817, 0.1064, 0.8408, 0.3590]
+  swsh3.5    swsh  swsh3.5-2      734x1024 match 0.980 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh3.5    swsh  swsh3.5-3      734x1024 match 0.972 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh6      swsh  swsh6-1        734x1024 match 0.932 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh6      swsh  swsh6-2        734x1024 match 0.922 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh12.5   swsh  swsh12.5-001   734x1024 match 0.955 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh12.5   swsh  swsh12.5-002   734x1024 match 0.929 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh3      swsh  swsh3-3        734x1024 match 0.985 crop [0.0845, 0.1074, 0.8394, 0.3584]
+  swsh3      swsh  swsh3-4        734x1024 match 0.898 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh7      swsh  swsh7-1        734x1024 match 0.908 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh7      swsh  swsh7-3        734x1024 match 0.895 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh8      swsh  swsh8-1        734x1024 match 0.921 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh8      swsh  swsh8-2        734x1024 match 0.934 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh11     swsh  swsh11-001     734x1024 match 0.945 crop [0.0872, 0.1074, 0.8367, 0.3572]
+  swsh11     swsh  swsh11-002     734x1024 match 0.849 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh10.5   swsh  swsh10.5-001   734x1024 match 0.899 crop [0.0845, 0.1084, 0.8394, 0.3584]
+  swsh10.5   swsh  swsh10.5-002   734x1024 match 0.886 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh2      swsh  swsh2-1        734x1024 match 0.960 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh2      swsh  swsh2-2        734x1024 match 0.902 crop [0.0831, 0.1064, 0.8435, 0.3601]
+  swsh4.5    swsh  swsh4.5-1      734x1024 match 0.974 crop [0.0858, 0.1074, 0.8394, 0.3584]
+  swsh4.5    swsh  swsh4.5-2      734x1024 match 0.947 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh12     swsh  swsh12-001     734x1024 match 0.931 crop [0.0858, 0.1074, 0.8394, 0.3584]
+  swsh12     swsh  swsh12-002     734x1024 match 0.951 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh1      swsh  swsh1-2        734x1024 match 0.939 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh1      swsh  swsh1-4        734x1024 match 0.966 crop [0.0845, 0.1064, 0.8408, 0.3590]
+  swsh4      swsh  swsh4-1        734x1024 match 0.982 crop [0.0845, 0.1074, 0.8408, 0.3590]
+  swsh4      swsh  swsh4-2        734x1024 match 0.922 crop [0.0845, 0.1064, 0.8408, 0.3590]
