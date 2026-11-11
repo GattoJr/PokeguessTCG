@@ -1,10 +1,16 @@
-// Cloudflare Workers (static assets only): publishes the site from the repo root.
-// Files listed in .assetsignore are not uploaded.
+// Cloudflare Workers: publishes the site from the repo root (static assets; files listed in .assetsignore are
+// not uploaded) and, through worker.js, serves the card pictures from the R2 bucket at /art/<secret name>.webp.
 {
   "name": "pokeguesstcg",
   "compatibility_date": "2026-06-01",
+  "main": "worker.js",
   "assets": {
     "directory": ".",
-    "not_found_handling": "404-page"
-  }
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/art/*"]
+  },
+  "r2_buckets": [
+    { "binding": "ART", "bucket_name": "pokeguesstcg-art" }
+  ]
 }

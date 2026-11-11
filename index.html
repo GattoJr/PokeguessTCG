@@ -936,14 +936,17 @@ if(sb) sb.auth.onAuthStateChange(function(ev){
 function rpc(name,args){
   return sb.rpc(name,args||{}).then(function(r){ if(r.error) throw r.error; return r.data; });
 }
-/* Artwork: first the copy saved on Supabase's CDN (named by a secret key the server sends), then the image
-   function, which builds and saves it when it is not there yet. full = without the covers, only once the card is over. */
+/* Artwork, named by a secret key the server sends: first the sharp picture served by the site's Worker from R2,
+   then the older copy saved on Supabase's CDN, then the image function, which builds and saves it when it is not
+   there yet. full = without the covers, only once the card is over. */
 var SB_URL = (CFG.supabaseUrl||'').replace(/\/$/,'');
+var ART_URL = 'https://pokeguesstcg.tototips.workers.dev/art/';
+function hdUrl(key){ return ART_URL+key+'.webp'; }
 function cdnUrl(key){ return SB_URL+'/storage/v1/object/public/art/'+key+'.jpg'; }
 function artUrl(roundId,full){ return SB_URL+'/functions/v1/art?round='+encodeURIComponent(roundId)+(full?'&full=1':''); }
 function setArt(rd, full){
   var img=$('art'), key=full?rd.artFull:rd.art, list=[], i=0;
-  if(key) list.push(cdnUrl(key));
+  if(key) list.push(hdUrl(key), cdnUrl(key));
   list.push(artUrl(rd.id, full));
   img.onerror=function(){
     if(S.round!==rd) return;
@@ -960,7 +963,7 @@ function warmNext(data){
   warmed[data.next_art]=1;
   var a=new Image();
   a.onerror=function(){ var b=new Image(); b.src=SB_URL+'/functions/v1/art?run='+encodeURIComponent(data.run_id)+'&idx='+(data.idx+1); b.onload=function(){ var c=new Image(); c.src=cdnUrl(data.next_art); }; };
-  a.src=cdnUrl(data.next_art);
+  a.src=hdUrl(data.next_art);
 }
 
 /* ---------- State ---------- */
@@ -1085,7 +1088,7 @@ function addChip(text){
 function revealArt(rd){
   var stage=$('stage'), top=$('artTop');
   if(!rd.artFull){ stage.classList.add('done'); return; }
-  var list=[cdnUrl(rd.artFull), artUrl(rd.id,true)], i=0, done=false;
+  var list=[hdUrl(rd.artFull), cdnUrl(rd.artFull), artUrl(rd.id,true)], i=0, done=false;
   function finish(ok){
     if(done || S.round!==rd) return; done=true;
     if(ok) top.classList.add('on');   // the uncovered picture fades in over the covered one
