@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install spandrel pillow numpy
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install spandrel pillow numpy
       - run: |
           mkdir -p models
           curl -sSfL -o models/RealESRGAN_x4plus_anime_6B.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth
