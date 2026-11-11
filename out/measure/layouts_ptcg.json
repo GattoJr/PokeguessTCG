@@ -16,7 +16,7 @@
    "evot": [
     0.1882,
     0.0916,
-    0.3319,
+    0.4019,
     0.0297
    ]
   },
@@ -36,7 +36,7 @@
    "evot": [
     0.1832,
     0.0916,
-    0.342,
+    0.412,
     0.0297
    ]
   },
@@ -56,7 +56,7 @@
    "evot": [
     0.17,
     0.092,
-    0.3621,
+    0.4321,
     0.0298
    ]
   }
@@ -79,7 +79,7 @@
    "evot": [
     0.1764,
     0.0879,
-    0.3459,
+    0.4159,
     0.0299
    ]
   },
@@ -100,7 +100,7 @@
    "evot": [
     0.1901,
     0.0914,
-    0.3297,
+    0.3997,
     0.0296
    ]
   },
@@ -121,7 +121,7 @@
    "evot": [
     0.1918,
     0.0927,
-    0.3296,
+    0.3996,
     0.0295
    ]
   },
@@ -142,7 +142,7 @@
    "evot": [
     0.1867,
     0.0889,
-    0.3335,
+    0.4035,
     0.0299
    ]
   },
@@ -163,9 +163,10 @@
    "evot": [
     0.1672,
     0.0915,
-    0.3621,
+    0.4321,
     0.0298
    ]
   }
- }
+ },
+ "note": "Fractions [left, top, width, height] of the pokemontcg.io pictures, measured 11/11/2026 by template matching against the TCGdex layouts. 'series' = default, 'sets' = sets whose pictures differ. evot widened by 0.07 for long names. Cards taken from TCGdex (fut2020 and the few without a pokemontcg.io picture) keep the TCGdex layouts table."
 }
