@@ -2,7 +2,7 @@ name: Measure layouts
 on:
   push:
     branches: [upscale-test]
-    paths: ['scripts/measure_layouts.py', '.github/workflows/measure-layouts.yml']
+    paths: ['scripts/measure_layouts.py', 'scripts/measure_sets.py', '.github/workflows/measure-layouts.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -15,7 +15,11 @@ jobs:
         with: { python-version: '3.12' }
       - run: pip install boto3 pillow numpy opencv-python-headless
       - run: git clone --depth 1 https://github.com/PokemonTCG/pokemon-tcg-data ptcg-data
-      - run: python scripts/measure_layouts.py 2>&1 | tee log.txt; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::$(tail -4 log.txt | tr '\n' ' ')"; exit 1; }
+      - run: python scripts/measure_sets.py 2>&1 | tee log.txt; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::$(tail -4 log.txt | tr '\n' ' ')"; exit 1; }
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       - if: always()
         run: |
           git config user.name "github-actions[bot]"
