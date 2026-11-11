@@ -1,0 +1,32 @@
+name: Fetch card pictures
+# Downloads the original picture of every playable card into the R2 bucket (source/<card id>.png).
+# Run by hand from the Actions tab. Cards already in the bucket are skipped, so it can be re-run.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Only the first N cards of each job (0 = all). Use 10 for a first test.'
+        default: '10'
+      dry_run:
+        description: 'Only check which source each card would use (no download, no R2 needed)'
+        type: boolean
+        default: false
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install boto3 pillow
+      - run: git clone --depth 1 https://github.com/PokemonTCG/pokemon-tcg-data ptcg-data
+      - run: python scripts/fetch_sources.py --shard ${{ matrix.shard }}/4 --limit ${{ inputs.limit }} ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
