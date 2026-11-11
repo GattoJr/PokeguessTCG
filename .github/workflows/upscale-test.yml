@@ -2,7 +2,7 @@ name: Upscale test
 on:
   push:
     branches: [upscale-test]
-    paths: ['scripts/upscale_test.py', '.github/workflows/upscale-test.yml']
+    paths: ['scripts/upscale_test.py', 'scripts/source_check.py', '.github/workflows/upscale-test.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,11 +13,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install spandrel pillow numpy
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install spandrel pillow numpy opencv-python-headless
       - run: |
           mkdir -p models
           curl -sSfL -o models/RealESRGAN_x4plus_anime_6B.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth
           curl -sSfL -o models/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+      - run: git clone --depth 1 https://github.com/PokemonTCG/pokemon-tcg-data ptcg-data
+      - run: python scripts/source_check.py 2>&1 | tee log2.txt; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::$(tail -5 log2.txt | tr '\n' ' ')"; exit 1; }
       - run: python scripts/upscale_test.py 2>&1 | tee log.txt; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::$(tail -5 log.txt | tr '\n' ' ')"; exit 1; }
       - uses: actions/upload-artifact@v4
         with: { name: upscale-test, path: out/ }
