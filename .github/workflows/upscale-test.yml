@@ -1,0 +1,21 @@
+name: Upscale test
+on:
+  push:
+    branches: [upscale-test]
+    paths: ['scripts/upscale_test.py', '.github/workflows/upscale-test.yml']
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install spandrel pillow numpy
+      - run: |
+          mkdir -p models
+          curl -sSfL -o models/RealESRGAN_x4plus_anime_6B.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth
+          curl -sSfL -o models/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+      - run: python scripts/upscale_test.py 2>&1 | tee log.txt; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::$(tail -5 log.txt | tr '\n' ' ')"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with: { name: upscale-test, path: out/ }
