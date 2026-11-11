@@ -1,0 +1,10 @@
+.git
+.github
+.gitignore
+.assetsignore
+wrangler.jsonc
+node_modules
+__pycache__
+supabase
+scripts
+SETUP.md

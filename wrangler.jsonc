@@ -1,0 +1,10 @@
+// Cloudflare Workers (static assets only): publishes the site from the repo root.
+// Files listed in .assetsignore are not uploaded.
+{
+  "name": "pokeguesstcg",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  }
+}
