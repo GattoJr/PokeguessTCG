@@ -69,7 +69,14 @@ def playable_cards():
             hit = pcards[ps["id"]].get(num(c[1]))
             if hit and norm(hit["name"]) == norm(c[2]):  # same number AND same name, or it is not the same card
                 hires = hit["images"].get("large")  # the _hires.png picture
-        out.append({"id": f"{st[0]}-{c[1]}", "serie": serie, "name": c[2],
+        p = hit if hires else {}
+        out.append({"id": f"{st[0]}-{c[1]}", "serie": serie, "serie_name": db["series"][st[2]][1],
+                    "set_id": st[0], "set_name": st[1], "set_date": st[3], "number": c[1], "name": c[2],
+                    "rarity": rarity, "has_evo": bool(c[4]),
+                    # extra card data from pokemontcg.io, when the card is there
+                    "ptcg_id": p.get("id"), "pokedex": p.get("nationalPokedexNumbers"), "artist": p.get("artist"),
+                    "supertype": p.get("supertype"), "subtypes": p.get("subtypes"), "types": p.get("types"),
+                    "hp": p.get("hp"), "evolves_from": p.get("evolvesFrom"),
                     "ptcg": hires, "tcgdex": f"{base}/{serie}/{st[0]}/{c[1]}/high.png"})
     return out
 
@@ -101,6 +108,13 @@ def main():
 
     cards = playable_cards()
     print(f"{len(cards)} playable cards; {sum(1 for c in cards if c['ptcg'])} on pokemontcg.io")
+    if k == 0:  # the card catalogue, one file: picture source/<id>.png + every property of the card
+        cat = [{**{x: v for x, v in c.items() if x not in ("ptcg", "tcgdex")},
+                "picture": f"source/{c['id']}.png", "picture_from": "pokemontcg.io" if c["ptcg"] else "tcgdex"}
+               for c in cards]
+        s3.put_object(Bucket=BUCKET, Key="source/catalog.json", ContentType="application/json",
+                      Body=json.dumps({"cards": cat}, ensure_ascii=False, indent=1).encode())
+        print(f"catalogue written: source/catalog.json ({len(cat)} cards)")
     todo = cards[k::n]
     if a.limit:
         todo = todo[: a.limit]
@@ -121,8 +135,9 @@ def main():
         if data is None:
             data, src = get(c["tcgdex"]), "tcgdex"
         w, h = Image.open(io.BytesIO(data)).size  # also checks it is a real picture
-        s3.put_object(Bucket=BUCKET, Key=key, Body=data, ContentType="image/png",
-                      Metadata={"source": src, "size": f"{w}x{h}"})
+        meta = {"source": src, "size": f"{w}x{h}", "set": c["set_id"], "number": c["number"],
+                "name": c["name"].encode("ascii", "backslashreplace").decode(), "rarity": c["rarity"] or ""}
+        s3.put_object(Bucket=BUCKET, Key=key, Body=data, ContentType="image/png", Metadata=meta)
         return c["id"], src, f"{w}x{h}", len(data)
 
     done, failed, total_bytes = {}, [], 0
