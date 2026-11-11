@@ -1,0 +1,23 @@
+name: Measure layouts
+on:
+  push:
+    branches: [upscale-test]
+    paths: ['scripts/measure_layouts.py', '.github/workflows/measure-layouts.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install boto3 pillow numpy opencv-python-headless
+      - run: git clone --depth 1 https://github.com/PokemonTCG/pokemon-tcg-data ptcg-data
+      - run: python scripts/measure_layouts.py 2>&1 | tee log.txt; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::$(tail -4 log.txt | tr '\n' ' ')"; exit 1; }
+      - if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add out && git commit -qm "Layout measurements" && git pull -q --rebase && git push || true
