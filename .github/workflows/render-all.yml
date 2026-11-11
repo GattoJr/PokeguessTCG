@@ -1,0 +1,31 @@
+name: Render card pictures
+# Builds upscaled/<card>_c.webp and _f.webp in R2 for every card (AI general model), in 20 parallel jobs.
+# Run by hand from the Actions tab; cards already done are skipped, so it can be re-run after an error.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Only the first N cards of each job (0 = all)'
+        default: '0'
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install spandrel pillow numpy boto3
+      - run: |
+          mkdir -p models
+          curl -sSfL -o models/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+          git clone --depth 1 https://github.com/PokemonTCG/pokemon-tcg-data ptcg-data
+      - run: python scripts/render_all.py --shard ${{ matrix.shard }}/20 --limit ${{ inputs.limit }}
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
