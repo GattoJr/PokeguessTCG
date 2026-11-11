@@ -1,0 +1,37 @@
+=== sv
+  sv01-084     Ralts                    734x1024 scale 1.227 match 0.879  crop [0.0848, 0.1070, 0.8387, 0.3560]
+  sv01-079     Kilowattrel              734x1024 scale 1.227 match 0.980  crop [0.0848, 0.1060, 0.8387, 0.3560]
+  sv04.5-116   Slowpoke                 733x1024 scale 1.228 match 0.891  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  sv04.5-124   Palafin                  733x1024 scale 1.228 match 0.957  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  sv08-081     Sigilyph                 733x1024 scale 1.228 match 0.970  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  sv08-074     Azumarill                733x1024 scale 1.228 match 0.952  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  sv10.5b-037  Solosis                  733x1024 scale 1.228 match 0.897  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  sv10.5b-041  Beheeyem                 733x1024 scale 1.228 match 0.948  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  crop  median [np.float64(0.0849), np.float64(0.107), np.float64(0.8401), np.float64(0.3561)]  (largest spread between cards 0.0014, 8 cards)
+  evo   median [np.float64(0.0276), np.float64(0.0684), np.float64(0.1487), np.float64(0.1108)]  (largest spread between cards 0.0010, 4 cards)
+  evot  median [np.float64(0.1884), np.float64(0.0911), np.float64(0.3316), np.float64(0.0297)]  (largest spread between cards 0.0010, 4 cards)
+=== me
+  me01-057     Jynx                     733x1024 scale 1.226 match 0.931  crop [0.0863, 0.1060, 0.8387, 0.3555]
+  me01-056     Alakazam                 733x1024 scale 1.228 match 0.933  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  me02.5-098   Spectrier                733x1024 scale 1.226 match 0.966  crop [0.0863, 0.1079, 0.8387, 0.3555]
+  me02.5-075   Clefable                 733x1024 scale 1.226 match 0.956  crop [0.0863, 0.1060, 0.8387, 0.3555]
+  me04-034     Deoxys                   733x1024 scale 1.228 match 0.898  crop [0.0849, 0.1070, 0.8401, 0.3561]
+  me04-039     Trevenant                733x1024 scale 1.226 match 0.819  crop [0.0863, 0.1070, 0.8387, 0.3555]
+  30th-061     Morpeko                  652x914 scale 1.105 match 0.949  crop [0.0770, 0.1035, 0.8498, 0.3590]
+  crop  median [np.float64(0.0863), np.float64(0.107), np.float64(0.8387), np.float64(0.3555)]  (largest spread between cards 0.0111, 7 cards)
+  evo   median [np.float64(0.0211), np.float64(0.0625), np.float64(0.1655), np.float64(0.1234)]  (largest spread between cards 0.0015, 3 cards)
+  evot  median [np.float64(0.1846), np.float64(0.0911), np.float64(0.3411), np.float64(0.0296)]  (largest spread between cards 0.0012, 3 cards)
+=== swsh
+  swsh1-78     Morpeko                  734x1024 scale 1.229 match 0.975  crop [0.0848, 0.1060, 0.8401, 0.3585]
+  swsh1-76     Boltund                  734x1024 scale 1.227 match 0.975  crop [0.0862, 0.1060, 0.8387, 0.3580]
+  swsh4.5-26   Chewtle                  734x1024 scale 1.223 match 0.937  crop [0.0875, 0.1080, 0.8360, 0.3568]
+  swsh4.5-23   Floatzel                 734x1024 scale 1.229 match 0.928  crop [0.0848, 0.1060, 0.8401, 0.3585]
+  swsh9-063    Chimecho                 734x1024 scale 1.229 match 0.961  crop [0.0848, 0.1070, 0.8401, 0.3585]
+  swsh9-075    Vibrava                  734x1024 scale 1.229 match 0.802  crop [0.0848, 0.1060, 0.8401, 0.3585]
+  swsh12.5-059 Mewtwo                   734x1024 scale 1.229 match 0.960  crop [0.0848, 0.1060, 0.8401, 0.3585]
+  swsh12.5-063 Dusclops                 734x1024 scale 1.229 match 0.863  crop [0.0848, 0.1070, 0.8401, 0.3585]
+  crop  median [np.float64(0.0848), np.float64(0.106), np.float64(0.8401), np.float64(0.3585)]  (largest spread between cards 0.0041, 8 cards)
+  evo   median [np.float64(0.0336), np.float64(0.0634), np.float64(0.1246), np.float64(0.0951)]  (largest spread between cards 0.0014, 4 cards)
+  evot  median [np.float64(0.1702), np.float64(0.0912), np.float64(0.3618), np.float64(0.0297)]  (largest spread between cards 0.0012, 4 cards)
+
+RESULT (pokemontcg.io fractions): {"sv": {"crop": [0.0849, 0.107, 0.8401, 0.3561], "evo": [0.0276, 0.0684, 0.1487, 0.1108], "evot": [0.1884, 0.0911, 0.3316, 0.0297]}, "me": {"crop": [0.0863, 0.107, 0.8387, 0.3555], "evo": [0.0211, 0.0625, 0.1655, 0.1234], "evot": [0.1846, 0.0911, 0.3411, 0.0296]}, "swsh": {"crop": [0.0848, 0.106, 0.8401, 0.3585], "evo": [0.0336, 0.0634, 0.1246, 0.0951], "evot": [0.1702, 0.0912, 0.3618, 0.0297]}}
