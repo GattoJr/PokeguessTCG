@@ -22,4 +22,4 @@ jobs:
           for u in / /art/$K /art/ffffffffffffffffffffffffffffffff.webp /art/ /worker.js /nope /daily/; do
             r=$(curl -s -o /tmp/b -w "%{http_code} %{content_type} %{size_download}" "$S$u"); out="$out | ${u:0:12} $r"
           done
-          curl -s -o a.webp "$S/art/$K"; echo "::notice::$out | $(file -b a.webp)"
+          H=$(curl -s "$S/" | grep -c hdUrl); N=$(curl -s -H "Sec-Fetch-Mode: navigate" -o /dev/null -w "%{size_download}" "$S/nope"); curl -s -o a.webp "$S/art/$K"; echo "::notice::$out | hdUrl=$H nav404=$N | $(file -b a.webp)"
