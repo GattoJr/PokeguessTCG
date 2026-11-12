@@ -1,0 +1,26 @@
+name: Smoke test art
+on:
+  push:
+    branches: [upscale-test]
+    paths: ['.github/workflows/smoke-art.yml']
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install boto3
+      - env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          K=$(python -c "
+          import boto3,os
+          s=boto3.client('s3',endpoint_url=f'https://{os.environ[\"R2_ACCOUNT_ID\"]}.r2.cloudflarestorage.com',region_name='auto',aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'])
+          print(s.list_objects_v2(Bucket='pokeguesstcg-art',Prefix='art/',MaxKeys=1)['Contents'][0]['Key'][4:])")
+          S=https://pokeguesstcg.tototips.workers.dev
+          out=""
+          for u in / /art/$K /art/ffffffffffffffffffffffffffffffff.webp /art/ /worker.js /nope /daily/; do
+            r=$(curl -s -o /tmp/b -w "%{http_code} %{content_type} %{size_download}" "$S$u"); out="$out | ${u:0:12} $r"
+          done
+          python -c "from PIL import Image;i=Image.open('/dev/null')" 2>/dev/null; curl -s -o a.webp "$S/art/$K"; file a.webp
+          echo "::notice::$out | $(file -b a.webp)"
