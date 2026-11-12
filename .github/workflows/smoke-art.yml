@@ -22,5 +22,4 @@ jobs:
           for u in / /art/$K /art/ffffffffffffffffffffffffffffffff.webp /art/ /worker.js /nope /daily/; do
             r=$(curl -s -o /tmp/b -w "%{http_code} %{content_type} %{size_download}" "$S$u"); out="$out | ${u:0:12} $r"
           done
-          python -c "from PIL import Image;i=Image.open('/dev/null')" 2>/dev/null; curl -s -o a.webp "$S/art/$K"; file a.webp
-          echo "::notice::$out | $(file -b a.webp)"
+          curl -s -o a.webp "$S/art/$K"; echo "::notice::$out | $(file -b a.webp)"
